@@ -15,4 +15,4 @@ cb = ProbIntsUncertainty(1e4,5)
 solve(prob,Tsit5())
 sim = monte_carlo_simulation(prob,Tsit5(),num_monte=10,callback=cb,adaptive=false,dt=1/10)
 
-using Plots; plot(sim,vars=(0,1),linealpha=0.4)
+using Plots; plotly(); plot(sim,vars=(0,1),linealpha=0.4)
