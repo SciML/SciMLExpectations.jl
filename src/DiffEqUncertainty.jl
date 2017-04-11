@@ -16,7 +16,7 @@ function ProbIntsUncertainty(σ,order,save=true)
   affect! = ProbIntsCache(σ,order)
   condtion = (t,u,integrator) -> true
   save_positions = (save,false)
-  DiscreteCallback(condtion,affect!,save_positions)
+  DiscreteCallback(condtion,affect!,save_positions=save_positions)
 end
 
 export ProbIntsUncertainty
