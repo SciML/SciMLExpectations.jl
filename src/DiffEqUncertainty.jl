@@ -19,6 +19,20 @@ function ProbIntsUncertainty(σ,order,save=true)
   DiscreteCallback(condtion,affect!,save_positions=save_positions)
 end
 
-export ProbIntsUncertainty
+immutable AdaptiveProbIntsCache
+  order::Int
+end
+function (p::AdaptiveProbIntsCache)(integrator)
+  integrator.u .= integrator.u .+ integrator.EEst*sqrt(integrator.dt^(2*p.order))*randn(size(integrator.u))
+end
+
+function AdaptiveProbIntsUncertainty(order,save=true)
+  affect! = AdaptiveProbIntsCache(order)
+  condtion = (t,u,integrator) -> true
+  save_positions = (save,false)
+  DiscreteCallback(condtion,affect!,save_positions=save_positions)
+end
+
+export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
 
 end
