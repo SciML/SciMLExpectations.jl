@@ -6,10 +6,11 @@ g = @ode_def_bare LorenzExample begin
   dx = σ*(y-x)
   dy = x*(ρ-z) - y
   dz = x*y - β*z
-end σ=>10.0 ρ=>28.0 β=(8/3)
+end σ ρ β
 u0 = [1.0;0.0;0.0]
 tspan = (0.0,10.0)
-prob = ODEProblem(g,u0,tspan)
+p = [10.0,28.0,8/3]
+prob = ODEProblem(g,u0,tspan,p)
 
 cb = ProbIntsUncertainty(1e4,5)
 solve(prob,Tsit5())
@@ -19,9 +20,9 @@ sim = solve(monte_prob,Tsit5(),num_monte=10,callback=cb,adaptive=false,dt=1/10)
 #using Plots; plotly(); plot(sim,vars=(0,1),linealpha=0.4)
 
 fitz = @ode_def_nohes FitzhughNagumo begin
-  dV = c*(V - V^3/3 + R)
-  dR = -(1/c)*(V -  a - b*R)
-end a=0.2 b=0.2 c=3.0
+  dV = 3.0*(V - V^3/3 + R)
+  dR = -(1/3.0)*(V -  0.2 - 0.2*R)
+end
 u0 = [-1.0;1.0]
 tspan = (0.0,20.0)
 prob = ODEProblem(fitz,u0,tspan)
