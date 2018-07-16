@@ -1,5 +1,5 @@
 using DiffEqUncertainty, DiffEqBase, OrdinaryDiffEq, DiffEqProblemLibrary, DiffEqMonteCarlo
-using Base.Test
+using Test
 
 using ParameterizedFunctions
 g = @ode_def_bare LorenzExample begin
