@@ -4,7 +4,7 @@ module DiffEqUncertainty
 
 using DiffEqBase
 
-immutable ProbIntsCache{T}
+struct ProbIntsCache{T}
   σ::T
   order::Int
 end
@@ -19,7 +19,7 @@ function ProbIntsUncertainty(σ,order,save=true)
   DiscreteCallback(condtion,affect!,save_positions=save_positions)
 end
 
-immutable AdaptiveProbIntsCache
+struct AdaptiveProbIntsCache
   order::Int
 end
 function (p::AdaptiveProbIntsCache)(integrator)
