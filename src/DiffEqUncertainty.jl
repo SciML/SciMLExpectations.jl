@@ -2,37 +2,12 @@ __precompile__()
 
 module DiffEqUncertainty
 
-using DiffEqBase
+using DiffEqBase, Cubature, Statistics, Distributions
 
-struct ProbIntsCache{T}
-  σ::T
-  order::Int
-end
-function (p::ProbIntsCache)(integrator)
-  integrator.u .= integrator.u .+ p.σ*sqrt(integrator.dt^(2*p.order))*randn(size(integrator.u))
-end
-
-function ProbIntsUncertainty(σ,order,save=true)
-  affect! = ProbIntsCache(σ,order)
-  condtion = (t,u,integrator) -> true
-  save_positions = (save,false)
-  DiscreteCallback(condtion,affect!,save_positions=save_positions)
-end
-
-struct AdaptiveProbIntsCache
-  order::Int
-end
-function (p::AdaptiveProbIntsCache)(integrator)
-  integrator.u .= integrator.u .+ integrator.EEst*sqrt(integrator.dt^(2*p.order))*randn(size(integrator.u))
-end
-
-function AdaptiveProbIntsUncertainty(order,save=true)
-  affect! = AdaptiveProbIntsCache(order)
-  condtion = (t,u,integrator) -> true
-  save_positions = (save,false)
-  DiscreteCallback(condtion,affect!,save_positions=save_positions)
-end
+include("probints.jl")
+include("koopman.jl")
 
 export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
+export koopman_cost, montecarlo_cost
 
 end
