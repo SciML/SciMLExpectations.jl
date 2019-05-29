@@ -13,7 +13,7 @@ prob = ODEProblem(f,u0,tspan,p)
 sol = solve(remake(prob,u0=u0),Tsit5())
 cost(sol) = sum(max(x[1]-6,0) for x in sol.u)
 u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
-
-c1, e1 = koopman_cost(u0s,cost,prob,Tsit5();saveat=0.1)
-c2 = montecarlo_cost(u0s,cost,prob,Tsit5();num_monte=100000,saveat=0.1)
+ps  = [Uniform(0.5,2.0)]
+@time c1, e1 = koopman_cost(u0s,ps,cost,prob,Tsit5();saveat=0.1)
+@time c2 = montecarlo_cost(u0s,ps,cost,prob,Tsit5();num_monte=100000,saveat=0.1)
 @test abs(c1 - c2) < 0.1
