@@ -18,13 +18,13 @@ function koopman_cost(u0s,ps,g,prob,args...;maxevals=0,
             reltol=ireltol, abstol=iabstol, maxevals = maxevals)
 end
 
-function montecarlo_cost(u0s,ps,g,prob,args...;num_monte,kwargs...)
+function montecarlo_cost(u0s,ps,g,prob,args...;trajectories,kwargs...)
   prob_func = function (prob,i,repeat)
     remake(prob,u0=rand.(u0s),p=rand.(ps))
   end
   output_func = (sol,i) -> (g(sol),false)
-  monte_prob = MonteCarloProblem(prob;
+  monte_prob = EnsembleProblem(prob;
                                  output_func = output_func,
                                  prob_func = prob_func)
-  mean(solve(monte_prob,args...;num_monte=num_monte,kwargs...).u)
+  mean(solve(monte_prob,args...;trajectories=trajectories,kwargs...).u)
 end

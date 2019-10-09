@@ -1,4 +1,4 @@
-using OrdinaryDiffEq, DiffEqMonteCarlo, Distributions, Cubature,
+using OrdinaryDiffEq, Distributions, Cubature,
       DiffEqUncertainty, Test
 
 function f(du,u,p,t)
@@ -15,5 +15,5 @@ cost(sol) = sum(max(x[1]-6,0) for x in sol.u)
 u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
 ps  = [Uniform(0.5,2.0)]
 @time c1, e1 = koopman_cost(u0s,ps,cost,prob,Tsit5();saveat=0.1)
-@time c2 = montecarlo_cost(u0s,ps,cost,prob,Tsit5();num_monte=100000,saveat=0.1)
+@time c2 = montecarlo_cost(u0s,ps,cost,prob,Tsit5();trajectories=100000,saveat=0.1)
 @test abs(c1 - c2) < 0.1
