@@ -2,7 +2,7 @@ __precompile__()
 
 module DiffEqUncertainty
 
-using DiffEqBase, Cubature, Statistics, Distributions
+using DiffEqBase, Statistics, Distributions, Quadrature
 
 include("probints.jl")
 include("koopman.jl")
