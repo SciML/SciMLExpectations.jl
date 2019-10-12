@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, Distributions,
-      DiffEqUncertainty, Test, DiffEqGPU
+      DiffEqUncertainty, Test, Quadrature, Cubature
 
 function f(du,u,p,t)
   @inbounds begin
@@ -19,10 +19,23 @@ u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
 ps  = [Uniform(0.5,2.0)]
 @time sol = koopman_cost(u0s,ps,cost,prob,Tsit5();iabstol=1e-3,ireltol=1e-3,maxiters=1000,saveat=0.1)
 c1, e1 = sol.u, sol.resid
-@time c2 = montecarlo_cost(u0s,ps,cost,prob,Tsit5(),EnsembleThreads();trajectories=100000,saveat=0.1)
+@time sol = koopman_cost(u0s,ps,cost,prob,Tsit5(),EnsembleThreads();quadalg=CubatureJLh(),
+                         batch=1000,iabstol=1e-3,ireltol=1e-3,
+                         maxiters=2000,saveat=0.1)
+c2, e2 = sol.u, sol.resid
 @test abs(c1 - c2) < 0.1
+
+@time c3 = montecarlo_cost(u0s,ps,cost,prob,Tsit5(),EnsembleThreads();trajectories=100000,saveat=0.1)
+@test abs(c1 - c3) < 0.1
 
 #=
 using DiffEqGPU
-@time c2 = montecarlo_cost(u0s,ps,cost,prob,Tsit5(),EnsembleGPUArray();trajectories=100000,saveat=0.1)
+@time sol = koopman_cost(u0s,ps,cost,prob,Tsit5(),EnsembleGPUArray();quadalg=CubatureJLh(),
+                         batch=1000,iabstol=1e-3,ireltol=1e-3,
+                         maxiters=2000,saveat=0.1)
+c2, e2 = sol.u, sol.resid
+@test abs(c1 - c2) < 0.1
+
+@time c3 = montecarlo_cost(u0s,ps,cost,prob,Tsit5(),EnsembleGPUArray();trajectories=100000,saveat=0.1)
+@test abs(c1 - c3) < 0.1
 =#
