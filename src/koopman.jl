@@ -3,20 +3,43 @@ function koopman(g,prob,u0,p,args...;kwargs...)
 end
 
 function koopman_cost(u0s,ps,g,prob,args...;maxiters=0,
-                      intalg = HCubatureJL(),
+                      batch = 0,
+                      quadalg = HCubatureJL(),
                       ireltol = 1e-2, iabstol=1e-2,kwargs...)
   n = length(u0s)
-  function _f(x,p)
-    u0 = x[1:n]
-    p  = x[n+1:end]
-    k = koopman(g,prob,u0,p,args...;kwargs...)
-    w = prod(pdf(a,b) for (a,b) in zip(u0s,u0))*
-        prod(pdf(a,b) for (a,b) in zip(ps,p))
-    k*w
+  if batch == 0
+    _f = function (x,p)
+      u0 = x[1:n]
+      p  = x[n+1:end]
+      k = koopman(g,prob,u0,p,args...;kwargs...)
+      w = prod(pdf(a,b) for (a,b) in zip(u0s,u0))*
+          prod(pdf(a,b) for (a,b) in zip(ps,p))
+      k*w
+    end
+  else
+    _f = function (dx,x,p)
+      trajectories = size(x,2)
+      prob_func = (prob,i,repeat) -> remake(prob,u0=@view(x[1:n,i]),
+                                                 p=@view(x[n+1:end,i]))
+      output_func = function (sol,i)
+        k = g(sol)
+        u0= @view(x[1:n,i])
+        p = @view(x[n+1:end,i])
+        w = prod(pdf(a,b) for (a,b) in zip(u0s,u0))*
+            prod(pdf(a,b) for (a,b) in zip(ps,p))
+        k*w,false
+      end
+
+      ensembleprob = EnsembleProblem(prob,prob_func=prob_func,
+                                     output_func = output_func)
+      sol = solve(ensembleprob,args...;trajectories=trajectories,kwargs...)
+      dx .= vec(sol.u)
+      nothing
+    end
   end
   xs = [u0s;ps]
-  intprob = QuadratureProblem(_f,minimum.(xs),maximum.(xs))
-  sol = solve(intprob,intalg,reltol=ireltol,
+  intprob = QuadratureProblem(_f,minimum.(xs),maximum.(xs),batch=batch)
+  sol = solve(intprob,quadalg,reltol=ireltol,
               abstol=iabstol,maxiters = maxiters)
 end
 
