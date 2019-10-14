@@ -1,5 +1,3 @@
-__precompile__()
-
 module DiffEqUncertainty
 
 using DiffEqBase, Statistics, Distributions, Quadrature
