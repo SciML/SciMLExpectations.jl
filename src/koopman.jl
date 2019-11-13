@@ -2,7 +2,7 @@ function koopman(g,prob,u0,p,args...;kwargs...)
     g(solve(remake(prob,u0=u0,p=p),args...;kwargs...))
 end
 
-function koopman_cost(u0s,ps,g,prob,args...;maxiters=0,
+function koopman_expectation(g,u0s,ps,prob,args...;maxiters=0,
                       batch = 0,
                       quadalg = HCubatureJL(),
                       ireltol = 1e-2, iabstol=1e-2,kwargs...)
@@ -43,7 +43,7 @@ function koopman_cost(u0s,ps,g,prob,args...;maxiters=0,
               abstol=iabstol,maxiters = maxiters)
 end
 
-function montecarlo_cost(u0s,ps,g,prob,args...;trajectories,kwargs...)
+function montecarlo_expectation(g,u0s,ps,prob,args...;trajectories,kwargs...)
   prob_func = function (prob,i,repeat)
     remake(prob,u0=rand.(u0s),p=rand.(ps))
   end

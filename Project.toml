@@ -12,6 +12,8 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 [compat]
 DiffEqBase = "6"
 julia = "1"
+Quadrature = "0.1"
+Distributions = "0.18, 0.19, 0.20, 0.21"
 
 [extras]
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
