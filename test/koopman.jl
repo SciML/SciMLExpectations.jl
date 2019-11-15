@@ -1,6 +1,8 @@
 using OrdinaryDiffEq, Distributions,
       DiffEqUncertainty, Test, Quadrature, Cubature
 
+
+
 function f(du,u,p,t)
   @inbounds begin
     du[1] = dx = p[1]*u[1] - u[1]*u[2]
@@ -27,6 +29,13 @@ c2, e2 = sol.u, sol.resid
 
 @time c3 = montecarlo_expectation(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();trajectories=100000,saveat=0.1)
 @test abs(c1 - c3) < 0.1
+
+##########
+u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
+ps  = [Uniform(0.5,2.0)]
+sol = expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-3,ireltol=1e-3,maxiters=1000,saveat=0.1)
+c4, e1 = sol.u, sol.resid
+@test c4 ≈ c1
 
 #=
 using DiffEqGPU
