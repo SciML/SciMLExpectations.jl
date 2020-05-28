@@ -1,5 +1,13 @@
-using Distributions
-import Random: AbstractRNG, rand
+using Distributions, Statistics
+import Random: AbstractRNG, RangeGenerator, rand!, SamplerRangeInt
+import Base: size, length, convert, show, getindex, rand, vec, inv
+import Base: sum, maximum, minimum, extrema, +, -, *, ==
+import Statistics: mean, median, quantile, std, var, cov, cor
+import StatsBase: kurtosis, skewness, entropy, mode, modes,
+                  fit, kldivergence, loglikelihood, dof, span,
+                  params, params!
+
+import Distributions: pdf
 
 """
     Dirac(value)

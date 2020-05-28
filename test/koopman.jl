@@ -1,6 +1,7 @@
-using OrdinaryDiffEq, Distributions,
+using OrdinaryDiffEq, Distributions, DiffEqBase,
       DiffEqUncertainty, Test, Quadrature, Cubature
 
+include("../examples/dirac.jl")
 
 function f(du,u,p,t)
   @inbounds begin
@@ -14,73 +15,61 @@ u0 = [1.0;1.0]
 tspan = (0.0,10.0)
 p = [1.5]
 prob = ODEProblem(f,u0,tspan,p)
-sol = solve(remake(prob,u0=u0),Tsit5())
 cost(sol) = sum(max(x[1]-6,0) for x in sol.u)
-u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
-ps  = [Uniform(0.5,2.0)]
-sol = koopman_expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-3,ireltol=1e-3,maxiters=1000,saveat=0.1)
+
+u0s = [Truncated(Normal(2.875, 0.875),0.25, 5.5) ,Truncated(Normal(2.875, 0.875),0.25, 5.5) ]
+ps  = [Truncated(Normal(1.25, 0.25),0.5, 2.0) ]
+
+
+@time sol = koopman_expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-3,ireltol=1e-3,maxiters=2000,saveat=0.1)
 c1, e1 = sol.u, sol.resid
+
+# batch
 @time sol = koopman_expectation(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();quadalg=CubatureJLh(),
                          batch=1000,iabstol=1e-3,ireltol=1e-3,
                          maxiters=2000,saveat=0.1)
 c2, e2 = sol.u, sol.resid
 @test abs(c1 - c2) < 0.1
 
+# MC
 @time c3 = montecarlo_expectation(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();trajectories=100000,saveat=0.1)
 @test abs(c1 - c3) < 0.1
 
-##########
-## Compare for all states/params random
-begin
-  u0 = [1.0;1.0]
-  tspan = (0.0,10.0)
-  p = [1.5]
-  prob = ODEProblem(f,u0,tspan,p)
-  u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
-  ps  = [Uniform(0.5,2.0)]
-  sol = expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-3,ireltol=1e-3,maxiters=1000,saveat=0.1)
-  c4, e4 = sol.u, sol.resid
-  @test c4 ≈ c1
-end
+###### New Interface vs old
+@time sol = koopman_expectation2(cost,u0s,ps,prob,Tsit5();quadalg=CubatureJLh(),
+                         iabstol=1e-3,ireltol=1e-3,
+                         maxiters=2000,saveat=0.1)
+c4, e4 = sol.u, sol.resid
+@test abs(c1 - c4) < 0.1
 
-## compare for subset of states random
-begin
-  u0 = [1.0;1.0]
-  tspan = (0.0,10.0)
-  p = [1.5]
-  prob = ODEProblem(f,u0,tspan,p)
+# batch
+@time sol = koopman_expectation2(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();quadalg=CubatureJLh(),
+                         batch=1000,iabstol=1e-3,ireltol=1e-3,
+                         maxiters=2000,saveat=0.1)
+c5, e5 = sol.u, sol.resid
+@test abs(c1 - c5) < 0.1
 
-  u0s = [Uniform(0.25,5.5),Uniform( (1.0 .+ [-1e-8, 1e-8])...)]   # Old interface hacked by using very tight distribution for 2nd state
-  ps  = [Uniform(0.5,2.0)]
-  sol = koopman_expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-6,ireltol=1e-6,maxiters=1000,saveat=0.1)
-  c5, e5 = sol.u, sol.resid
 
-  u0s = [Uniform(0.25,5.5), 1.0]
-  ps  = [Uniform(0.5,2.0)]
-  prob = ODEProblem(f,[1.0,1.0],tspan,p)
-  sol = expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-6,ireltol=1e-6,maxiters=1000,saveat=0.1)
-  c6, e6 = sol.u, sol.resid
+###########
 
-  @test abs(c6 - c5) < 0.02
-end
 
-## Compare with only random states
-begin
-  u0 = [1.0;1.0]
-  tspan = (0.0,10.0)
-  p = [1.5]
-  prob = ODEProblem(f,u0,tspan,p)
 
-  u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
-  ps  = [Uniform((1.5 .+ [-1e-8, 1e-8])...)]  # Old interface hacked by using very tight distribution for 2nd state
-  sol = koopman_expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-6,ireltol=1e-6,maxiters=1000,saveat=0.1)
-  c7, e7 = sol.u, sol.resid
-
-  u0s = [Uniform(0.25,5.5), Uniform(0.25,5.5)]
-  ps  = [1.5]
-  prob = ODEProblem(f,[1.0,1.0],tspan,p)
-  sol = expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-6,ireltol=1e-6,maxiters=1000,saveat=0.1)
-  c8, e8 = sol.u, sol.resid
-
-  @test abs(c7 - c8) < 0.02
+@testset "Deterministic vs Uncertain IC" begin
+    u2 = [Truncated(Normal(2.875, 0.875),0.25, 5.5), Uniform(2.8749,2.8751), Truncated(Normal(2.8749,0.01),2,3), 2.875, Dirac(2.875)]
+    ps  = [Truncated(Normal(1.25, 0.25),0.5, 2.0) ]
+    for i in 1:length(u2)
+        u0s = [Truncated(Normal(2.875, 0.875),0.25, 5.5) ,u2[i]]
+        sol = koopman_expectation2(cost,u0s,ps,prob,Tsit5();quadalg=CubatureJLh(),
+                                 batch = 0, iabstol=1e-3,ireltol=1e-3,
+                                 maxiters=2000,saveat=0.1)
+        c = sol.u
+        sol = koopman_expectation2(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();quadalg=CubatureJLh(),
+                                 batch = 10, iabstol=1e-3,ireltol=1e-3,
+                                 maxiters=2000,saveat=0.1)
+        c_batch = sol.u
+        c_mc = montecarlo_expectation(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();trajectories=100000,saveat=0.1)
+        @show c, c_batch, c_mc
+        @test abs(c-c_mc) <0.1
+        @test abs(c-c_batch) <0.1
+    end
 end

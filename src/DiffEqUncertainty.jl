@@ -7,6 +7,6 @@ include("koopman.jl")
 
 export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
 export koopman_expectation, montecarlo_expectation
-export expectation
+export koopman_expectation2
 
 end

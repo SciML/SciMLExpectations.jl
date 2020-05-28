@@ -19,7 +19,10 @@ julia = "1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
 DiffEqProblemLibrary = "a077e3f3-b75c-5d7f-a0c6-6bc4c8ec64a9"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["DiffEqProblemLibrary", "Test", "OrdinaryDiffEq", "Cubature"]
+test = ["DiffEqProblemLibrary", "Test", "OrdinaryDiffEq", "Cubature", "Random",
+        "StatsBase"]
