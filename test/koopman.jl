@@ -17,8 +17,8 @@ p = [1.5]
 prob = ODEProblem(f,u0,tspan,p)
 cost(sol) = sum(max(x[1]-6,0) for x in sol.u)
 
-u0s = [Truncated(Normal(2.875, 0.875),0.25, 5.5) ,Truncated(Normal(2.875, 0.875),0.25, 5.5) ]
-ps  = [Truncated(Normal(1.25, 0.25),0.5, 2.0) ]
+u0s = (Truncated(Normal(2.875, 0.875),0.25, 5.5) ,Truncated(Normal(2.875, 0.875),0.25, 5.5) )
+ps  = (Truncated(Normal(1.25, 0.25),0.5, 2.0),)
 
 
 @time sol = koopman_expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-3,ireltol=1e-3,maxiters=2000,saveat=0.1)

@@ -1,3 +1,7 @@
+@inline tuplejoin(x) = x
+@inline tuplejoin(x, y) = (x..., y...)
+@inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
+
 function koopman(g,prob,u0,p,args...; u0s_func = identity, kwargs...)
     g(solve(remake(prob,u0=u0s_func(u0),p=p),args...;kwargs...))
 end
@@ -69,8 +73,9 @@ function koopman_expectation2(g,u0s,ps,prob,args...;maxiters=0,
     n_states = length(u0s)
 
     # find indices corresponding to distributions, check if sampleable and has non-zero support.
-    ext_state = vcat(u0s, ps)
-    ext_state_dist_bitmask =  @. isa(ext_state,Sampleable) & (minimum(ext_state) != maximum(ext_state))
+    # ext_state = vcat(u0s, ps)
+    ext_state = tuplejoin(u0s, ps)
+    ext_state_dist_bitmask = isa.(ext_state,Sampleable) .& (minimum.(s for s ∈ ext_state) .!= maximum.( s for s ∈ ext_state))
     ext_state_val_bitmask = .!(ext_state_dist_bitmask)
 
     # get distributions and indx in extended state space
@@ -81,7 +86,7 @@ function koopman_expectation2(g,u0s,ps,prob,args...;maxiters=0,
     if batch == 0
       # create numerical state space values
       ext_state_val = zeros(length(ext_state))
-      ext_state_val[ext_state_val_bitmask] = minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
+      ext_state_val[ext_state_val_bitmask] .= minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
 
       integrand = function (x, p)
           ext_state_val[dist_idx] = x        # set values for indices corresponding to random variables
@@ -96,7 +101,7 @@ function koopman_expectation2(g,u0s,ps,prob,args...;maxiters=0,
           trajectories = size(x,2)
 
           ext_state_val = zeros(length(ext_state), trajectories)
-          ext_state_val[ext_state_val_bitmask,:] .= minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
+          ext_state_val[ext_state_val_bitmask,:] .= minimum.(s for s ∈ ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
           ext_state_val[dist_idx,:] = x
 
           prob_func = (prob,i,repeat) -> remake(prob, u0 = u0s_func(@view(ext_state_val[1:n_states,i])),
@@ -114,7 +119,7 @@ function koopman_expectation2(g,u0s,ps,prob,args...;maxiters=0,
     end
 
     #solve
-    intprob = QuadratureProblem(integrand,minimum.(dists),maximum.(dists),batch=batch)
+    intprob = QuadratureProblem(integrand,minimum.(d for d ∈ dists),maximum.(d for d ∈ dists),batch=batch)
     sol = solve(intprob,quadalg,reltol=ireltol,
                 abstol=iabstol,maxiters = maxiters)
 end
