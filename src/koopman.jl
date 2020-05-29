@@ -1,3 +1,4 @@
+# tuplejoin from https://discourse.julialang.org/t/efficient-tuple-concatenation/5398/8
 @inline tuplejoin(x) = x
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
@@ -75,7 +76,7 @@ function koopman_expectation2(g,u0s,ps,prob,args...;maxiters=0,
     # find indices corresponding to distributions, check if sampleable and has non-zero support.
     # ext_state = vcat(u0s, ps)
     ext_state = tuplejoin(u0s, ps)
-    ext_state_dist_bitmask = isa.(ext_state,Sampleable) .& (minimum.(s for s ∈ ext_state) .!= maximum.( s for s ∈ ext_state))
+    ext_state_dist_bitmask = collect(isa.(ext_state,Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
     ext_state_val_bitmask = .!(ext_state_dist_bitmask)
 
     # get distributions and indx in extended state space
@@ -119,7 +120,7 @@ function koopman_expectation2(g,u0s,ps,prob,args...;maxiters=0,
     end
 
     #solve
-    intprob = QuadratureProblem(integrand,minimum.(d for d ∈ dists),maximum.(d for d ∈ dists),batch=batch)
+    intprob = QuadratureProblem(integrand,minimum.(dists),maximum.(dists),batch=batch)
     sol = solve(intprob,quadalg,reltol=ireltol,
                 abstol=iabstol,maxiters = maxiters)
 end
