@@ -45,7 +45,7 @@ function koopman_expectation(g,u0s,ps,prob,args...;maxiters=0,
     # Define the integrand for expectation
     if batch == 0
       # create numerical state space values
-      ext_state_val = zeros(length(ext_state))
+      ext_state_val = vcat(zero.(eltype.(ext_state))...)
       ext_state_val[ext_state_val_bitmask] .= minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
 
       integrand = function (x, p)
