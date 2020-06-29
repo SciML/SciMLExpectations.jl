@@ -23,7 +23,7 @@ c1, e1 = sol.u, sol.resid
                          batch=1000,iabstol=1e-3,ireltol=1e-3,
                          maxiters=2000,saveat=0.1)
 c2, e2 = sol.u, sol.resid
-@test abs(c1 - c2) < 0.1
+@test abs(c1 - c2[1]) < 0.1
 
 @time c3 = montecarlo_expectation(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();trajectories=100000,saveat=0.1)
 @test abs(c1 - c3) < 0.1

@@ -1,55 +1,90 @@
-function koopman(g,prob,u0,p,args...;kwargs...)
-    g(solve(remake(prob,u0=u0,p=p),args...;kwargs...))
+# tuplejoin from https://discourse.julialang.org/t/efficient-tuple-concatenation/5398/8
+@inline tuplejoin(x) = x
+@inline tuplejoin(x, y) = (x..., y...)
+@inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
+
+function koopman(g,prob,u0,p,args...; u0s_func = identity, kwargs...)
+  g(solve(remake(prob,u0=u0s_func(u0),p=p),args...;kwargs...))
 end
 
-function koopman_expectation(g,u0s,ps,prob,args...;maxiters=0,
-                      batch = 0,
-                      quadalg = HCubatureJL(),
-                      ireltol = 1e-2, iabstol=1e-2,kwargs...)
-  n = length(u0s)
-  if batch == 0
-    _f = function (x,p)
-      u0 = x[1:n]
-      p  = x[n+1:end]
-      k = koopman(g,prob,u0,p,args...;kwargs...)
-      w = prod(pdf(a,b) for (a,b) in zip(u0s,u0))*
-          prod(pdf(a,b) for (a,b) in zip(ps,p))
-      k*w
-    end
-  else
-    _f = function (dx,x,p)
-      trajectories = size(x,2)
-      prob_func = (prob,i,repeat) -> remake(prob,u0=@view(x[1:n,i]),
-                                                 p=@view(x[n+1:end,i]))
-      output_func = function (sol,i)
-        k = g(sol)
-        u0= @view(x[1:n,i])
-        p = @view(x[n+1:end,i])
-        w = prod(pdf(a,b) for (a,b) in zip(u0s,u0))*
-            prod(pdf(a,b) for (a,b) in zip(ps,p))
-        k*w,false
-      end
+function montecarlo_expectation(g,u0s,ps,prob,args...;
+                                trajectories,u0s_func = identity,kwargs...)
 
-      ensembleprob = EnsembleProblem(prob,prob_func=prob_func,
-                                     output_func = output_func)
-      sol = solve(ensembleprob,args...;trajectories=trajectories,kwargs...)
-      dx .= vec(sol.u)
-      nothing
-    end
-  end
-  xs = [u0s;ps]
-  intprob = QuadratureProblem(_f,minimum.(xs),maximum.(xs),batch=batch)
-  sol = solve(intprob,quadalg,reltol=ireltol,
-              abstol=iabstol,maxiters = maxiters)
-end
+  _rand(x::T) where T<:Sampleable = rand(x)
+  _rand(x) = x
 
-function montecarlo_expectation(g,u0s,ps,prob,args...;trajectories,kwargs...)
   prob_func = function (prob,i,repeat)
-    remake(prob,u0=rand.(u0s),p=rand.(ps))
+    remake(prob,u0=u0s_func(_rand.(u0s)),p=_rand.(ps))
   end
   output_func = (sol,i) -> (g(sol),false)
   monte_prob = EnsembleProblem(prob;
                                  output_func = output_func,
                                  prob_func = prob_func)
-  mean(solve(monte_prob,args...;trajectories=trajectories,kwargs...).u)
+  sol = solve(monte_prob,args...;trajectories=trajectories,kwargs...)
+  mean(sol.u)#, sol
+end
+
+function koopman_expectation(g,u0s,ps,prob,args...;maxiters=0,
+                      batch = 0,
+                      quadalg = HCubatureJL(),
+                      ireltol = 1e-2, iabstol=1e-2,
+                      nout = 1,
+                      u0s_func = identity, ∂dist=false, kwargs...)
+
+    n_states = length(u0s)
+
+    # find indices corresponding to distributions, check if sampleable and has non-zero support.
+    ext_state = tuplejoin(u0s, ps)
+    ext_state_dist_bitmask = collect(isa.(ext_state,Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
+    ext_state_val_bitmask = .!(ext_state_dist_bitmask)
+
+    # get distributions and indx in extended state space
+    dist_idx =  (1:length(ext_state))[ext_state_dist_bitmask]
+    dists = ext_state[dist_idx]
+
+    # Define the integrand for expectation
+    if batch == 0
+      # create numerical state space values
+      ext_state_val = zeros(length(ext_state))
+      ext_state_val[ext_state_val_bitmask] .= minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
+
+      integrand = function (x, p)
+          ext_state_val[dist_idx] = x        # set values for indices corresponding to random variables
+          w = prod(pdf(a, b) for (a, b) in zip(dists, x))
+
+          sol = solve(remake(prob,u0=u0s_func(@view(ext_state_val[1:n_states])),
+                      p=@view(ext_state_val[(n_states + 1):end])),
+                      args...;u0s_func = u0s_func, kwargs...)
+
+          k = g(sol)
+          return k*w
+      end
+    else
+      integrand = function (dx, x, p)
+          trajectories = size(x,2)
+
+          ext_state_val = zeros(length(ext_state), trajectories)
+          ext_state_val[ext_state_val_bitmask,:] .= minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
+          ext_state_val[dist_idx,:] = x
+
+          prob_func = (prob,i,repeat) -> remake(prob, u0 = u0s_func(@view(ext_state_val[1:n_states,i])),
+                                                       p = @view(ext_state_val[n_states+1:end,i]))
+          output_func = function (sol,i)
+            w = prod(pdf(a,b) for (a,b) in zip(dists,x[:,i]))
+            k = g(sol)
+            return k*w,false
+          end
+
+          ensembleprob = EnsembleProblem(prob,prob_func=prob_func, output_func = output_func)
+          sol = solve(ensembleprob,args...;trajectories=trajectories,kwargs...)
+
+
+          dx .= hcat(sol.u...) # Why do I need to hcat???
+      end
+    end
+
+    #solve
+    intprob = QuadratureProblem(integrand,minimum.(dists),maximum.(dists),batch=batch, nout= nout)
+    sol = solve(intprob,quadalg,reltol=ireltol,
+                abstol=iabstol,maxiters = maxiters)
 end
