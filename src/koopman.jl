@@ -24,7 +24,7 @@ function montecarlo_expectation(g,u0s,ps,prob,args...;
   mean(sol.u)#, sol
 end
 
-function koopman_expectation(g,u0s,ps,prob,args...;maxiters=0,
+function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
                       batch = 0,
                       quadalg = HCubatureJL(),
                       ireltol = 1e-2, iabstol=1e-2,
@@ -49,7 +49,7 @@ function koopman_expectation(g,u0s,ps,prob,args...;maxiters=0,
       ext_state_val[ext_state_val_bitmask] .= minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
 
       integrand = function (x, p)
-          ext_state_val[dist_idx] = x        # set values for indices corresponding to random variables
+          ext_state_val[dist_idx] .= x        # set values for indices corresponding to random variables
           w = prod(pdf(a, b) for (a, b) in zip(dists, x))
 
           sol = solve(remake(prob,u0=u0s_func(@view(ext_state_val[1:n_states])),
@@ -84,7 +84,9 @@ function koopman_expectation(g,u0s,ps,prob,args...;maxiters=0,
     end
 
     #solve
-    intprob = QuadratureProblem(integrand,minimum.(dists),maximum.(dists),batch=batch, nout= nout)
+    intprob = QuadratureProblem(integrand,minimum.(dists),maximum.(dists),ADparams,batch=batch, nout= nout)
     sol = solve(intprob,quadalg,reltol=ireltol,
                 abstol=iabstol,maxiters = maxiters)
+
+    sol#,sols,ks
 end

@@ -17,7 +17,7 @@ sol = solve(remake(prob,u0=u0),Tsit5())
 cost(sol) = sum(max(x[1]-6,0) for x in sol.u)
 u0s = [Uniform(0.25,5.5),Uniform(0.25,5.5)]
 ps  = [Uniform(0.5,2.0)]
-@time sol = koopman_expectation(cost,u0s,ps,prob,Tsit5();iabstol=1e-3,ireltol=1e-3,maxiters=1000,saveat=0.1)
+@time sol = koopman_expectation(cost,u0s,ps,prob,ps,Tsit5();quadalg=HCubatureJL(),iabstol=1e-3,ireltol=1e-3,maxiters=1000,saveat=0.1)
 c1, e1 = sol.u, sol.resid
 @time sol = koopman_expectation(cost,u0s,ps,prob,Tsit5(),EnsembleThreads();quadalg=CubatureJLh(),
                          batch=1000,iabstol=1e-3,ireltol=1e-3,
