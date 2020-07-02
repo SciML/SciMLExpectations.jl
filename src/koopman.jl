@@ -3,15 +3,15 @@
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
 
+_rand(x::T) where T<:Sampleable = rand(x)
+_rand(x) = x
+
 function koopman(g,prob,u0,p,args...; u0s_func = identity, kwargs...)
   g(solve(remake(prob,u0=u0s_func(u0),p=p),args...;kwargs...))
 end
 
 function montecarlo_expectation(g,u0s,ps,prob,args...;
                                 trajectories,u0s_func = identity,kwargs...)
-
-  _rand(x::T) where T<:Sampleable = rand(x)
-  _rand(x) = x
 
   prob_func = function (prob,i,repeat)
     remake(prob,u0=u0s_func(_rand.(u0s)),p=_rand.(ps))
