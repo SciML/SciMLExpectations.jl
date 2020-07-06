@@ -37,7 +37,7 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
     ext_state = tuplejoin(u0s, ps)
     ext_state_dist_bitmask = collect(isa.(ext_state, Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
     ext_state_val_bitmask = .!(ext_state_dist_bitmask)
-    @show ext_state_dist_bitmask
+  
     # get distributions and indx in extended state space
     dist_idx =  (1:length(ext_state))[ext_state_dist_bitmask]
     dists = ext_state[dist_idx]
@@ -47,7 +47,7 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
       # create numerical state space values
         ext_state_val = vcat(zero.(eltype.(ext_state))...)
         ext_state_val[ext_state_val_bitmask] .= minimum.(ext_state[ext_state_val_bitmask])   # minimum used to extract value if Dirac or a number type
-        @show ext_state_val
+        
         integrand = function (x, p)
             ext_state_val[dist_idx] .= x        # set values for indices corresponding to random variables
             
@@ -57,8 +57,6 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
                       args...;u0s_func=u0s_func, kwargs...)
 
             k = g(sol)
-          # @show k*w
-          # @show w, g(sol)
             return k * w
         end
     else
@@ -86,8 +84,6 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
     end
 
     # solve
-    @show typeof(minimum.(dists)), typeof(minimum.(dists))
-    @show typeof(ADparams)
     intprob = QuadratureProblem(integrand, minimum.(dists), maximum.(dists), ADparams, batch=batch, nout=nout)
     sol = solve(intprob,quadalg,reltol=ireltol,
                 abstol=iabstol,maxiters=maxiters)
