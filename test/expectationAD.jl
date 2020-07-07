@@ -21,7 +21,6 @@ sol = solve(prob,Tsit5())
 u0s_dist = [truncated(Normal(μs[1],2.0),1.0,10.0),truncated(Normal(μs[2],2.0),1.0,10.0)]
 
 function loss_koop(θ, quadalg, args...; kwargs...)
-    @show θ
     expectation(sum, prob, u0s_dist, θ, Koopman(), Tsit5(); quadalg=quadalg, ireltol=1e-5, iabstol = 1e-5, saveat=saveat, kwargs...)[1]
 end
 

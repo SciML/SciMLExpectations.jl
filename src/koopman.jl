@@ -19,8 +19,6 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
                         nout=1,kwargs...)
 
     S = function (u,p)
-        println(u)
-        println(p)
         solve(remake(prob,u0=u,p=p),
                       args...; kwargs...)
     end
