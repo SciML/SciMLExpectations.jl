@@ -34,10 +34,22 @@ end
 @time Zygote.gradient(p->loss_koop(p,CubaCuhre()),p)
 ForwardDiff.gradient(p->loss_koop(p,CubaCuhre()),p)
 
+#### Non-working Example
+function loss_koop2(θ, quadalg, args...; kwargs...)
+  u0s_dist = [truncated(Normal(θ[1],2.0),1.0,10.0),truncated(Normal(θ[2],2.0),1.0,10.0)]
+  expectation(sum, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg=quadalg, ireltol=1e-5, iabstol = 1e-5, saveat=saveat, kwargs...)[1]
+end
 
-Zygote.gradient(p->loss_mc(p, trajectories = 10),p)
+function loss_mc2(θ, args...; kwargs...)
+  u0s_dist = [truncated(Normal(θ[1],2.0),1.0,10.0),truncated(Normal(θ[2],2.0),1.0,10.0)]
+  expectation(sum, prob, u0s_dist, p, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
+end
 
+@time loss_koop2(μs, CubaCuhre())
+@time loss_mc2(μs; trajectories = 10_000)
 
+@time Zygote.gradient(p->loss_koop2(p,CubaCuhre()),μs)
+ForwardDiff.gradient(p->loss_koop2(p,CubaCuhre()),μs)
 
 
 
