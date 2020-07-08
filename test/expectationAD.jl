@@ -28,12 +28,12 @@ function loss_mc(θ, args...; kwargs...)
   expectation(sum, prob, u0s_dist, θ, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
 end
 
-@time loss_koop(p, CubaCuhre())
+@time loss_koop(p, HCubature())
 @time loss_mc(p; trajectories = 10_000)
 
-@time Zygote.gradient(p->loss_koop(p,CubaCuhre()),p)
-ForwardDiff.gradient(p->loss_koop(p,CubaCuhre()),p)
-FiniteDiff.finite_difference_gradient(p->loss_koop(p,CubaCuhre()),p)
+@time Zygote.gradient(p->loss_koop(p,HCubature()),p)
+ForwardDiff.gradient(p->loss_koop(p,HCubature()),p)
+FiniteDiff.finite_difference_gradient(p->loss_koop(p,HCubature()),p)
 
 #### Non-working Example
 function loss_koop2(θ, quadalg, args...; kwargs...)
@@ -46,12 +46,12 @@ function loss_mc2(θ, args...; kwargs...)
   expectation(sum, prob, u0s_dist, p, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
 end
 
-@time loss_koop2(μs, CubaCuhre())
+@time loss_koop2(μs, HCubature())
 @time loss_mc2(μs; trajectories = 10_000)
 
-@time Zygote.gradient(p->loss_koop2(p,CubaCuhre()),μs)
-ForwardDiff.gradient(p->loss_koop2(p,CubaCuhre()),μs)
-FiniteDiff.finite_difference_gradient(p->loss_koop2(p,CubaCuhre()),μs)
+@time Zygote.gradient(p->loss_koop2(p,HCubature()),μs)
+ForwardDiff.gradient(p->loss_koop2(p,HCubature()),μs)
+FiniteDiff.finite_difference_gradient(p->loss_koop2(p,HCubature()),μs)
 
 
 
@@ -59,11 +59,11 @@ FiniteDiff.finite_difference_gradient(p->loss_koop2(p,CubaCuhre()),μs)
 
 
 
-# @time Zygote.gradient(p->loss2(p,CubaCuhre()),p)
+# @time Zygote.gradient(p->loss2(p,HCubature()),p)
 
-# @run Zygote.gradient(p->loss1(p,CubaCuhre()),p)
-# @time FiniteDiff.finite_difference_derivative(p->loss1(p,CubaCuhre()),p)
-# @time FiniteDiff.finite_difference_derivative(p->loss2(p,CubaCuhre()),p)
+# @run Zygote.gradient(p->loss1(p,HCubature()),p)
+# @time FiniteDiff.finite_difference_derivative(p->loss1(p,HCubature()),p)
+# @time FiniteDiff.finite_difference_derivative(p->loss2(p,HCubature()),p)
 
 #Discreate Map
 function S(u,p, args...; kwargs...)

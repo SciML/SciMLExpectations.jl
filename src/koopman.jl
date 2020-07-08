@@ -23,7 +23,11 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
                       args...; kwargs...)
     end
 
-    expectation(g, S, u0, p, expalg, args...; u0_func=u0_func, p_func=p_func, kwargs...)
+    expectation(g, S, u0, p, expalg, args...; u0_func=u0_func, p_func=p_func,
+                maxiters=maxiters, batch=batch,
+                ireltol=ireltol, iabstol=iabstol,
+                quadalg=quadalg,
+                nout=nout,kwargs...)
 
 end
 
