@@ -33,6 +33,7 @@ end
 
 @time Zygote.gradient(p->loss_koop(p,CubaCuhre()),p)
 ForwardDiff.gradient(p->loss_koop(p,CubaCuhre()),p)
+FiniteDiff.finite_difference_gradient(p->loss_koop(p,CubaCuhre()),p)
 
 #### Non-working Example
 function loss_koop2(θ, quadalg, args...; kwargs...)
@@ -50,8 +51,7 @@ end
 
 @time Zygote.gradient(p->loss_koop2(p,CubaCuhre()),μs)
 ForwardDiff.gradient(p->loss_koop2(p,CubaCuhre()),μs)
-
-
+FiniteDiff.finite_difference_gradient(p->loss_koop2(p,CubaCuhre()),μs)
 
 
 
@@ -77,5 +77,3 @@ end
 function loss2_mc(θ, args...; kwargs...)
     expectation(sum, S, u0s_dist, θ, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
 end
-
-

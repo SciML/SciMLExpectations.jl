@@ -10,7 +10,7 @@ struct MonteCarlo <: AbstractExpectationAlgorithm end
 _rand(x::T) where T <: Sampleable = rand(x)
 _rand(x) = x
 
-function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args...; 
+function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args...;
                         u0_func=(u,p)->u, p_func=(u,p)->p,
                         maxiters=0,
                         batch=0,
@@ -24,11 +24,11 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
     end
 
     expectation(g, S, u0, p, expalg, args...; u0_func=u0_func, p_func=p_func, kwargs...)
-    
+
 end
 
-function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...; 
-                        u0_func=(u,p)->u, p_func=(u,p)->p, 
+function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
+                        u0_func=(u,p)->u, p_func=(u,p)->p,
                         maxiters=0,
                         batch=0,
                         quadalg=HCubatureJL(),
@@ -46,7 +46,7 @@ function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
 
     # get distributions and indx in extended state space
     dists = ext_state[dist_mask]
-   
+
     # create numerical state space values
     ext_state_val = minimum.(ext_state)
     state_view = @view ext_state_val[dist_mask]
@@ -54,9 +54,13 @@ function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
 
     integrand = function (x, p)
         ## Hack to avoid mutating array replacing ext_state_val[ext_state_dist_bitmask] .= x
-        x_it = Iterators.Stateful(1:sum(dist_mask))
-        p_it = Iterators.Stateful(1:sum(val_mask))
-        esv = [dist_mask[idx] ? x[popfirst!(x_it)] : p[popfirst!(p_it)] for idx ∈ 1:length(ext_state_val)]
+        x_it = 0
+        p_it = 0
+        T = promote_type(eltype(x),eltype(p))
+        esv = map(1:length(ext_state_val)) do idx
+            dist_mask[idx] ? T(x[x_it+=1]) : T(p[p_it+=1])
+        end
+
         _u0 = @view(esv[1:n_states])
         _p = @view(esv[n_states+1:end])
 
@@ -73,14 +77,17 @@ function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
     end
 
     # TODO fix params usage
-    intprob = QuadratureProblem(integrand, minimum.(dists), maximum.(dists), p, batch=batch, nout=nout)
+    lb = minimum.(dists)
+    ub = maximum.(dists)
+    T = promote_type(eltype(p),eltype(lb),eltype(ub))
+    intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(p), batch=batch, nout=nout)
     sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
 
     sol
 end
 
-function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, args...; 
-                        trajectories, 
+function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, args...;
+                        trajectories,
                         u0_func=(u,p)->u, p_func=(u,p)->p,
                         kwargs...)
 
@@ -99,11 +106,11 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, a
     mean(sol.u)# , sol
 end
 
-function expectation(g::Function, S::Function, u0, p, expalg::MonteCarlo, args...; 
-                        trajectories, 
-                        u0_func=(u,p)->u, p_func=(u,p)->p, 
+function expectation(g::Function, S::Function, u0, p, expalg::MonteCarlo, args...;
+                        trajectories,
+                        u0_func=(u,p)->u, p_func=(u,p)->p,
                         kwargs...)
-    
+
     function mc_run(u0,p)
         _u0 = _rand.(u0)
         _p = _rand.(p)
@@ -145,7 +152,7 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
 
         # create numerical state space values
 
-        
+
         ext_state_val = Array([minimum(es) for es ∈ ext_state])
         @show typeof(ext_state_val)
 
@@ -191,7 +198,7 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
 
     # solve
     intprob = QuadratureProblem(integrand, minimum.(dists), maximum.(dists), ADparams, batch=batch, nout=nout)
-    
+
     sol = solve(intprob,quadalg,reltol=ireltol,
                 abstol=iabstol,maxiters=maxiters)
     @show sol.u[1]
