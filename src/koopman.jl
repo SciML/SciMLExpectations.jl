@@ -10,6 +10,10 @@ struct MonteCarlo <: AbstractExpectationAlgorithm end
 _rand(x::T) where T <: Sampleable = rand(x)
 _rand(x) = x
 
+function __make_map(prob::ODEProblem, args...; kwargs...)
+    (u,p) -> solve(remake(prob,u0=u,p=p), args...; kwargs...)
+end
+
 function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args...;
                         u0_func=(u,p)->u, p_func=(u,p)->p,
                         maxiters=0,
@@ -18,12 +22,28 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
                         ireltol=1e-2, iabstol=1e-2,
                         nout=1,kwargs...)
 
-    S = function (u,p)
-        solve(remake(prob,u0=u,p=p),
-                      args...; kwargs...)
-    end
+    S = __make_map(prob, args...; kwargs...)
 
     expectation(g, S, u0, p, expalg, args...; u0_func=u0_func, p_func=p_func,
+                maxiters=maxiters, batch=batch,
+                ireltol=ireltol, iabstol=iabstol,
+                quadalg=quadalg,
+                nout=nout,kwargs...)
+
+end
+
+function expectation(g::Function, prob::ODEProblem, u0_f::Function, p_f::Function, p_quad, expalg::Koopman, args...;
+                        u0_func=(u,p)->u, p_func=(u,p)->p,
+                        maxiters=0,
+                        batch=0,
+                        quadalg=HCubatureJL(),
+                        ireltol=1e-2, iabstol=1e-2,
+                        nout=1,kwargs...)
+
+    S = __make_map(prob, args...; kwargs...)
+
+    expectation(g, S, u0_f, p_f, p_quad, expalg, args...;
+                u0_func=u0_func, p_func=p_func,
                 maxiters=maxiters, batch=batch,
                 ireltol=ireltol, iabstol=iabstol,
                 quadalg=quadalg,
@@ -90,10 +110,67 @@ function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
     sol
 end
 
-function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, args...;
-                        trajectories,
+function expectation(g::Function, S::Function, u0_f::Function, p_f::Function, p_quad, expalg::Koopman, args...;
                         u0_func=(u,p)->u, p_func=(u,p)->p,
-                        kwargs...)
+                        maxiters=0,
+                        batch=0,
+                        quadalg=HCubatureJL(),
+                        ireltol=1e-2, iabstol=1e-2,
+                        nout=1,kwargs...)
+
+    # construct extended state space
+    u0 = u0_f(p_quad)
+    p = p_f(p_quad)
+    n_states = length(u0)
+    ext_state = [u0; p]
+
+    # find indices corresponding to distributions, check if sampleable and has non-zero support.
+    dist_mask = collect(isa.(ext_state, Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
+    val_mask = .!(dist_mask)
+    
+    integrand = function (x, p_quad)
+        # reconstruct 
+        u0 = u0_f(p_quad)
+        p = p_f(p_quad)
+        ext_state = [u0; p]
+
+        dists = @view ext_state[dist_mask]
+        ext_state_val = minimum.(ext_state)
+        val_view = @view ext_state_val[val_mask]
+
+        # ## Hack to avoid mutating array replacing ext_state_val[dist_mask] .= x
+        x_it = 0
+        p_it = 0
+        T = promote_type(eltype(x),eltype(p_quad))
+        esv = map(1:length(ext_state_val)) do idx
+            dist_mask[idx] ? T(x[x_it+=1]) : T(val_view[p_it+=1])
+        end
+
+        u0_view = @view(esv[1:n_states])
+        p_view = @view(esv[n_states+1:end])
+
+        # Koopman
+        w =prod(pdf(a, b) for (a, b) in zip(dists, x))
+        Ug = g(S(u0_func(u0_view,p_view), p_func(u0_view,p_view)))
+
+        return Ug*w
+    end
+
+    # TODO fix params usage
+    dists = @view ext_state[dist_mask]
+    lb = minimum.(dists)
+    ub = maximum.(dists)
+    T = promote_type(eltype(p_quad),eltype(lb),eltype(ub))
+    intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(p_quad), batch=batch, nout=nout)
+    sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
+
+    sol
+end
+
+function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, args...;
+        trajectories,
+        u0_func=(u,p)->u, p_func=(u,p)->p,
+        kwargs...)
 
     prob_func = function (prob, i, repeat)
         _u0 = _rand.(u0)
@@ -104,8 +181,8 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, a
     output_func = (sol, i) -> (g(sol), false)
 
     monte_prob = EnsembleProblem(prob;
-                                 output_func=output_func,
-                                 prob_func=prob_func)
+                output_func=output_func,
+                prob_func=prob_func)
     sol = solve(monte_prob, args...;trajectories=trajectories,kwargs...)
     mean(sol.u)# , sol
 end
@@ -158,7 +235,6 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
 
 
         ext_state_val = Array([minimum(es) for es ∈ ext_state])
-        @show typeof(ext_state_val)
 
         integrand = function (x, p)
             # ext_state_val[dist_idx] .= x        # set values for indices corresponding to random variables

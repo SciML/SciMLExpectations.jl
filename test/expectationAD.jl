@@ -16,6 +16,8 @@ p = [1.5,1.0,3.0,1.0];
 saveat = 0.1
 prob = ODEProblem(fiip,u0,(0.0,10.0),p)
 sol = solve(prob,Tsit5())
+# alg = CubaCuhre()
+alg = HCubatureJL()
 
 μs = [6.0,6.0]
 u0s_dist = [truncated(Normal(μs[1],2.0),1.0,10.0),truncated(Normal(μs[2],2.0),1.0,10.0)]
@@ -28,12 +30,12 @@ function loss_mc(θ, args...; kwargs...)
   expectation(sum, prob, u0s_dist, θ, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
 end
 
-@time loss_koop(p, HCubature())
+@time loss_koop(p, alg)
 @time loss_mc(p; trajectories = 10_000)
 
-@time Zygote.gradient(p->loss_koop(p,HCubature()),p)
-ForwardDiff.gradient(p->loss_koop(p,HCubature()),p)
-FiniteDiff.finite_difference_gradient(p->loss_koop(p,HCubature()),p)
+@time Zygote.gradient(p->loss_koop(p,alg),p)
+ForwardDiff.gradient(p->loss_koop(p,alg),p)
+FiniteDiff.finite_difference_gradient(p->loss_koop(p,alg),p)
 
 #### Non-working Example
 function loss_koop2(θ, quadalg, args...; kwargs...)
@@ -46,34 +48,36 @@ function loss_mc2(θ, args...; kwargs...)
   expectation(sum, prob, u0s_dist, p, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
 end
 
-@time loss_koop2(μs, HCubature())
+@time loss_koop2(μs, alg)
 @time loss_mc2(μs; trajectories = 10_000)
 
-@time Zygote.gradient(p->loss_koop2(p,HCubature()),μs)
-ForwardDiff.gradient(p->loss_koop2(p,HCubature()),μs)
-FiniteDiff.finite_difference_gradient(p->loss_koop2(p,HCubature()),μs)
+@time Zygote.gradient(p->loss_koop2(p,alg),μs)
+@time ForwardDiff.gradient(p->loss_koop2(p,alg),μs)
+FiniteDiff.finite_difference_gradient(p->loss_koop2(p,alg),μs)
 
-
-
-
-
-
-
-# @time Zygote.gradient(p->loss2(p,HCubature()),p)
-
-# @run Zygote.gradient(p->loss1(p,HCubature()),p)
-# @time FiniteDiff.finite_difference_derivative(p->loss1(p,HCubature()),p)
-# @time FiniteDiff.finite_difference_derivative(p->loss2(p,HCubature()),p)
-
-#Discreate Map
-function S(u,p, args...; kwargs...)
-    2.0*u
+##### Working Hyper parameters
+function loss_koop3(θ, quadalg, args...; kwargs...)
+  u0_f(θ) = [truncated(Normal(θ[1],2.0),1.0,10.0),truncated(Normal(θ[2],2.0),1.0,10.0)]
+  p_f(θ) = p
+  expectation(sum, prob, u0_f, p_f, θ, Koopman(), Tsit5(); quadalg=quadalg, ireltol=1e-5, iabstol = 1e-5, saveat=saveat, kwargs...)[1]
 end
 
-function loss2_koop(θ, quadalg, args...; batch=0)
-    expectation(sum, S, u0s_dist, θ, Koopman(), Tsit5(), args...; quadalg=quadalg, ireltol=1e-5, iabstol = 1e-5, saveat=saveat, batch=batch)[1]
-end
+@time loss_koop3(μs, alg)
+@time Zygote.gradient(p->loss_koop3(p,alg),μs)
+@time ForwardDiff.gradient(p->loss_koop3(p,alg),μs)
+@time FiniteDiff.finite_difference_gradient(p->loss_koop3(p,alg),μs)
 
-function loss2_mc(θ, args...; kwargs...)
-    expectation(sum, S, u0s_dist, θ, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
-end
+
+
+# #Discreate Map
+# function S(u,p, args...; kwargs...)
+#     2.0*u
+# end
+
+# function loss2_koop(θ, quadalg, args...; batch=0)
+#     expectation(sum, S, u0s_dist, θ, Koopman(), Tsit5(), args...; quadalg=quadalg, ireltol=1e-5, iabstol = 1e-5, saveat=saveat, batch=batch)[1]
+# end
+
+# function loss2_mc(θ, args...; kwargs...)
+#     expectation(sum, S, u0s_dist, θ, MonteCarlo(), Tsit5(), args...;saveat=saveat, kwargs...)[1]
+# end
