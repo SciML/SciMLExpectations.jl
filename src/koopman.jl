@@ -69,14 +69,20 @@ function expectation(g::Function, prob::ODEProblem, u0_f::Function, p_f::Functio
 
             dists = @view ext_state[dist_mask]
 
-            ext_state_val = repeat(minimum.(ext_state), inner = (1,trajectories))
-            dist_view = @view ext_state_val[dist_mask,:] 
-            dist_view .= x
+            ext_state_val = minimum.(ext_state)
+            val_view = @view ext_state_val[val_mask]
 
-            ## TODO UPDATE REST
+            T = promote_type(eltype(x),eltype(p_quad))
+
             prob_func = function (prob, i, repeat) 
-                u0_view = @view(ext_state_val[1:n_states,i])
-                p_view = @view(ext_state_val[n_states + 1:end,i])
+                x_it = 0
+                p_it = 0  
+                esv = map(1:length(ext_state_val)) do idx
+                    dist_mask[idx] ? T(x[x_it+=1,i]) : T(val_view[p_it+=1])
+                end
+
+                u0_view = @view(esv[1:n_states])
+                p_view = @view(esv[n_states+1:end])
                 remake(prob, u0=u0_CoV(u0_view,p_view),p=p_CoV(u0_view,p_view))
             end
 
