@@ -67,6 +67,8 @@ function expectation(g::Function, prob::ODEProblem, u0_f::Function, p_f::Functio
             p = p_f(p_quad)
             ext_state = [u0; p]
 
+            dists = @view ext_state[dist_mask]
+
             ext_state_val = repeat(minimum.(ext_state), inner = (1,trajectories))
             dist_view = @view ext_state_val[dist_mask,:] 
             dist_view .= x
