@@ -15,7 +15,7 @@ function __make_map(prob::ODEProblem, args...; kwargs...)
 end
 
 function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args...;
-                        u0_func=(u,p)->u, p_func=(u,p)->p,
+                        u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
                         maxiters=0,
                         batch=0,
                         quadalg=HCubatureJL(),
@@ -24,7 +24,7 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
 
     S = __make_map(prob, args...; kwargs...)
 
-    expectation(g, S, u0, p, expalg, args...; u0_func=u0_func, p_func=p_func,
+    expectation(g, S, u0, p, expalg, args...; u0_CoV=u0_CoV, p_CoV=p_CoV,
                 maxiters=maxiters, batch=batch,
                 ireltol=ireltol, iabstol=iabstol,
                 quadalg=quadalg,
@@ -33,26 +33,79 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
 end
 
 function expectation(g::Function, prob::ODEProblem, u0_f::Function, p_f::Function, p_quad, expalg::Koopman, args...;
-                        u0_func=(u,p)->u, p_func=(u,p)->p,
+                        u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
                         maxiters=0,
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
                         nout=1,kwargs...)
 
-    S = __make_map(prob, args...; kwargs...)
+    if batch == 0 #TODO or 1
+        S = __make_map(prob, args...; kwargs...)
+        expectation(g, S, u0_f, p_f, p_quad, expalg, args...;
+                    u0_CoV=u0_CoV, p_CoV=p_CoV,
+                    maxiters=maxiters, batch=batch,
+                    ireltol=ireltol, iabstol=iabstol,
+                    quadalg=quadalg,
+                    nout=nout,kwargs...)
+    else
+        println("das batch")
+        u0 = u0_f(p_quad)
+        p = p_f(p_quad)
+        n_states = length(u0)
+        ext_state = [u0; p]
+    
+        # find indices corresponding to distributions, check if sampleable and has non-zero support.
+        dist_mask = collect(isa.(ext_state, Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
+        val_mask = .!(dist_mask)
 
-    expectation(g, S, u0_f, p_f, p_quad, expalg, args...;
-                u0_func=u0_func, p_func=p_func,
-                maxiters=maxiters, batch=batch,
-                ireltol=ireltol, iabstol=iabstol,
-                quadalg=quadalg,
-                nout=nout,kwargs...)
+        integrand = function (dx, x, p_quad)
+            trajectories = size(x, 2)
+
+            # reconstruct 
+            u0 = u0_f(p_quad)
+            p = p_f(p_quad)
+            ext_state = [u0; p]
+
+            ext_state_val = repeat(minimum.(ext_state), inner = (1,trajectories))
+            dist_view = @view ext_state_val[dist_mask,:] 
+            dist_view .= x
+
+            ## TODO UPDATE REST
+            prob_func = function (prob, i, repeat) 
+                u0_view = @view(ext_state_val[1:n_states,i])
+                p_view = @view(ext_state_val[n_states + 1:end,i])
+                remake(prob, u0=u0_CoV(u0_view,p_view),p=p_CoV(u0_view,p_view))
+            end
+
+            output_func = function (sol, i)
+                w = prod(pdf(a, b) for (a, b) in zip(dists, x[:,i]))
+                Ug = g(sol)
+                return Ug*w,false #Ug * w, false
+            end
+
+            ensembleprob = EnsembleProblem(prob, prob_func=prob_func, output_func=output_func)
+            sol = solve(ensembleprob, args...;trajectories=trajectories,kwargs...)
+            if batch == 1
+                dx[1] = sol.u[1]
+            else
+                dx .= hcat(sol.u...) # Why do I need to hcat???
+            end
+            
+        end
+
+        dists = @view ext_state[dist_mask]
+        lb = minimum.(dists)
+        ub = maximum.(dists)
+        T = promote_type(eltype(p_quad),eltype(lb),eltype(ub))
+        intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(p_quad), batch=batch, nout=nout)
+        sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
+    end
 
 end
 
 function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
-                        u0_func=(u,p)->u, p_func=(u,p)->p,
+                        u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
                         maxiters=0,
                         batch=0,
                         quadalg=HCubatureJL(),
@@ -95,7 +148,7 @@ function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
 
         # Koopman
         w = prod(pdf(a, b) for (a, b) in zip(dists, x))
-        Ug = g(S(u0_func(_u0,_p), p_func(_u0,_p)))
+        Ug = g(S(u0_CoV(_u0,_p), p_CoV(_u0,_p)))
 
         return Ug*w
     end
@@ -111,7 +164,7 @@ function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
 end
 
 function expectation(g::Function, S::Function, u0_f::Function, p_f::Function, p_quad, expalg::Koopman, args...;
-                        u0_func=(u,p)->u, p_func=(u,p)->p,
+                        u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
                         maxiters=0,
                         batch=0,
                         quadalg=HCubatureJL(),
@@ -127,7 +180,7 @@ function expectation(g::Function, S::Function, u0_f::Function, p_f::Function, p_
     # find indices corresponding to distributions, check if sampleable and has non-zero support.
     dist_mask = collect(isa.(ext_state, Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
     val_mask = .!(dist_mask)
-    
+
     integrand = function (x, p_quad)
         # reconstruct 
         u0 = u0_f(p_quad)
@@ -135,6 +188,7 @@ function expectation(g::Function, S::Function, u0_f::Function, p_f::Function, p_
         ext_state = [u0; p]
 
         dists = @view ext_state[dist_mask]
+
         ext_state_val = minimum.(ext_state)
         val_view = @view ext_state_val[val_mask]
 
@@ -151,12 +205,10 @@ function expectation(g::Function, S::Function, u0_f::Function, p_f::Function, p_
 
         # Koopman
         w =prod(pdf(a, b) for (a, b) in zip(dists, x))
-        Ug = g(S(u0_func(u0_view,p_view), p_func(u0_view,p_view)))
-
+        Ug = g(S(u0_CoV(u0_view,p_view), p_CoV(u0_view,p_view)))
         return Ug*w
     end
-
-    # TODO fix params usage
+    
     dists = @view ext_state[dist_mask]
     lb = minimum.(dists)
     ub = maximum.(dists)
@@ -169,13 +221,13 @@ end
 
 function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, args...;
         trajectories,
-        u0_func=(u,p)->u, p_func=(u,p)->p,
+        u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
         kwargs...)
 
     prob_func = function (prob, i, repeat)
         _u0 = _rand.(u0)
         _p = _rand.(p)
-        remake(prob, u0=u0_func(_u0,_p), p=p_func(_u0,_p))
+        remake(prob, u0=u0_CoV(_u0,_p), p=p_CoV(_u0,_p))
     end
 
     output_func = (sol, i) -> (g(sol), false)
@@ -189,13 +241,13 @@ end
 
 function expectation(g::Function, S::Function, u0, p, expalg::MonteCarlo, args...;
                         trajectories,
-                        u0_func=(u,p)->u, p_func=(u,p)->p,
+                        u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
                         kwargs...)
 
     function mc_run(u0,p)
         _u0 = _rand.(u0)
         _p = _rand.(p)
-        g(S(u0_func(_u0,_p), p_func(_u0,_p)))
+        g(S(u0_CoV(_u0,_p), p_CoV(_u0,_p)))
     end
 
     tot = mc_run(u0,p)
