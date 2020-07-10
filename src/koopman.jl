@@ -49,7 +49,6 @@ function expectation(g::Function, prob::ODEProblem, u0_f::Function, p_f::Functio
                     quadalg=quadalg,
                     nout=nout,kwargs...)
     else
-        println("das batch")
         u0 = u0_f(p_quad)
         p = p_f(p_quad)
         n_states = length(u0)
@@ -95,11 +94,17 @@ function expectation(g::Function, prob::ODEProblem, u0_f::Function, p_f::Functio
             ensembleprob = EnsembleProblem(prob, prob_func=prob_func, output_func=output_func)
             sol = solve(ensembleprob, args...;trajectories=trajectories,kwargs...)
             if batch == 1
+                # @show sol.u#sol.u[1]
+                # return sol.u[1]
                 dx[1] = sol.u[1]
             else
+
+                # return sol.u
+                # @show hcat(sol.u...) 
+                # return hcat(sol.u...) 
                 dx .= hcat(sol.u...) # Why do I need to hcat???
             end
-            
+            # return dx
         end
 
         dists = @view ext_state[dist_mask]

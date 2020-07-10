@@ -58,7 +58,7 @@ FiniteDiff.finite_difference_gradient(p->loss_koop2(p,alg),μs)
 
 ##### Working Hyper parameters
 function loss_koop3(θ, quadalg, args...; kwargs...)
-  u0_f(θ) = [truncated(Normal(θ[1],2.0),1.0,10.0),truncated(Normal(θ[2],2.0),1.0,10.0)]
+  u0_f(θ) = [truncated(Normal(θ[1],2.0),1.0,10.0),truncated(Normal(6.0,2.0),1.0,10.0)]
   p_f(θ) = p
   expectation(cost, prob, u0_f, p_f, θ, Koopman(), Tsit5(),args...; quadalg=quadalg, ireltol=1e-5, iabstol = 1e-5, saveat=saveat, kwargs...)[1]
 end
@@ -69,10 +69,11 @@ end
 @time FiniteDiff.finite_difference_gradient(p->loss_koop3(p,alg),μs)
 
 ###### Batch Example
-batch = 100
+batch = 2
 @time loss_koop3(μs, CubaCuhre(), EnsembleThreads(); batch = batch)
-@time loss_mc(p; trajectories = 10_000)
-
+tp = [6.0,]
+@time Zygote.gradient(p->loss_koop3(p,CubaCuhre(), EnsembleThreads(); batch = batch),tp)
+@time FiniteDiff.finite_difference_gradient(p->loss_koop3(p,CubaCuhre(), EnsembleThreads(); batch = batch),μs)
 
 # Zygote.gradient(p->loss_koop3(p,CubaCuhre(); batch = batch),p)
 
