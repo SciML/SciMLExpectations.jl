@@ -16,25 +16,111 @@ end
 
 function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args...;
                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-                        maxiters=0,
+                        maxiters=1000000,
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
                         nout=1,kwargs...)
 
-    S = __make_map(prob, args...; kwargs...)
+    # S = __make_map(prob, args...; kwargs...)
 
-    expectation(g, S, u0, p, expalg, args...; u0_CoV=u0_CoV, p_CoV=p_CoV,
-                maxiters=maxiters, batch=batch,
-                ireltol=ireltol, iabstol=iabstol,
-                quadalg=quadalg,
-                nout=nout,kwargs...)
+    # expectation(g, S, u0, p, expalg, args...; u0_CoV=u0_CoV, p_CoV=p_CoV,
+    #             maxiters=maxiters, batch=batch,
+    #             ireltol=ireltol, iabstol=iabstol,
+    #             quadalg=quadalg,
+    #             nout=nout,kwargs...)
+
+    # construct extended state space
+    n_states = length(u0)
+    n_params = length(p)
+    ext_state = [u0; p]
+    # ext_state = (u0...,p...)
+
+    # find indices corresponding to distributions, check if sampleable and has non-zero support.
+    dist_mask = collect(isa.(ext_state, Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
+    val_mask = .!(dist_mask)
+
+    # get distributions and indx in extended state space
+    dists = ext_state[dist_mask]
+
+    # create numerical state space values
+    # ext_state_val = minimum.(ext_state)
+    T0 = promote_type(eltype.(ext_state)...)
+    ext_state_val = [T0(minimum(v)) for v ∈ ext_state] |> collect  #collect needed for zygote for somereason. Otherwise is a tuple
+
+    state_view = @view ext_state_val[dist_mask]
+    param_view = @view ext_state_val[val_mask]
+
+    if batch <= 1
+        S = __make_map(prob, args...; kwargs...)
+        integrand = function (x, p)
+            ## Hack to avoid mutating array replacing ext_state_val[ext_state_dist_bitmask] .= x
+            x_it = 0
+            p_it = 0
+            T = promote_type(eltype(x),eltype(p))
+            esv = map(1:length(ext_state_val)) do idx
+                dist_mask[idx] ? T(x[x_it+=1]) : T(p[p_it+=1])
+            end
+
+            _u0 = @view(esv[1:n_states])
+            _p = @view(esv[n_states+1:end])
+
+            # Koopman
+            w = prod(pdf(a, b) for (a, b) in zip(dists, x))
+            Ug = g(S(u0_CoV(_u0,_p), p_CoV(_u0,_p)))
+
+            return Ug*w
+        end
+    else
+        integrand = function (dx, x, p)
+            trajectories = size(x, 2)
+            T = promote_type(eltype(x),eltype(p))
+
+            prob_func = function (prob, i, repeat) 
+                x_it = 0
+                p_it = 0  
+                esv = map(1:length(ext_state_val)) do idx
+                    dist_mask[idx] ? T(x[x_it+=1,i]) : T(p[p_it+=1])
+                end
+
+                u0_view = @view(esv[1:n_states])
+                p_view = @view(esv[n_states+1:end])
+                remake(prob, u0=u0_CoV(u0_view,p_view),p=p_CoV(u0_view,p_view))
+            end
+
+            output_func = function (sol, i)
+                w = prod(pdf(a, b) for (a, b) in zip(dists, x[:,i]))
+                Ug = g(sol)
+                return Ug*w,false #Ug * w, false
+            end
+
+            ensembleprob = EnsembleProblem(prob, prob_func=prob_func, output_func=output_func)
+            sol = solve(ensembleprob, args...;trajectories=trajectories,kwargs...)
+            dx .= hcat(sol.u...) # Why do I need to hcat??? 
+            nothing
+        end
+    end
+
+    # TODO fix params usage
+    lb = minimum.(dists)
+    ub = maximum.(dists)
+    # T = promote_type(eltype(p),eltype(lb),eltype(ub))
+    # intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(p), batch=batch, nout=nout)
+    # T = promote_type(eltype(param_view),eltype(lb),eltype(ub))
+    # @show "hi"
+    # T = promote_type(eltype(u0),eltype(lb),eltype(ub))
+    # intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(param_view), batch=batch, nout=nout)
+    # T = promote_type(eltype(u0),eltype(lb),eltype(ub))
+    # T = promote_type(eltype(u0),eltype(lb),eltype(ub), eltype(p))
+    T = promote_type(eltype(lb),eltype(ub), eltype(ext_state_val))
+    intprob = QuadratureProblem(integrand, lb, ub, T.(param_view), batch=batch, nout=nout)
+    sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
 
 end
 
 function expectation(g::Function, prob::ODEProblem, u0_f::Function, p_f::Function, p_quad, expalg::Koopman, args...;
                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-                        maxiters=0,
+                        maxiters=1000000,
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
@@ -119,7 +205,7 @@ end
 
 function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-                        maxiters=0,
+                        maxiters=1000000,
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
@@ -140,37 +226,41 @@ function expectation(g::Function, S::Function, u0, p, expalg::Koopman, args...;
     # create numerical state space values
     ext_state_val = minimum.(ext_state)
     state_view = @view ext_state_val[dist_mask]
-    # param_view = @view ext_state_val[val_mask]
+    param_view = @view ext_state_val[val_mask]
 
-    integrand = function (x, p)
-        ## Hack to avoid mutating array replacing ext_state_val[ext_state_dist_bitmask] .= x
-        x_it = 0
-        p_it = 0
-        T = promote_type(eltype(x),eltype(p))
-        esv = map(1:length(ext_state_val)) do idx
-            dist_mask[idx] ? T(x[x_it+=1]) : T(p[p_it+=1])
+    if batch <= 1
+        integrand = function (x, p)
+            ## Hack to avoid mutating array replacing ext_state_val[ext_state_dist_bitmask] .= x
+            x_it = 0
+            p_it = 0
+            T = promote_type(eltype(x),eltype(p))
+            esv = map(1:length(ext_state_val)) do idx
+                dist_mask[idx] ? T(x[x_it+=1]) : T(p[p_it+=1])
+            end
+
+            _u0 = @view(esv[1:n_states])
+            _p = @view(esv[n_states+1:end])
+
+            # set values for indices corresponding to random variables
+            # state_view .= x
+            # _u0 = @view(ext_state_val[1:n_states])
+            # _p = @view(ext_state_val[n_states+1:end])
+
+            # Koopman
+            w = prod(pdf(a, b) for (a, b) in zip(dists, x))
+            Ug = g(S(u0_CoV(_u0,_p), p_CoV(_u0,_p)))
+
+            return Ug*w
         end
-
-        _u0 = @view(esv[1:n_states])
-        _p = @view(esv[n_states+1:end])
-
-        # set values for indices corresponding to random variables
-        # state_view .= x
-        # _u0 = @view(ext_state_val[1:n_states])
-        # _p = @view(ext_state_val[n_states+1:end])
-
-        # Koopman
-        w = prod(pdf(a, b) for (a, b) in zip(dists, x))
-        Ug = g(S(u0_CoV(_u0,_p), p_CoV(_u0,_p)))
-
-        return Ug*w
     end
 
     # TODO fix params usage
     lb = minimum.(dists)
     ub = maximum.(dists)
-    T = promote_type(eltype(p),eltype(lb),eltype(ub))
-    intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(p), batch=batch, nout=nout)
+    # T = promote_type(eltype(p),eltype(lb),eltype(ub))
+    # intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(p), batch=batch, nout=nout)
+    T = promote_type(eltype(param_view),eltype(lb),eltype(ub))
+    intprob = QuadratureProblem(integrand, T.(lb), T.(ub), T.(param_view), batch=batch, nout=nout)
     sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
 
     sol
@@ -178,7 +268,7 @@ end
 
 function expectation(g::Function, S::Function, u0_f::Function, p_f::Function, p_quad, expalg::Koopman, args...;
                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-                        maxiters=0,
+                        maxiters=1000000,
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
@@ -270,7 +360,7 @@ function expectation(g::Function, S::Function, u0, p, expalg::MonteCarlo, args..
     tot/trajectories
 end
 
-function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
+function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=1000000,
                       batch=0,
                       quadalg=HCubatureJL(),
                       ireltol=1e-2, iabstol=1e-2,
@@ -353,7 +443,7 @@ function koopman_expectation(g,u0s,ps,prob,ADparams,args...;maxiters=0,
 end
 
 using RecursiveArrayTools
-function koopman_expectation2(g,u0s_f,ps_f, params,prob,args...;maxiters=0,
+function koopman_expectation2(g,u0s_f,ps_f, params,prob,args...;maxiters=1000000,
                               batch=0,
                               quadalg=HCubatureJL(),
                               ireltol=1e-2, iabstol=1e-2,
