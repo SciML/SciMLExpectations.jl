@@ -351,3 +351,30 @@ function expectation(g::Function, S::Function, u0, p, expalg::MonteCarlo, args..
     end
     tot/trajectories
 end
+
+"""
+    centralmoment(n, g, args...; kwargs) -> [n by 1 Array]
+
+Computes the n central moments of the function g using the Koopman expectation.
+The function is a wrapper over expectation, arguments can be piped through with
+args and kwargs.
+
+Note: the first central moment is always 1
+"""
+function centralmoment(n::Int, g::Function, args...; kwargs...) 
+
+    # Compute the expectations of g, g^2, ..., g^n
+    sol = expectation(x -> [g(x)^i for i in 1:n], args...; kwargs...)
+    exp_set = sol.u
+    mu_g = popfirst!(exp_set)
+
+    # Combine according to binomial expansion
+    const_term(n) = (-1)^(n-1) * (n-1) * mu_g^n
+    binom_term(n, k, mu, exp_gi) = binomial(n, k) * (-mu)^(n - k) * exp_gi
+    binom_sum = function (exp_vals)
+        m = length(exp_vals) + 1
+        sum([binom_term(m, k + 1, mu_g, v) for (k,v) in enumerate(exp_vals)]) + const_term(m)
+    end
+
+    return [1, [binom_sum(exp_set[1:i]) for i in 1:length(exp_set)]...]
+end
