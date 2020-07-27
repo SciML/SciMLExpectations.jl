@@ -359,12 +359,20 @@ Computes the n central moments of the function g using the Koopman expectation.
 The function is a wrapper over expectation, arguments can be piped through with
 args and kwargs.
 
-Note: the first central moment is always 1
+Return: n - 1 (or 0) sized array of the 2 to n central moments
+
+Note: the zeroth and first central moment's are always 1 and 0, respectively.
+      As such, they are excluded in the return value
+
+TODO: - add support for vector-valued g functions, currently assumes scalar 
+      return values.
+      - add tests
 """
 function centralmoment(n::Int, g::Function, args...; kwargs...) 
+    if n < 2 return Float64[] end
 
     # Compute the expectations of g, g^2, ..., g^n
-    sol = expectation(x -> [g(x)^i for i in 1:n], args...; kwargs...)
+    sol = expectation(x -> [g(x)^i for i in 1:n], args...; nout = n, kwargs...)
     exp_set = sol.u
     mu_g = popfirst!(exp_set)
 
@@ -376,5 +384,5 @@ function centralmoment(n::Int, g::Function, args...; kwargs...)
         sum([binom_term(m, k + 1, mu_g, v) for (k,v) in enumerate(exp_vals)]) + const_term(m)
     end
 
-    return [1, [binom_sum(exp_set[1:i]) for i in 1:length(exp_set)]...]
+    return [binom_sum(exp_set[1:i]) for i in 1:length(exp_set)]
 end
