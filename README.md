@@ -20,7 +20,7 @@ utilities for solving uncertainty quantification. This includes quantifying unce
 ## Initial Condition and Parameteric Uncertanties
 
 ### Example
-Here, we wish to compute expected value for the number prey in the Lotka-Volterra model at 10s with uncertainty in the second initial condition and last model parameter. We will solve the expectation using two different algorithms, `MonteCarlo` and `Koopman`.
+Here, we wish to compute the expected value for the number prey in the Lotka-Volterra model at 10s with uncertainty in the second initial condition and last model parameter. We will solve the expectation using two different algorithms, `MonteCarlo` and `Koopman`.
 
 ```julia
 function f!(du,u,p,t)
@@ -42,14 +42,18 @@ expectation(g, prob, u0_dist, p_dist, MonteCarlo(), Tsit5(); trajectories = 100_
 expectation(g, prob, u0_dist, p_dist, Koopman(), Tsit5())  
 ```
 
+If we wish to compute the variance, or 2nd central moment, of this same observable, we can do so as
+
+```julia
+centralmoment(2, g, prob, u0_dist, p_dist, Koopman(), Tsit5())[2]  
+```
+
 ### Expectations
 DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, $g$ of the states of a dynamical system as the system evolves in time, i.e.,
 
 $$\mathbb{E}\left[g\left(X\right)\right]$$
 
-These algorithms applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported. 
-
-
+These algorithms are applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported. 
 
 You can compute the expectation by using the `expectation` function:
 
@@ -66,8 +70,8 @@ expectation(g, prob, u0, p, expalg, args...; kwargs...)
 #### Algorithms
 The following algorithms are available:
 
-- `MonteCarlo`: Provides a convenient wrapper to `EnsembleProblem` from computing expectations via Monte Carlo simulation. Requires setting `trajectories >1`. See the [DifferentialEquations.jl documentation](https://diffeq.sciml.ai/stable/features/ensemble/#) for additional details.
-- `Koopman`: Leverages the Koopman operator to the expectation efficiently via quadrature methods. This capability is build on top of DifferntialEquations.jl and Quadrature.jl. The Quadrature.jl for additional options. 
+- `MonteCarlo`: Provides a convenient wrapper to `EnsembleProblem` for computing expectations via Monte Carlo simulation. Requires setting `trajectories >1`. See the [DifferentialEquations.jl documentation](https://diffeq.sciml.ai/stable/features/ensemble/#) for additional details.
+- `Koopman`: Leverages the Koopman operator to compute the expectation efficiently via quadrature methods. This capability is built on top of DifferntialEquations.jl and Quadrature.jl. See Quadrature.jl for additional options. 
 
 #### Common Keyword Arguments for `Koopman`
 - `quadalg`: Quadrature algorithm. See Quadrature.jl for available algorithms
@@ -77,6 +81,16 @@ The following algorithms are available:
 - `nout`: Output size of observable `g`. Used to specify vector-valued expectations
 - `batch`: The preferred number of points to batch. This allows user-side
   parallelization of the expectation. See Quadrature.jl for additional details
+
+### Central Moments
+These algorithms can also be used to compute higher order central moments via `centralmoments`. This function returns the central moments up to the requested number.
+
+```julia
+centralmoments(n, args...; kwargs...)
+```
+
+- `n`: highest-order central moment to be computed. `centralmoments` will return an `n` length array with central moments 1 through `n`
+- `args` and `kwargs`: This function wraps `expectation`. See `expectation` for additional options.
 
 ## ProbInts
 Users interested in using this functionality should check out the [DifferentialEquations.jl documentation](https://diffeq.sciml.ai/stable/analysis/uncertainty_quantification/#ProbInts-1).
