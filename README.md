@@ -45,11 +45,7 @@ centralmoment(2, g, prob, u0_dist, p_dist, Koopman(), Tsit5())[2]
 See [SciMLTutorials.jl](https://github.com/SciML/SciMLTutorials.jl) for additional examples.
 
 ### Expectations
-DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, $g$ of the states of a dynamical system as the system evolves in time, i.e.,
-
-$$\mathbb{E}\left[g\left(X\right)\right]$$
-
-These algorithms are applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported. 
+DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, `g` of the states of a dynamical system as the system evolves in time. These algorithms are applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported. 
 
 You can compute the expectation by using the `expectation` function:
 
