@@ -45,11 +45,7 @@ centralmoment(2, g, prob, u0_dist, p_dist, Koopman(), Tsit5())[2]
 See [SciMLTutorials.jl](https://github.com/SciML/SciMLTutorials.jl) for additional examples.
 
 ### Expectations
-DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, $g$ of the states of a dynamical system as the system evolves in time, i.e.,
-
-$$\mathbb{E}\left[g\left(X\right)\right]$$
-
-These algorithms are applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported. 
+DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, `g` of the states of a dynamical system as the system evolves in time. These algorithms are applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported. 
 
 You can compute the expectation by using the `expectation` function:
 
@@ -67,7 +63,7 @@ expectation(g, prob, u0, p, expalg, args...; kwargs...)
 The following algorithms are available:
 
 - `MonteCarlo`: Provides a convenient wrapper to `EnsembleProblem` for computing expectations via Monte Carlo simulation. Requires setting `trajectories >1`. See the [DifferentialEquations.jl documentation](https://diffeq.sciml.ai/stable/features/ensemble/#) for additional details.
-- `Koopman`: Leverages the Koopman operator to compute the expectation efficiently via quadrature methods. This capability is built on top of DifferntialEquations.jl and Quadrature.jl. See Quadrature.jl for additional options. 
+- `Koopman`: Leverages the Koopman operator to compute the expectation efficiently via quadrature methods. This capability is built on top of DifferntialEquations.jl and Quadrature.jl. See Quadrature.jl for additional options. An Arxiv paper that details this approach is in the works. Keep an eye out here for when it is available. 
 
 #### Common Keyword Arguments for `Koopman`
 - `quadalg`: Quadrature algorithm. See Quadrature.jl for available algorithms
