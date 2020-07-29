@@ -1,11 +1,11 @@
 module DiffEqUncertainty
 
-using DiffEqBase, Statistics, Distributions, Quadrature
-
+using DiffEqBase, Statistics, Distributions, Reexport
+@reexport using Quadrature
 include("probints.jl")
 include("koopman.jl")
 
 export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
-export koopman_expectation, montecarlo_expectation
+export expectation, centralmoment, Koopman, MonteCarlo
 
 end
