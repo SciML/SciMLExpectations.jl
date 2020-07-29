@@ -1,7 +1,7 @@
 module DiffEqUncertainty
 
-using DiffEqBase, Statistics, Distributions, Quadrature, RecursiveArrayTools
-
+using DiffEqBase, Statistics, Distributions, Reexport
+@reexport using Quadrature
 include("probints.jl")
 include("koopman.jl")
 
