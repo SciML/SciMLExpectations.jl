@@ -11,8 +11,6 @@ utilities for solving uncertainty quantification. This includes quantifying unce
 - The propagation of initial condition and parametric uncertainties through an ODE
 - The finite approximation of numerical solutions of ODEs and PDEs (ProbInts)
 
-**Note:** This is a work in progress!
-
 ## Initial Condition and Parameteric Uncertanties
 
 ### Example
