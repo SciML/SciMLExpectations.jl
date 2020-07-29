@@ -48,6 +48,8 @@ If we wish to compute the variance, or 2nd central moment, of this same observab
 centralmoment(2, g, prob, u0_dist, p_dist, Koopman(), Tsit5())[2]  
 ```
 
+See [SciMLTutorials.jl](https://github.com/SciML/SciMLTutorials.jl) for additional examples.
+
 ### Expectations
 DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, $g$ of the states of a dynamical system as the system evolves in time, i.e.,
 
