@@ -142,7 +142,7 @@ function centralmoment(n::Int, g::Function, args...; kwargs...)
 
     # Compute the expectations of g, g^2, ..., g^n
     sol = expectation(x -> [g(x)^i for i in 1:n], args...; nout = n, kwargs...)
-    exp_set = sol.u
+    exp_set = sol[:]#sol.u
     mu_g = popfirst!(exp_set)
 
     # Combine according to binomial expansion
