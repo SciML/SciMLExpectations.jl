@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, Distributions,
-      DiffEqUncertainty, Test, Quadrature, Cubature, Cuba, 
+      DiffEqUncertainty, Test, Quadrature, Cubature, Cuba,
       FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity
 
 quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
@@ -24,7 +24,7 @@ u0s_dist = [Uniform(1,10), Uniform(2,6)]
 @testset "Koopman Expectation, nout = 1" begin
   g(sol) = sol[1,end]
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
-  
+
   for alg ∈ quadalgs
     @info "$alg"
     @test expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg)[1] ≈ analytical rtol=1e-2
@@ -34,7 +34,7 @@ end
 @testset "Koopman Expectation, nout > 1" begin
   g(sol) = sol[:,end]
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))
-  
+
   for alg ∈ quadalgs
     @info "$alg"
     @test expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg, nout =2) ≈ analytical rtol=1e-2
@@ -66,7 +66,7 @@ end
         continue
       end
       @info "nout = 2, batch mode = $bmode, $alg"
-      res = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode; 
+      res = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode;
                         quadalg = alg, batch = 15, nout=2)
       @test res ≈ analytical rtol=1e-2
     end
@@ -97,9 +97,9 @@ end
         continue
       end
       @info "$bmode, $alg, ForwardDiff"
-      @test_broken ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
+      @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
       @info "$bmode, $alg, Zygote"
-      @test_broken  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
+      @test Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
     end
   end
 end
@@ -128,8 +128,8 @@ analytical = [0.0, exp(2*p[1]*tspan[end])*var(u0s_dist[1]), 0.0]
       continue
     end
     @info "Koopman Central Moment, alg = $alg"
-    r = centralmoment(3, g, prob, u0s_dist, p, Koopman(), Tsit5(); 
-                      ireltol = 1e-8, iabstol = 1e-8, quadalg = alg) 
+    r = centralmoment(3, g, prob, u0s_dist, p, Koopman(), Tsit5();
+                      ireltol = 1e-8, iabstol = 1e-8, quadalg = alg)
     if alg isa CubaSUAVE
       @test_broken r ≈ analytical rtol=1e-2
     else
@@ -145,8 +145,8 @@ end
         continue
       end
       @info "Koopman Central Moment, batch mode = $bmode, alg = $alg"
-      r = centralmoment(3, g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode; 
-                        ireltol = 1e-8, iabstol = 1e-8, quadalg = alg, batch=15) 
+      r = centralmoment(3, g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode;
+                        ireltol = 1e-8, iabstol = 1e-8, quadalg = alg, batch=15)
       if alg isa CubaSUAVE
         @test_broken r ≈ analytical rtol=1e-2
       else
@@ -158,19 +158,18 @@ end
 
 @testset "Monte Carlo Central Moment" begin
   @info "Monte Carlo Central Moment"
-  r = centralmoment(3, g, prob, u0s_dist, p, MonteCarlo(), Tsit5(); 
+  r = centralmoment(3, g, prob, u0s_dist, p, MonteCarlo(), Tsit5();
                     trajectories=50_000)
-  
+
   @test r ≈ analytical atol=4e-2
 end
 
 @testset "Monte Carlo Central Moment, batch" begin
   for bmode ∈ batchmode
     @info "Monte Carlo Central Moment, batch mode = $bmode"
-    r = centralmoment(3, g, prob, u0s_dist, p, MonteCarlo(), Tsit5(), bmode; 
+    r = centralmoment(3, g, prob, u0s_dist, p, MonteCarlo(), Tsit5(), bmode;
                       trajectories=50_000)
-    
+
     @test r ≈ analytical atol=4e-2
   end
 end
-
