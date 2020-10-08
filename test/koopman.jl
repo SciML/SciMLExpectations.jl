@@ -97,9 +97,9 @@ end
         continue
       end
       @info "$bmode, $alg, ForwardDiff"
-      @test_broken ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
+      @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=2e-2
       @info "$bmode, $alg, Zygote"
-      @test_broken  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
+      @test Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=2e-2
     end
   end
 end
