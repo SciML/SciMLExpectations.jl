@@ -1,5 +1,5 @@
 
-struct ExpectationProblem{T, Tg, Tq, Tp, Tf, Ts, Tc, Tb, To, Tk} <: AbstractUncertaintyProblem
+struct ExpectationProblem{T, Tg, Tq, Tp, Tf, Ts, Tc, Tb, Tr, To, Tk} <: AbstractUncertaintyProblem
     Tscalar::Type{T}
     nout::Int64
     g::Tg
@@ -10,6 +10,7 @@ struct ExpectationProblem{T, Tg, Tq, Tp, Tf, Ts, Tc, Tb, To, Tk} <: AbstractUnce
     comp_func::Tc
     quad_lb::Tb
     quad_ub::Tb
+    p_quad::Tr
     ode_prob::To
     kwargs::Tk
 end
@@ -60,7 +61,10 @@ function ExpectationProblem(g::Function, u0_dist, p_dist, prob::ODEProblem, nout
     lb = to_quad(comp_func(minimum.(u0_dist), minimum.(p_dist))...)[1]
     ub = to_quad(comp_func(maximum.(u0_dist), maximum.(p_dist))...)[1]
 
+    # compute "static" quadrature parameters
+    p_quad = to_quad(comp_func(mean.(u0_dist), mean.(p_dist))...)[2]
 
-    return ExpectationProblem(Tscalar,nout,g,to_quad,to_phys,f0_func,samp_func,comp_func,lb,ub,prob,kwargs)
+
+    return ExpectationProblem(Tscalar,nout,g,to_quad,to_phys,f0_func,samp_func,comp_func,lb,ub,p_quad,prob,kwargs)
 end
 

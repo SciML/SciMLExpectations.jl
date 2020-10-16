@@ -7,11 +7,86 @@ struct MonteCarlo <: AbstractExpectationAlgorithm end
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
 
-_rand(x::T) where T <: Sampleable = rand(x)
-_rand(x) = x
-
 function __make_map(prob::ODEProblem, args...; kwargs...)
     (u,p) -> solve(remake(prob,u0=u,p=p), args...; kwargs...)
+end
+
+"""
+    solve(prob, expalg::Koopman, args; kwargs...)
+
+Solves the ExpectationProblem using via the Koopman expectation
+
+Both args and kwargs are passed to DifferentialEquation solver
+
+Special kwargs:
+    - maxiters: max quadrature iterations (default 1000000)
+    - batch: solve quadrature using n-batch processing (default 0, off)
+    - quadalg: quadrature algorithm to use (default HCubatureJL())
+    - ireltol, iabstol: integration relative and absolute tolerances (default 1e-2, 1e-2)
+"""
+function solve(prob::ExpectationProblem, expalg::Koopman, args...;
+    maxiters=1000000,
+    batch=0,
+    quadalg=HCubatureJL(),
+    ireltol=1e-2, iabstol=1e-2,
+    kwargs...)
+
+    jargs = tuplejoin(prob.args, args)
+    jkwargs = tuplejoin(prob.kwargs, kwargs)
+
+    # build the integrand for ∫(Ug)(x) * f(x) dx 
+    integrand = function(fq, xq, pq)
+        # convert to physical x and p
+        (_x, _p) = prob.comp_func(prob.to_phys(xq,pq)...)
+
+        # solve ODE and evaluate observable
+        if batch == 0
+            # scalar solution
+            _prob = remake(prob.ode_prob, u0=_x, p=_p)
+            Ug = prob.g(solve(_prob, jargs...; jkwargs...))
+            f0 = prob.f0_func(_x, _p)
+        else
+            # ensemble solution
+            prob_func(prob, i, repeat) = remake(prob, u0=_x[:,i], p=_p[:,i])
+            output_func(sol,i) = prob.g(sol), false
+            _prob = EnsembleProblem(prob.ode_prob, prob_func=prob_func, output_func=output_func)
+            Ug = solve(_prob, jargs...; trajectories=size(xq,2), jkwargs...)[:]
+            f0 = map(prob.f0_func(x,p), zip(_x,_p))
+        end
+
+        fq .= Ug .* f0
+        return nothing  
+    end
+
+    # solve the integral using quadrature methods
+    intprob = QuadratureProblem(integrand, prob.lb, prob.ub, prob.p_quad, batch=batch, nout=prob.nout)
+    sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
+end
+
+"""
+    solve(prob, expalg::MonteCarlo, args; kwargs...)
+
+Solves the ExpectationProblem using via the Monte Carlo integration
+
+Both args and kwargs are passed to DifferentialEquation solver
+
+"""
+function solve(prob::ExpectationProblem, expalg::MonteCarlo, args...; trajectories,kwargs...)
+    jargs = tuplejoin(prob.args, args)
+    jkwargs = tuplejoin(prob.kwargs, kwargs)
+
+    prob_func = function (prob, i, repeat)
+        _u0, _p = prob.comp_func(prob.samp_func()...)
+        remake(prob, u0=_u0, p=_p)
+    end
+
+    output_func(sol, i) = (prob.g(sol), false)
+
+    monte_prob = EnsembleProblem(prob.ode_prob;
+                output_func=output_func,
+                prob_func=prob_func)
+    sol = solve(monte_prob, jargs...;trajectories=trajectories,jkwargs...)
+    mean(sol.u)
 end
 
 function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args...;
