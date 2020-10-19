@@ -21,6 +21,17 @@ prob = ODEProblem(eom!,u0,tspan,p)
 A = [0.0 1.0; -p[1] -p[2]]
 u0s_dist = [Uniform(1,10), Uniform(2,6)]
 
+@testset "Koopman solve, nout = 1" begin
+  g(sol) = sol[1,end]
+  exp_prob = ExpectationProblem(g, u0s_dist, p, prob)
+  analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
+
+  for alg ∈ quadalgs
+    @info "$alg"
+    @test solve(exp_prob, Koopman(), Tsit5(); quadalg=alg)[1] ≈ analytical rtol=1e-2
+  end
+end
+
 @testset "Koopman Expectation, nout = 1" begin
   g(sol) = sol[1,end]
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]

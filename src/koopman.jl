@@ -24,14 +24,14 @@ Special kwargs:
     - quadalg: quadrature algorithm to use (default HCubatureJL())
     - ireltol, iabstol: integration relative and absolute tolerances (default 1e-2, 1e-2)
 """
-function solve(prob::ExpectationProblem, expalg::Koopman, args...;
+function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
     maxiters=1000000,
     batch=0,
     quadalg=HCubatureJL(),
     ireltol=1e-2, iabstol=1e-2,
     kwargs...)
 
-    jargs = tuplejoin(prob.args, args)
+    jargs = tuplejoin(args)
     jkwargs = tuplejoin(prob.kwargs, kwargs)
 
     # build the integrand for ∫(Ug)(x) * f(x) dx 
@@ -51,15 +51,15 @@ function solve(prob::ExpectationProblem, expalg::Koopman, args...;
             output_func(sol,i) = prob.g(sol), false
             _prob = EnsembleProblem(prob.ode_prob, prob_func=prob_func, output_func=output_func)
             Ug = solve(_prob, jargs...; trajectories=size(xq,2), jkwargs...)[:]
-            f0 = map(prob.f0_func(x,p), zip(_x,_p))
+            f0 = map(prob.f0_func, zip(_x,_p))
         end
 
         fq .= Ug .* f0
-        return nothing  
+        return nothing
     end
 
     # solve the integral using quadrature methods
-    intprob = QuadratureProblem(integrand, prob.lb, prob.ub, prob.p_quad, batch=batch, nout=prob.nout)
+    intprob = QuadratureProblem(integrand, prob.quad_lb, prob.quad_ub, prob.p_quad, batch=batch, nout=prob.nout)
     sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
 end
 
@@ -71,7 +71,7 @@ Solves the ExpectationProblem using via the Monte Carlo integration
 Both args and kwargs are passed to DifferentialEquation solver
 
 """
-function solve(prob::ExpectationProblem, expalg::MonteCarlo, args...; trajectories,kwargs...)
+function DiffEqBase.solve(prob::ExpectationProblem, expalg::MonteCarlo, args...; trajectories,kwargs...)
     jargs = tuplejoin(prob.args, args)
     jkwargs = tuplejoin(prob.kwargs, kwargs)
 
