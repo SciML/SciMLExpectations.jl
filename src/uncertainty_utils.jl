@@ -1,5 +1,12 @@
 
-# wraps Distribtuions.jl 
+# wraps Distribtuions.jl
+# note: MultivariateDistributions do not support minimum/maximum. Setting to -Inf/Inf with
+# the knowledge that it will cause quadrature integration to fail if Koopman is used. To use
+# MultivariateDistributions the upper/lower bounds should be set with the kwargs.
+_minimum(f::T) where T <: MultivariateDistribution = -Inf .* ones(eltype(f), size(f)...)
+_minimum(f) = minimum(f)
+_maximum(f::T) where T <: MultivariateDistribution = Inf .* ones(eltype(f), size(f)...)
+_maximum(f) = maximum(f)
 _rand(f::T) where T <: Distribution = rand(f)
 _rand(x) = x
 _pdf(f::T, x) where T <: Distribution = pdf(f,x)
