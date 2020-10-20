@@ -22,6 +22,7 @@ A = [0.0 1.0; -p[1] -p[2]]
 u0s_dist = [Uniform(1,10), Uniform(2,6)]
 
 @testset "Koopman solve, nout = 1" begin
+  @info "Koopman solve, nout = 1"
   g(sol) = sol[1,end]
   exp_prob = ExpectationProblem(g, u0s_dist, p, prob)
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
@@ -33,6 +34,7 @@ u0s_dist = [Uniform(1,10), Uniform(2,6)]
 end
 
 @testset "Koopman Expectation, nout = 1" begin
+  @info "Koopman Expectation, nout = 1"
   g(sol) = sol[1,end]
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
   
@@ -42,7 +44,20 @@ end
   end
 end
 
+@testset "Koopman solve, nout > 1" begin
+  @info "Koopman solve, nout > 1"
+  g(sol) = sol[:,end]
+  exp_prob = ExpectationProblem(g, u0s_dist, p, prob,2)
+  analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
+
+  for alg ∈ quadalgs
+    @info "$alg"
+    @test solve(exp_prob, Koopman(), Tsit5(); quadalg=alg)[1] ≈ analytical rtol=1e-2
+  end
+end
+
 @testset "Koopman Expectation, nout > 1" begin
+  @info "Koopman Expectation, nout > 1"
   g(sol) = sol[:,end]
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))
   
@@ -52,7 +67,25 @@ end
   end
 end
 
+@testset "Koopman solve, nout = 1, batch" begin
+  @info  "Koopman solve, nout = 1, batch"
+  g(sol) = sol[1,end]
+  exp_prob = ExpectationProblem(g, u0s_dist, p, prob)
+  analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
+
+  for bmode ∈ batchmode
+    for alg ∈ quadalgs
+      if alg isa HCubatureJL
+        continue
+      end
+      @info "nout = 1, batch mode = $bmode, $alg"
+      @test solve(exp_prob, Koopman(), Tsit5(), bmode; quadalg=alg, batch=15)[1] ≈ analytical rtol=1e-2
+    end
+  end
+end
+
 @testset "Koopman Expectation, nout = 1, batch" begin
+  @info "Koopman Expectation, nout = 1, batch"
   g(sol) = sol[1,end]
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
 
@@ -67,7 +100,25 @@ end
   end
 end
 
+@testset "Koopman solve, nout > 1, batch" begin
+  @info "Koopman solve, nout > 1, batch"
+  g(sol) = sol[:,end]
+  exp_prob = ExpectationProblem(g, u0s_dist, p, prob, 2)
+  analytical = (exp(A*tspan[end])*mean.(u0s_dist))
+
+  for bmode ∈ batchmode
+    for alg ∈ quadalgs
+      if alg isa HCubatureJL
+        continue
+      end
+      @info "nout = 2, batch mode = $bmode, $alg"
+      @test solve(exp_prob, Koopman(), Tsit5(), bmode; quadalg=alg, batch=15)[1] ≈ analytical rtol=1e-2
+    end
+  end
+end
+
 @testset "Koopman Expectation, nout > 1, batch" begin
+  @info "Koopman Expectation, nout > 1, batch"
   g(sol) = sol[:,end]
   analytical = (exp(A*tspan[end])*mean.(u0s_dist))
 

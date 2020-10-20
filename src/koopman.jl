@@ -24,7 +24,7 @@ Special kwargs:
     - quadalg: quadrature algorithm to use (default HCubatureJL())
     - ireltol, iabstol: integration relative and absolute tolerances (default 1e-2, 1e-2)
 """
-function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
+function DiffEqBase.solve(prob::ExpectationProblem, ::Koopman, args...;
     maxiters=1000000,
     batch=0,
     quadalg=HCubatureJL(),
@@ -35,27 +35,29 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
     jkwargs = tuplejoin(prob.kwargs, kwargs)
 
     # build the integrand for ∫(Ug)(x) * f(x) dx 
-    integrand = function(fq, xq, pq)
-        # convert to physical x and p
-        (_x, _p) = prob.comp_func(prob.to_phys(xq,pq)...)
+    integrand = function(xq, pq)
+        xqsize = size(xq)
+        neval = length(xqsize) > 1 ? xqsize[2] : 0
 
         # solve ODE and evaluate observable
-        if batch == 0
+        if neval == 0
             # scalar solution
-            _prob = remake(prob.ode_prob, u0=_x, p=_p)
+            _X = prob.comp_func(prob.to_phys(xq,pq)...)
+            _prob = remake(prob.ode_prob, u0=_X[1], p=_X[2])
             Ug = prob.g(solve(_prob, jargs...; jkwargs...))
-            f0 = prob.f0_func(_x, _p)
+            f0 = prob.f0_func(_X...)
         else
             # ensemble solution
-            prob_func(prob, i, repeat) = remake(prob, u0=_x[:,i], p=_p[:,i])
-            output_func(sol,i) = prob.g(sol), false
+            _X = map(xi->prob.comp_func(prob.to_phys(xi,pq)...), eachcol(xq))
+            prob_func(prob, i, _) = remake(prob, u0=_X[i][1], p=_X[i][2])
+            output_func(sol,_) = prob.g(sol), false
             _prob = EnsembleProblem(prob.ode_prob, prob_func=prob_func, output_func=output_func)
-            Ug = solve(_prob, jargs...; trajectories=size(xq,2), jkwargs...)[:]
-            f0 = map(prob.f0_func, zip(_x,_p))
+            Ug = solve(_prob, jargs...; trajectories=neval, jkwargs...)[:]
+            f0 = map(X->prob.f0_func(X...), _X)
         end
 
-        fq .= Ug .* f0
-        return nothing
+        # fq .= Ug .* f0
+        return Ug .* f0
     end
 
     # solve the integral using quadrature methods
@@ -71,7 +73,7 @@ Solves the ExpectationProblem using via the Monte Carlo integration
 Both args and kwargs are passed to DifferentialEquation solver
 
 """
-function DiffEqBase.solve(prob::ExpectationProblem, expalg::MonteCarlo, args...; trajectories,kwargs...)
+function DiffEqBase.solve(prob::ExpectationProblem, ::MonteCarlo, args...; trajectories,kwargs...)
     jargs = tuplejoin(prob.args, args)
     jkwargs = tuplejoin(prob.kwargs, kwargs)
 
