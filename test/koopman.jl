@@ -112,7 +112,7 @@ end
         continue
       end
       @info "nout = 2, batch mode = $bmode, $alg"
-      @test solve(exp_prob, Koopman(), Tsit5(), bmode; quadalg=alg, batch=15)[1] ≈ analytical rtol=1e-2
+      @test solve(exp_prob, Koopman(), Tsit5(), bmode; quadalg=alg, batch=15) ≈ analytical rtol=1e-2
     end
   end
 end
@@ -137,7 +137,26 @@ end
 
 ############## Koopman AD ###############
 
+@testset "Koopman solve AD" begin
+  @info "Koopman solve AD"
+  g(sol) = sol[1,end]
+  loss = function(p, alg;lb=nothing, ub=nothing)
+    exp_prob = ExpectationProblem(g, u0s_dist, p, prob;lower_bounds=lb, upper_bounds=ub)
+    solve(exp_prob, Koopman(), Tsit5(); quadalg=alg)[1]
+  end
+  dp1 = FiniteDiff.finite_difference_gradient(p->loss(p, HCubatureJL()),p)
+  for alg ∈ quadalgs
+    @info "$alg, ForwardDiff"
+    alg isa HCubatureJL ? 
+      (@test ForwardDiff.gradient(p->loss(p,alg;lb=[1.,2.],ub=[10.,6.]),p) ≈ dp1 rtol=1e-2) :
+      (@test_broken ForwardDiff.gradient(p->loss(p,alg),p) ≈ dp1 rtol=1e-2)
+    @info "$alg, Zygote"
+    @test Zygote.gradient(p->loss(p,alg),p)[1] ≈ dp1 rtol=1e-2
+  end
+end
+
 @testset "Koopman Expectation AD" begin
+  @info "Koopman Expectation AD"
   g(sol) = sol[1,end]
   loss(p, alg) = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg)[1]
   dp1 = FiniteDiff.finite_difference_gradient(p->loss(p, HCubatureJL()),p)
@@ -149,9 +168,13 @@ end
   end
 end
 
-@testset "Koopman Expectation AD, batch" begin
+@testset "Koopman solve AD, batch" begin
+  @info "Koopman solve AD, batch"
   g(sol) = sol[1,end]
-  loss(p, alg, bmode) = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode; quadalg = alg, batch = 10)[1]
+  loss = function(p, alg, bmode;lb=nothing, ub=nothing)
+    exp_prob = ExpectationProblem(g, u0s_dist, p, prob;lower_bounds=lb, upper_bounds=ub)
+    solve(exp_prob, Koopman(), Tsit5(); quadalg=alg)[1]
+  end
   dp1 = FiniteDiff.finite_difference_gradient(p->loss(p, CubatureJLh(), EnsembleThreads()),p)
   for bmode ∈ batchmode
     for alg ∈ quadalgs
@@ -161,7 +184,25 @@ end
       @info "$bmode, $alg, ForwardDiff"
       @test_broken ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
       @info "$bmode, $alg, Zygote"
-      @test_broken  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
+      @test  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
+    end
+  end
+end
+
+@testset "Koopman Expectation AD, batch" begin
+  @info "Koopman Expectation AD, batch"
+  g(sol) = sol[1,end]
+  loss(p, alg, bmode) = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode; quadalg = alg, batch = 10)[1]
+  dp1 = FiniteDiff.finite_difference_gradient(p->loss(p, CubatureJLh(), EnsembleThreads()),p)
+  for bmode ∈ batchmode
+    for alg ∈ quadalgs
+      if alg isa HCubatureJL #no batch support
+        continue
+      end
+      @info "$bmode, $alg, ForwardDiff"
+      @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
+      @info "$bmode, $alg, Zygote"
+      @test  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
     end
   end
 end
@@ -183,6 +224,7 @@ prob = ODEProblem(eom!,u0,tspan,p)
 u0s_dist = [Uniform(1,10)]
 
 @testset "Koopman Central Moment" begin
+  @info "Koopman Central Moment"
   g(sol) = sol[1,end]
   analytical = [0.0, exp(2*p[1]*tspan[end])*var(u0s_dist[1]), 0.0]
   
@@ -201,6 +243,7 @@ u0s_dist = [Uniform(1,10)]
 end
 
 @testset "Koopman Central Moment, batch" begin
+  @info "Koopman Central Moment, batch"
   g(sol) = sol[1,end]
   analytical = [0.0, exp(2*p[1]*tspan[end])*var(u0s_dist[1]), 0.0]
   
@@ -220,4 +263,3 @@ end
     end
   end
 end
-

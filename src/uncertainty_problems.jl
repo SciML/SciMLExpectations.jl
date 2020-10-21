@@ -17,23 +17,16 @@ end
 
 DEFAULT_COMP_FUNC(x,p) = (x,p)
 
+
 # Builds problem from (arrays) of u0 and p distribution(s)
 function ExpectationProblem(g::Function, u0_dist, p_dist, prob::ODEProblem, nout=1; 
-    comp_func=DEFAULT_COMP_FUNC, lower_bounds=nothing, upper_bounds=nothing, kwargs...)
+    comp_func=DEFAULT_COMP_FUNC, lower_bounds=nothing, upper_bounds=nothing, kwargs...) 
     
-    _xdist = u0_dist isa AbstractArray ? u0_dist : [u0_dist]
-    _pdist = p_dist isa AbstractArray ? p_dist : [p_dist] 
+    T = promote_type([eltype.(u0_dist)..., eltype.(p_dist)...]...)
 
-    T = promote_type(eltype.(mean.([_xdist...,_pdist...]))...)
-
-    # build shuffle/unshuffle functions
-    usizes = Vector{Int64}([length(u) for u in _xdist])
-    psizes = Vector{Int64}([length(p) for p in _pdist])
-    nu = sum(usizes)
-    np = sum(psizes)
-    mx = vcat([repeat([u isa Distribution],length(u)) for u in _xdist]...)
-    mp = vcat([repeat([p isa Distribution],length(p)) for p in _pdist]...)
-    dist_mask = [mx..., mp...]
+    (nu, usizes, umask) = _dist_mask.(u0_dist) |> _dist_mask_reduce
+    (np, psizes, pmask) = _dist_mask.(p_dist) |> _dist_mask_reduce
+    dist_mask = Bool.(vcat(umask, pmask))
 
     # map physical x-state, p-params to quadrature state and params
     to_quad = function(x,p)
@@ -52,26 +45,41 @@ function ExpectationProblem(g::Function, u0_dist, p_dist, prob::ODEProblem, nout
 
     # evaluate the f0 (joint) distribution
     f0_func = function(u,p)
-        fu = prod([_pdf(dist, u[idx]) for (idx,dist) in zip(accumulated_range(usizes), _xdist)])
-        fp = prod([_pdf(dist, p[idx]) for (idx,dist) in zip(accumulated_range(psizes), _pdist)])
-        return fu * fp
+        # we need to use this to play nicely with Zygote...
+        _u = let u_it=1
+                map(1:length(u0_dist)) do idx
+                    ii = usizes[idx] > 1 ? (u_it:(u_it+usizes[idx]-1)) : u_it
+                    u_it += usizes[idx]
+                    # u[ii]
+                    view(u, ii)
+                end
+            end
+        _p = let p_it=1 
+                map(1:length(p_dist)) do idx
+                    ii = psizes[idx] > 1 ? (p_it:(p_it+psizes[idx]-1)) : p_it
+                    p_it += psizes[idx]
+                    # p[ii]
+                    view(p, ii)
+                end
+            end
+        return prod(_pdf(a,b) for (a,b) in zip(u0_dist,_u)) * prod(_pdf(a,b) for (a,b) in zip(p_dist,_p))
     end
 
     # sample from (joint) distribution
-    samp_func() = comp_func(vcat(_rand.(_xdist)...), vcat(_rand.(_pdist)...))
+    samp_func() = comp_func(vcat(_rand.(u0_dist)...), vcat(_rand.(p_dist)...))
 
     # compute the bounds
-    lb = isnothing(lower_bounds) ? to_quad(comp_func(vcat(_minimum.(_xdist)...), vcat(_minimum.(_pdist)...))...)[1] : lower_bounds
-    ub = isnothing(upper_bounds) ? to_quad(comp_func(vcat(_maximum.(_xdist)...), vcat(_maximum.(_pdist)...))...)[1] : upper_bounds
+    lb = isnothing(lower_bounds) ? to_quad(comp_func(vcat(_minimum.(u0_dist)...), vcat(_minimum.(p_dist)...))...)[1] : lower_bounds
+    ub = isnothing(upper_bounds) ? to_quad(comp_func(vcat(_maximum.(u0_dist)...), vcat(_maximum.(p_dist)...))...)[1] : upper_bounds
 
     # compute "static" quadrature parameters
-    p_quad = to_quad(comp_func(vcat(mean.(_xdist)...), vcat(mean.(_pdist)...))...)[2]
-
+    p_quad = to_quad(comp_func(vcat(mean.(u0_dist)...), vcat(mean.(p_dist)...))...)[2]
 
     return ExpectationProblem(T,nout,g,to_quad,to_phys,f0_func,samp_func,comp_func,lb,ub,p_quad,prob,kwargs)
 end
 
 # Builds problem from (array) of u0 distribution(s)
 function ExpectationProblem(g::Function, u0_dist, prob::ODEProblem, nout=1; kwargs...)
-    return ExpectationProblem(g,u0_dist,[],prob,nout=nout; kwargs...)
+    T = promote_type(eltype.(u0_dist)...)
+    return ExpectationProblem(g,u0_dist,Vector{T}(),prob,nout=nout; kwargs...)
 end

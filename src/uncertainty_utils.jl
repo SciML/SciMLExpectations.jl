@@ -9,8 +9,14 @@ _maximum(f::T) where T <: MultivariateDistribution = Inf .* ones(eltype(f), size
 _maximum(f) = maximum(f)
 _rand(f::T) where T <: Distribution = rand(f)
 _rand(x) = x
-_pdf(f::T, x) where T <: Distribution = pdf(f,x)
+_pdf(f::T, x) where T <: MultivariateDistribution = pdf(f,x) # needed to not iterate for MV
+_pdf(f::T, x) where T <: Distribution = pdf.(f,x)
 _pdf(f, x) = one(eltype(x))
+
+_dist_mask(::Nothing) = (0, Vector{Bool}())
+_dist_mask(x) = (length(x), repeat([isa(x, Distribution)], length(x),))
+_dist_mask_reduce(x::T) where T <: AbstractArray = (sum(first.(x)), vcat(first.(x)), vcat(last.(x)...))
+_dist_mask_reduce(x::T) where T <: Tuple{Int64, Vector{Bool}} = (x[1], [x[1]], x[2])
 
 # creates a tuple of idices, or ranges, from array partition lengths
 function accumulated_range(partition_lengths)

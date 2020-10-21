@@ -12,6 +12,6 @@ include("koopman.jl")
 
 export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
 export AbstractUncertaintyProblem, ExpectationProblem
-export expectation, centralmoment, Koopman, MonteCarlo
+export solve, expectation, centralmoment, Koopman, MonteCarlo
 
 end

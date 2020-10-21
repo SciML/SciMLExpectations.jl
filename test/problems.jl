@@ -20,7 +20,7 @@ g(sol) = sol[1,end]
 # various u0/p distributions
 u0_const = [5., 5.]
 u0_mixed = [5., Uniform(1.,9.)]
-u0_mv_dist = MvNormal([5., 5.], [1., 1.])
+u0_mv_dist = [MvNormal([5., 5.], [1., 1.])]
 p_const = [2., 1f0]
 p_mixed = [Uniform(1.,2.), 1f0]
 
@@ -54,7 +54,7 @@ p_mixed = [Uniform(1.,2.), 1f0]
         @test prob.Tscalar == Float64
         @test prob.to_quad([1., 2.], [3., 4.]) == ([1.,2.,3.], [4.])
         @test prob.to_phys([1.,2.,3.], [4.]) == ([1., 2.], [3., 4.])
-        @test prob.f0_func(u0_const, p_const) == pdf(u0_mv_dist, u0_const)
+        @test prob.f0_func(u0_const, p_const) == pdf(u0_mv_dist[1], u0_const)
         @test length.(prob.samp_func()) == (2, 2)
         @test (prob.quad_lb, prob.quad_ub) == ([-Inf,-Inf,1.], [Inf, Inf,2.])
         @test prob.p_quad == [1.]

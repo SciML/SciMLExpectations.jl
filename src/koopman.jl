@@ -38,7 +38,6 @@ function DiffEqBase.solve(prob::ExpectationProblem, ::Koopman, args...;
     integrand = function(xq, pq)
         xqsize = size(xq)
         neval = length(xqsize) > 1 ? xqsize[2] : 0
-
         # solve ODE and evaluate observable
         if neval == 0
             # scalar solution
@@ -46,22 +45,21 @@ function DiffEqBase.solve(prob::ExpectationProblem, ::Koopman, args...;
             _prob = remake(prob.ode_prob, u0=_X[1], p=_X[2])
             Ug = prob.g(solve(_prob, jargs...; jkwargs...))
             f0 = prob.f0_func(_X...)
+            I = Ug .* f0
         else
             # ensemble solution
             _X = map(xi->prob.comp_func(prob.to_phys(xi,pq)...), eachcol(xq))
             prob_func(prob, i, _) = remake(prob, u0=_X[i][1], p=_X[i][2])
-            output_func(sol,_) = prob.g(sol), false
+            output_func(sol,i) = prob.g(sol)*prob.f0_func(_X[i][1], _X[i][2]), false
             _prob = EnsembleProblem(prob.ode_prob, prob_func=prob_func, output_func=output_func)
-            Ug = solve(_prob, jargs...; trajectories=neval, jkwargs...)[:]
-            f0 = map(X->prob.f0_func(X...), _X)
+            I = hcat(solve(_prob, jargs...; trajectories=neval, jkwargs...)[:]...)
         end
 
-        # fq .= Ug .* f0
-        return Ug .* f0
+        return I
     end
 
     # solve the integral using quadrature methods
-    intprob = QuadratureProblem(integrand, prob.quad_lb, prob.quad_ub, prob.p_quad, batch=batch, nout=prob.nout)
+    intprob = QuadratureProblem(integrand, prob.quad_lb, prob.quad_ub, prob.Tscalar.(prob.p_quad), batch=batch, nout=prob.nout)
     sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
 end
 
