@@ -29,7 +29,9 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
     # ext_state = (u0...,p...)
 
     # find indices corresponding to distributions, check if sampleable and has non-zero support.
-    dist_mask = collect(isa.(ext_state, Sampleable) .& (minimum.(ext_state) .!= maximum.(ext_state)))
+    dist_mask = collect(isa.(ext_state, Union{KernelDensity.AbstractKDE,
+                                              Distributions.Sampleable}) .&
+                                              (minimum.(ext_state) .!= maximum.(ext_state)))
     val_mask = .!(dist_mask)
 
     # get distributions and indx in extended state space
