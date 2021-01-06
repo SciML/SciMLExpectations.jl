@@ -6,13 +6,14 @@ version = "1.6.0"
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
 Quadrature = "67601950-bd08-11e9-3c89-fd23fb4432d2"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 DiffEqBase = "6"
-Distributions = "0.18, 0.19, 0.20, 0.21, 0.22, 0.23"
+Distributions = "0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24"
 Quadrature = "0.1, 1.0"
 Reexport = "0.2, 1.0"
 julia = "1"
