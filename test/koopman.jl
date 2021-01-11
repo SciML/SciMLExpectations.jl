@@ -100,7 +100,7 @@ end
       @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
       @info "$bmode, $alg, Zygote"
       if typeof(alg) <: Union{CubaDivonne,CubaCuhre} ||
-        (typeof(alg) <: Union{CubatureJLp,CubatureJLh,CubaSUAVE} && typeof(bmode) <: Union{EnsembleThreads,EnsembleCPUArray})
+        (typeof(alg) <: Union{CubatureJLh,CubaSUAVE} && typeof(bmode) <: Union{EnsembleThreads,EnsembleCPUArray})
         @test_broken  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
       else
         @test  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
