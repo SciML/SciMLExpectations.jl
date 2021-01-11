@@ -80,17 +80,10 @@ end
   loss(p, alg) = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg)[1]
   dp1 = FiniteDiff.finite_difference_gradient(p->loss(p, HCubatureJL()),p)
   for alg ∈ quadalgs
-    if typeof(alg) <: Union{CubaDivonne,CubaCuhre}
-      @info "$alg, ForwardDiff"
-      @test_broken ForwardDiff.gradient(p->loss(p,alg),p) ≈ dp1 rtol=1e-2
-      @info "$alg, Zygote"
-      @test_broken Zygote.gradient(p->loss(p,alg),p)[1] ≈ dp1 rtol=1e-2
-    else
-      @info "$alg, ForwardDiff"
-      @test ForwardDiff.gradient(p->loss(p,alg),p) ≈ dp1 rtol=1e-2
-      @info "$alg, Zygote"
-      @test Zygote.gradient(p->loss(p,alg),p)[1] ≈ dp1 rtol=1e-2
-    end
+    @info "$alg, ForwardDiff"
+    @test ForwardDiff.gradient(p->loss(p,alg),p) ≈ dp1 rtol=1e-2
+    @info "$alg, Zygote"
+    @test Zygote.gradient(p->loss(p,alg),p)[1] ≈ dp1 rtol=1e-2
   end
 end
 
@@ -104,11 +97,7 @@ end
         continue
       end
       @info "$bmode, $alg, ForwardDiff"
-      if typeof(alg) <: Union{CubaDivonne,CubaCuhre}
-        @test_broken ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
-      else
-        @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
-      end
+      @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
       @info "$bmode, $alg, Zygote"
       if typeof(alg) <: Union{CubaDivonne,CubaCuhre} ||
         (typeof(alg) <: Union{CubatureJLp,CubatureJLh,CubaSUAVE} && typeof(bmode) <: Union{EnsembleThreads,EnsembleCPUArray})
