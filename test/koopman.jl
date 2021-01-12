@@ -97,10 +97,15 @@ end
         continue
       end
       @info "$bmode, $alg, ForwardDiff"
-      @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
+      if typeof(alg) <: CubaSUAVE && typeof(bmode) <: EnsembleCPUArray
+        @test_broken ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
+      else
+        @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
+      end
       @info "$bmode, $alg, Zygote"
-      if typeof(alg) <: Union{CubaDivonne,CubaCuhre} ||
-        (typeof(alg) <: Union{CubatureJLh,CubaSUAVE} && typeof(bmode) <: Union{EnsembleThreads,EnsembleCPUArray})
+      if typeof(alg) <: Union{CubaCuhre} ||
+        (typeof(alg) <: Union{CubaSUAVE,CubaDivonne} && typeof(bmode) <: Union{EnsembleSerial,EnsembleCPUArray}) ||
+        (typeof(alg) <: Union{CubatureJLh} && typeof(bmode) <: Union{EnsembleThreads,EnsembleCPUArray})
         @test_broken  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
       else
         @test  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
