@@ -25,7 +25,7 @@ end
 tspan = (0.0,10.0)
 u0 = [1.0;1.0]
 p = [1.5,1.0,3.0,1.0]
-prob = ODEProblem(f,u0,tspan,p)
+prob = ODEProblem(f!,u0,tspan,p)
 
 u0_dist = [1.0, Uniform(0.8, 1.1)]
 p_dist = [1.5,1.0,3.0,truncated(Normal(1.0,.1),.6, 1.4)]
