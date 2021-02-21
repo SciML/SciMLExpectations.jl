@@ -1,6 +1,6 @@
 using OrdinaryDiffEq, Distributions,
       DiffEqUncertainty, Test, Quadrature, Cubature, Cuba,
-      FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity
+      FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity, LinearAlgebra
 
 quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
 batchmode = [EnsembleSerial(), EnsembleThreads(), EnsembleCPUArray()]#, EnsembleGPUArray()]
