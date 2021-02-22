@@ -1,6 +1,6 @@
 using OrdinaryDiffEq, Distributions,
       DiffEqUncertainty, Test, Quadrature, Cubature, Cuba,
-      FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity
+      FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity, LinearAlgebra
 
 quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
 batchmode = [EnsembleSerial(), EnsembleThreads(), EnsembleCPUArray()]#, EnsembleGPUArray()]
@@ -169,4 +169,30 @@ end
       end
     end
   end
+end
+
+########## AbstractODEProblem tests ##############
+
+function eom!(du,u,p,t)
+  @inbounds begin
+    du[1] = u[2]
+    du[2] = -p[1]*u[1] - p[2]*u[2]
+  end
+  nothing
+end
+
+u0 = [1.0, 1.0]
+p = [1.0, 2.0]
+prob = ODEForwardSensitivityProblem(eom!,u0,(0.0,3.0),p,saveat=0:3)  
+function g(sol)
+    J = extract_local_sensitivities(sol,true)[2]
+    det(J'*J)
+end
+u0_dist = [Uniform(0.7,1.3), 1.0]
+p_dist = [1.0, truncated(Normal(2.0,.1),1.6, 2.4)]
+u0_dist_extended = vcat(u0_dist,zeros(length(p)*length(u0)))
+
+@testset "ODEForwardSensitivityProblem" begin
+  @test expectation(g, prob, u0_dist_extended, p_dist, MonteCarlo(), Tsit5(); trajectories =100_000) ≈ 0.06781155001419734 rtol=1e-1
+  @test expectation(g, prob, u0_dist_extended, p_dist, Koopman(), Tsit5())[1] ≈ 0.06781155001419734 rtol=1e-1
 end

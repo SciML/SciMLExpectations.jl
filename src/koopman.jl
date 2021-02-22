@@ -14,7 +14,7 @@ function __make_map(prob::ODEProblem, args...; kwargs...)
     (u,p) -> solve(remake(prob,u0=u,p=p), args...; kwargs...)
 end
 
-function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args...;
+function expectation(g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::Koopman, args...;
                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
                         maxiters=1000000,
                         batch=0,
@@ -104,7 +104,7 @@ function expectation(g::Function, prob::ODEProblem, u0, p, expalg::Koopman, args
     sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
 end
 
-function expectation(g::Function, prob::ODEProblem, u0, p, expalg::MonteCarlo, args...;
+function expectation(g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::MonteCarlo, args...;
         trajectories,
         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
         kwargs...)
