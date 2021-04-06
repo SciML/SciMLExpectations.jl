@@ -17,6 +17,8 @@ utilities for solving uncertainty quantification. This includes quantifying unce
 Here, we wish to compute the expected value for the number prey in the Lotka-Volterra model at 10s with uncertainty in the second initial condition and last model parameter. We will solve the expectation using two different algorithms, `MonteCarlo` and `Koopman`.
 
 ```julia
+using DiffEqUncertainty, OrdinaryDiffEq, Distributions
+
 function f!(du,u,p,t)
     du[1] = p[1]*u[1] - p[2]*u[1]*u[2] #prey
     du[2] = -p[3]*u[2] + p[4]*u[1]*u[2] #predator
