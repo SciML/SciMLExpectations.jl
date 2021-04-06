@@ -104,9 +104,8 @@ end
         @test ForwardDiff.gradient(p->loss(p,alg,bmode),p) ≈ dp1 rtol=1e-2
       end
       @info "$bmode, $alg, Zygote"
-      if typeof(alg) <: CubaCuhre
-        @test_broken  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
-      elseif typeof(alg) <: Union{CubatureJLh,CubatureJLp,CubaSUAVE,CubaDivonne}
+      Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
+      if typeof(alg) <: Union{CubatureJLh,CubatureJLp,CubaSUAVE,CubaDivonne}
         # Passes and fails randomly
         @test_skip  Zygote.gradient(p->loss(p,alg,bmode),p)[1] ≈ dp1 rtol=1e-2
       else
