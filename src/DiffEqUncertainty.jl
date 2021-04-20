@@ -1,8 +1,9 @@
 module DiffEqUncertainty
 
-using DiffEqBase, Statistics, Distributions, Reexport
+# LinearAlgebra
+using DiffEqBase, Statistics, Reexport, RecursiveArrayTools,
+    Distributions, KernelDensity
 @reexport using Quadrature
-using KernelDensity
 
 include("probints.jl")
 include("koopman.jl")
@@ -13,6 +14,7 @@ Base.minimum(K::UnivariateKDE) = minimum(K.x)
 Base.maximum(K::UnivariateKDE) = maximum(K.x)
 
 export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
-export expectation, centralmoment, Koopman, MonteCarlo
+export expectation#, centralmoment
+export Koopman, MonteCarlo
 
 end
