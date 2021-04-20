@@ -2,16 +2,22 @@ abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
 struct Koopman <:AbstractExpectationAlgorithm end
 struct MonteCarlo <: AbstractExpectationAlgorithm end
 
+
+
 # function barrier. Need disbatch for zygote w/o mutation using zygote.buffer() ??? May not be needed as this is non-mutating?
 # double check correctness, especially with CA w/ additional states
 function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, TP}
     # it, dist_it arrays are hack around boxed variables in closures https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
-    it = [0]      # counter for current index. Cannot simply enumerate w/ map as type information is lost
-    dist_it = [1] # counter for current uncertain var idx
+    # it = [0]      # counter for current index. Cannot simply enumerate w/ map as type information is lost
+    # dist_it = [1] # counter for current uncertain var idx
+    it::Int = 0      #type annotation to ensure boxed variable is type stable. See: https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
+    dist_it::Int = 1
     state = map(p.x[1]) do i
-                it[1]+=1
+                # it[1]+=1
+                it += 1
                 if dist_it[1] <= length(dists_idx.x[1]) && dists_idx.x[1][dist_it[1]] == it[1]
-                    dist_it[1] += 1
+                    # dist_it[1] += 1
+                    dist_it += 1
                     return eltype(TX)(x[dist_it[1] - 1])
                 else
                     return eltype(TX)(p.x[1][it[1]])
@@ -19,12 +25,16 @@ function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, 
             end
 
     #resetting it/dist_it and resusing breaks box hack. Need for variables. why????
-    it2 = [0]
-    dist_it2 = [1]
+    # it2 = [0]
+    # dist_it2 = [1]
+    it2::Int = 0
+    dist_it2::Int = 1
     param = map(p.x[2]) do i
-                it2[1]+=1
+                # it2[1]+=1
+                it2+=1
                 if dist_it2[1] <= length(dists_idx.x[2]) && dists_idx.x[2][dist_it2[1]] == it2[1]
-                    dist_it2[1] += 1
+                    # dist_it2[1] += 1
+                    dist_it2+=1
                     return eltype(TP)(x[dist_it2[1]+length(dists_idx.x[1]) - 1])
                 else
                     return eltype(TP)(p.x[2][it2[1]])
@@ -51,18 +61,15 @@ function expectation(g::F, prob::deT, u0_pair, p_pair, expalg::Koopman, args...;
     #                                 Tuple{typeof(values(kwargs)), typeof(solve),
     #                                 typeof(prob), typeof.(args)...})
     # results = solT[]
-
     quad_p = ArrayPartition(deepcopy(prob.u0), deepcopy(prob.p))
-    dists = ArrayPartition(last.(u0_pair), last.(p_pair))
+    dists = (last.(u0_pair)..., last.(p_pair)...)
     dists_idx = ArrayPartition(first.(u0_pair), first.(p_pair)) 
 
     integrand = function(x,p)
         p2 = inject(x, p, dists_idx)
         prob_update::deT = remake(prob, u0 = p2.x[1], p = p2.x[2])  #deT for compiler hint for stability
-
         Sx = solve(prob_update, args...; kwargs...)
         # push!(results, Sx)
-
         w = prod(pdf(a, b) for (a, b) in zip(dists, x))
         g(Sx)*w
     end
@@ -76,6 +83,8 @@ function expectation(g::F, prob::deT, u0_pair, p_pair, expalg::Koopman, args...;
 
     return sol#, EnsembleSolution(results,0.0, true)
 end
+
+aasdf(x) = x
 # 
 
 # # tuplejoin from https://discourse.julialang.org/t/efficient-tuple-concatenation/5398/8

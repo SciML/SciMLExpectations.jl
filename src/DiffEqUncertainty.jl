@@ -2,7 +2,7 @@ module DiffEqUncertainty
 
 # LinearAlgebra
 using DiffEqBase, Statistics, Reexport, RecursiveArrayTools,
-    Distributions, KernelDensity
+    Distributions, KernelDensity, Zygote
 @reexport using Quadrature
 
 include("probints.jl")

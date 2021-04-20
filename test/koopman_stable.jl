@@ -40,7 +40,7 @@ end
         prob = ODEProblem{true}(pend!, u0, tspan, ps)
         u0_dist = (1 => Uniform(.9*π/4, 1.1*π/4),)
         ps_dist = (2 => Uniform(.9, 1.1), )
-        expectation(g, prob, u0_dist, ps_dist, Koopman(), Tsit5()).u
+        expectation(g, prob, u0_dist, ps_dist, Koopman(), Tsit5())[1]
     end
     @testset "Correctness" begin
         fd = FiniteDiff.finite_difference_derivative(loss, 0.0)
