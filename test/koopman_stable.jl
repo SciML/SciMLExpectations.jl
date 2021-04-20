@@ -1,7 +1,7 @@
 using Test, TestExtras,
     DiffEqUncertainty, OrdinaryDiffEq, Distributions,
     StaticArrays, ComponentArrays, 
-    ForwardDiff, FiniteDiff
+    ForwardDiff, FiniteDiff,Zygote
 
 ## Array
 function pend!(du, u, p, t)
@@ -35,7 +35,7 @@ end
 @testset "Koopman Expectation AD" begin
     function loss(x::T) where {T<:Real}
         u0 = [0.0, x]
-        ps = [9.807, 1.0]
+        ps = [9.807,1.0]
         tspan = (0.0,10.0)
         prob = ODEProblem{true}(pend!, u0, tspan, ps)
         u0_dist = (1 => Uniform(.9*π/4, 1.1*π/4),)
@@ -47,6 +47,9 @@ end
         @test ForwardDiff.derivative(loss, 0.0) ≈ fd rtol=1e-2
     end
     @testset "Type Stability" begin
-        @constinferred ForwardDiff.derivative(loss, 0.0)
+        pt = 0.0
+        @constinferred ForwardDiff.derivative(loss, pt)
+        cfg = ForwardDiff.GradientConfig(loss∘first, [pt, 0.0])  # required, as config heuristic is type unstable, see: https://juliadiff.org/ForwardDiff.jl/latest/user/advanced.html#Configuring-Chunk-Size-1
+        @constinferred ForwardDiff.gradient(loss∘first,[pt, 0.0], cfg)
     end
 end
