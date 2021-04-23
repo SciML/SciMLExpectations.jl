@@ -2,7 +2,16 @@ abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
 struct Koopman <:AbstractExpectationAlgorithm end
 struct MonteCarlo <: AbstractExpectationAlgorithm end
 
-
+abstract type AbstractExpectationADAlgorithm  end
+struct NonfusedAD <: AbstractExpectationADAlgorithm end
+struct PrefusedAD <: AbstractExpectationADAlgorithm
+    norm_partials::Bool
+end
+PrefusedAD() = PrefusedAD(true)
+struct PostfusedAD <: AbstractExpectationADAlgorithm 
+    norm_partials::Bool
+end
+PostfusedAD() = PostfusedAD(true)
 
 # function barrier. Need disbatch for zygote w/o mutation using zygote.buffer() ??? May not be needed as this is non-mutating?
 # double check correctness, especially with CA w/ additional states
@@ -45,16 +54,14 @@ end
 
 # g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::Koopman, args...;
 #                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-
-
-
 function expectation(g::F, prob::deT, u0_pair, p_pair, expalg::Koopman, args...; 
+                                adalg::A = NonFusedAD(),
                                 maxiters=1000000,
                                 batch=0,
                                 quadalg=HCubatureJL(),
                                 ireltol=1e-2, iabstol=1e-2,
                                 nout=1,
-                                kwargs...) where {F,deT}
+                                kwargs...) where {A<:AbstractExpectationADAlgorithm,F,deT}
 
     # determine DE solve return type and construct array to store results
     # solT = Core.Compiler.return_type(Core.kwfunc(solve), 
@@ -77,11 +84,83 @@ function expectation(g::F, prob::deT, u0_pair, p_pair, expalg::Koopman, args...;
     # tuple bounds required for type stability w/ HCubature
     lb = tuple(minimum.(last.(u0_pair))..., minimum.(last.(p_pair))...)
     ub = tuple(maximum.(last.(u0_pair))..., maximum.(last.(p_pair))...)
-    
-    qprob = QuadratureProblem{false}(integrand, lb, ub, quad_p)
-    sol = solve(qprob,quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
+
+    sol = myintegrate(quadalg, adalg, integrand, lb, ub, quad_p;
+            nout = nout, batch = batch, reltol=ireltol, abstol=iabstol, maxiters=maxiters, kwargs...)
 
     return sol#, EnsembleSolution(results,0.0, true)
+end
+
+function myintegrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
+                        nout = 1, batch = 0,
+                        kwargs...) where {F,T,P}
+    prob = QuadratureProblem{false}(f,lb,ub,p; nout = nout, batch = batch)
+    res = solve(prob, HCubatureJL(); kwargs...)
+    res.u
+end
+
+function primalnorm(nout, norm)
+    x->norm(@view x[1:nout])
+end
+
+Zygote.@adjoint function myintegrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T, params::P; 
+                            nout = 1, batch = 0,    
+                            kwargs...) where {F,T,P}
+    @show "nonfusedAD"
+    primal = myintegrate(quadalg, adalg, f, lb, ub, params; kwargs...)
+    @show "primal done"
+    function myintegrate_pullbacks(Δ)
+        function dfdp(x,params)
+            _,back = Zygote.pullback(p->f(x,p),params)
+            back(Δ)[1]
+        end
+        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; kwargs...)
+        # ∂lb = -f(lb,params)  #needs correct for dim > 1
+        # ∂ub = f(ub,params)
+        return nothing, nothing, nothing, nothing, nothing, ∂p
+    end 
+    primal, myintegrate_pullbacks
+end
+
+Zygote.@adjoint function myintegrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub::T, params::P; 
+                            nout = 1, batch = 0, norm = norm,
+                            kwargs...) where {F,T,P}
+	@show "post fusedAD"
+    primal = myintegrate(quadalg, adalg, f, lb, ub, params; norm = norm, kwargs...)
+    @show "primal done"
+
+    _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
+
+    function myintegrate_pullbacks(Δ)
+        function dfdp(x,params)
+            y, back = Zygote.pullback(p->f(x,p),params)
+            [y; back(Δ)[1]]   #TODO need to match proper arrray type? promote_type???
+        end
+        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; norm = _norm, kwargs...)
+        return nothing, nothing, nothing, nothing, nothing, @view ∂p[(nout+1):end]
+    end 
+    primal, myintegrate_pullbacks
+end
+
+# from Seth Axen via Slack
+# Does not work w/ ArrayPartition unless with following hack
+# TODO add ArrayPartition similar fix upstream, see https://github.com/SciML/RecursiveArrayTools.jl/issues/135
+# Base.similar(A::ArrayPartition, ::Type{T}, dims::NTuple{N,Int}) where {T,N} = similar(Array(A), T, dims)
+Zygote.@adjoint function myintegrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::T, params::P; 
+                            nout = 1, batch = 0, norm = norm,
+                            kwargs...) where {F,T,P}
+	@show "pre fusedAD"
+    ∂f_∂params(x, params) = only(Zygote.jacobian(p -> f(x, p), params))
+	f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper arrray type? promote_type???
+	_norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
+
+    res = myintegrate(quadalg, adalg, f_augmented, lb, ub, params; norm = _norm, kwargs...)
+	primal = first(res)
+    function integrate_pullback(Δy)
+		∂params = Δy .* conj.(@view(res[(nout+1):end]))
+        return nothing, nothing, nothing, nothing, nothing, ∂params
+    end 
+    primal, integrate_pullback
 end
 
 aasdf(x) = x
