@@ -13,6 +13,16 @@ struct PostfusedAD <: AbstractExpectationADAlgorithm
 end
 PostfusedAD() = PostfusedAD(true)
 
+# Zygote.@adjoint function Zygote.literal_getproperty(
+#         x::T,::Val{:norm_partials}) where {T<:Union{PrefusedAD, PostfusedAD}}
+#     x.norm_partials, Δ->(T(Δ),)
+# end
+
+# Zygote.@adjoint function Zygote.literal_getfield(
+#     x::T,::Val{:norm_partials}) where {T<:Union{PrefusedAD, PostfusedAD}}
+# x.norm_partials, Δ->(T(Δ),)
+# end
+
 # function barrier. Need disbatch for zygote w/o mutation using zygote.buffer() ??? May not be needed as this is non-mutating?
 # double check correctness, especially with CA w/ additional states
 function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, TP}
@@ -52,6 +62,20 @@ function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, 
     ArrayPartition(state, param)
 end
 
+function build_integrand(g::F, prob::deT, u0_pair, p_pair, args...; kwargs...) where {F, deT}
+    dists = (last.(u0_pair)..., last.(p_pair)...)
+    dists_idx = ArrayPartition(first.(u0_pair), first.(p_pair)) 
+
+    integrand = function(x,p)
+        p2 = inject(x, p, dists_idx)
+        prob_update::deT = remake(prob, u0 = p2.x[1], p = p2.x[2])  #deT for compiler hint for stability
+        Sx = solve(prob_update, args...; kwargs...)
+        # push!(results, Sx)
+        w = prod(pdf(a, b) for (a, b) in zip(dists, x))
+        g(Sx)*w
+    end
+end
+
 # g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::Koopman, args...;
 #                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
 function expectation(g::F, prob::deT, u0_pair, p_pair, expalg::Koopman, args...; 
@@ -64,23 +88,16 @@ function expectation(g::F, prob::deT, u0_pair, p_pair, expalg::Koopman, args...;
                                 kwargs...) where {A<:AbstractExpectationADAlgorithm,F,deT}
 
     # determine DE solve return type and construct array to store results
+    # TODO integrate into build_integrand
     # solT = Core.Compiler.return_type(Core.kwfunc(solve), 
     #                                 Tuple{typeof(values(kwargs)), typeof(solve),
     #                                 typeof(prob), typeof.(args)...})
     # results = solT[]
+
     quad_p = ArrayPartition(deepcopy(prob.u0), deepcopy(prob.p))
-    dists = (last.(u0_pair)..., last.(p_pair)...)
-    dists_idx = ArrayPartition(first.(u0_pair), first.(p_pair)) 
 
-    integrand = function(x,p)
-        p2 = inject(x, p, dists_idx)
-        prob_update::deT = remake(prob, u0 = p2.x[1], p = p2.x[2])  #deT for compiler hint for stability
-        Sx = solve(prob_update, args...; kwargs...)
-        # push!(results, Sx)
-        w = prod(pdf(a, b) for (a, b) in zip(dists, x))
-        g(Sx)*w
-    end
-
+    integrand = build_integrand(g, prob, u0_pair, p_pair, args...; kwargs...)
+ 
     # tuple bounds required for type stability w/ HCubature
     lb = tuple(minimum.(last.(u0_pair))..., minimum.(last.(p_pair))...)
     ub = tuple(maximum.(last.(u0_pair))..., maximum.(last.(p_pair))...)
@@ -94,8 +111,10 @@ end
 function myintegrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
                         nout = 1, batch = 0,
                         kwargs...) where {F,T,P}
+    #TODO check batch iip type stability
+    # iip = batch > 1
     prob = QuadratureProblem{false}(f,lb,ub,p; nout = nout, batch = batch)
-    res = solve(prob, HCubatureJL(); kwargs...)
+    res = solve(prob, quadalg; kwargs...)
     res.u
 end
 
@@ -104,17 +123,21 @@ function primalnorm(nout, norm)
 end
 
 Zygote.@adjoint function myintegrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T, params::P; 
-                            nout = 1, batch = 0,    
+                            nout = 1, batch = 0, norm = norm,  
                             kwargs...) where {F,T,P}
     @show "nonfusedAD"
-    primal = myintegrate(quadalg, adalg, f, lb, ub, params; kwargs...)
+    primal = myintegrate(quadalg, adalg, f, lb, ub, params; 
+        norm = norm, nout = nout, batch = batch, 
+        kwargs...)
     @show "primal done"
     function myintegrate_pullbacks(Δ)
         function dfdp(x,params)
             _,back = Zygote.pullback(p->f(x,p),params)
             back(Δ)[1]
         end
-        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; kwargs...)
+        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; 
+            norm = norm, nout = nout*length(params), batch = batch,
+            kwargs...)
         # ∂lb = -f(lb,params)  #needs correct for dim > 1
         # ∂ub = f(ub,params)
         return nothing, nothing, nothing, nothing, nothing, ∂p
@@ -126,7 +149,9 @@ Zygote.@adjoint function myintegrate(quadalg, adalg::PostfusedAD, f::F, lb::T, u
                             nout = 1, batch = 0, norm = norm,
                             kwargs...) where {F,T,P}
 	@show "post fusedAD"
-    primal = myintegrate(quadalg, adalg, f, lb, ub, params; norm = norm, kwargs...)
+    primal = myintegrate(quadalg, adalg, f, lb, ub, params; 
+        norm = norm, nout = nout, batch = batch, 
+        kwargs...)
     @show "primal done"
 
     _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
@@ -136,7 +161,9 @@ Zygote.@adjoint function myintegrate(quadalg, adalg::PostfusedAD, f::F, lb::T, u
             y, back = Zygote.pullback(p->f(x,p),params)
             [y; back(Δ)[1]]   #TODO need to match proper arrray type? promote_type???
         end
-        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; norm = _norm, kwargs...)
+        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; 
+            norm = _norm, nout = nout + nout*length(params), batch = batch, 
+            kwargs...)
         return nothing, nothing, nothing, nothing, nothing, @view ∂p[(nout+1):end]
     end 
     primal, myintegrate_pullbacks
@@ -154,7 +181,9 @@ Zygote.@adjoint function myintegrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub
 	f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper arrray type? promote_type???
 	_norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
 
-    res = myintegrate(quadalg, adalg, f_augmented, lb, ub, params; norm = _norm, kwargs...)
+    res = myintegrate(quadalg, adalg, f_augmented, lb, ub, params; 
+        norm = _norm, nout = nout + nout*length(params), batch = batch,
+        kwargs...)
 	primal = first(res)
     function integrate_pullback(Δy)
 		∂params = Δy .* conj.(@view(res[(nout+1):end]))
