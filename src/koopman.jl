@@ -26,46 +26,33 @@ PostfusedAD() = PostfusedAD(true)
 # function barrier. Need disbatch for zygote w/o mutation using zygote.buffer() ??? May not be needed as this is non-mutating?
 # double check correctness, especially with CA w/ additional states
 function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, TP}
-    # it, dist_it arrays are hack around boxed variables in closures https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
-    # it = [0]      # counter for current index. Cannot simply enumerate w/ map as type information is lost
-    # dist_it = [1] # counter for current uncertain var idx
     it::Int = 0      #type annotation to ensure boxed variable is type stable. See: https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
     dist_it::Int = 1
     state = map(p.x[1]) do i
-                # it[1]+=1
                 it += 1
-                if dist_it[1] <= length(dists_idx.x[1]) && dists_idx.x[1][dist_it[1]] == it[1]
-                    # dist_it[1] += 1
+                if dist_it <= length(dists_idx.x[1]) && dists_idx.x[1][dist_it[1]] == it
                     dist_it += 1
-                    return eltype(TX)(x[dist_it[1] - 1])
+                    return eltype(TX)(x[dist_it - 1])
                 else
-                    return eltype(TX)(p.x[1][it[1]])
+                    return eltype(TX)(p.x[1][it])
                 end
             end
 
-    #resetting it/dist_it and resusing breaks box hack. Need for variables. why????
-    # it2 = [0]
-    # dist_it2 = [1]
-    it2::Int = 0
-    dist_it2::Int = 1
+    it = 0
+    dist_it = 1
     param = map(p.x[2]) do i
-                # it2[1]+=1
-                it2+=1
-                if dist_it2[1] <= length(dists_idx.x[2]) && dists_idx.x[2][dist_it2[1]] == it2[1]
-                    # dist_it2[1] += 1
-                    dist_it2+=1
-                    return eltype(TP)(x[dist_it2[1]+length(dists_idx.x[1]) - 1])
+                it+=1
+                if dist_it <= length(dists_idx.x[2]) && dists_idx.x[2][dist_it] == it
+                    dist_it+=1
+                    return eltype(TP)(x[dist_it+length(dists_idx.x[1]) - 1])
                 else
-                    return eltype(TP)(p.x[2][it2[1]])
+                    return eltype(TP)(p.x[2][it])
                 end
             end
     ArrayPartition(state, param)
 end
 
 function transform_interface(prob_x::TX, x) where TX
-    nums_mask = collect(isa.(x, Number))
-    nums_idx = (1:length(nums_mask))[nums_mask]
-    @show nums_idx
     dists = filter(y-> !isa(y[2],Number), (enumerate(x)...,))
     x_pair = map(y->Pair(y[1],y[2]), dists) 
     
