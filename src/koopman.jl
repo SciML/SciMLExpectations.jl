@@ -52,8 +52,9 @@ function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, 
     ArrayPartition(state, param)
 end
 
+# TODO add check if min(dist) == max(dist), i.e. is on a manifold???
 function transform_interface(prob_x::TX, x) where TX
-    dists = filter(y-> !isa(y[2],Number), (enumerate(x)...,))
+    dists = filter(y-> !isa(y[2],Number), tuple(enumerate(x)...))
     x_pair = map(y->Pair(y[1],y[2]), dists) 
     
     it::Int = 0

@@ -7,6 +7,7 @@ using DiffEqBase, Statistics, Reexport, RecursiveArrayTools,
 
 include("probints.jl")
 include("koopman.jl")
+include("jointpdf.jl")
 
 # Type Piracy, should upstream
 Base.eltype(K::UnivariateKDE)  = eltype(K.density)
@@ -18,5 +19,6 @@ export expectation#, centralmoment
 export Koopman, MonteCarlo
 export PrefusedAD,PostfusedAD, NonfusedAD
 export myintegrate
+export JointPdf
 
 end

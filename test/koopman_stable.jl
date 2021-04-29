@@ -3,6 +3,8 @@ using Test, TestExtras,
     StaticArrays, ComponentArrays, 
     ForwardDiff, FiniteDiff,Zygote
 
+import DiffEqUncertainty: bounds, indices
+
 ## Array
 function pend!(du, u, p, t)
     du[1] = u[2]
@@ -57,6 +59,34 @@ ps = ([9.807, 1.0],
         end
     end
 end
+
+@testset "Koopman JointPdf Transform" begin
+    udist = (1=> Uniform(-1,1), 3=>Normal(0,1))
+    pdist = (1=> Uniform(5,6), )
+    x = [mean.(last.(udist))...; mean.(last.(pdist))...]
+
+    f = let udist = udist, pdist=pdist
+            x-> prod(pdf(a,b) for (a,b) in zip((last.(udist)...,last.(pdist)...),x))
+    end
+    
+    j= JointPdf(f, first.(udist), minimum.(last.(udist)), maximum.(last.(udist)), 
+                                 first.(pdist), minimum.(last.(pdist)), maximum.(last.(pdist)))
+    @constinferred JointPdf(f, first.(udist), minimum.(last.(udist)), maximum.(last.(udist)), 
+                                 first.(pdist), minimum.(last.(pdist)), maximum.(last.(pdist)))
+    j_pairs = JointPdf(udist,pdist)
+    @constinferred JointPdf(udist,pdist)
+    j_array = JointPdf([last(udist[1]), 1.0, last(udist[2])], [last(pdist[1]), 1.0, 2.0])
+    j_tuple = JointPdf((last(udist[1]), 1.0, last(udist[2])), (last(pdist[1]), 1.0, 2.0))
+    @constinferred JointPdf((last(udist[1]), 1.0, last(udist[2])), (last(pdist[1]), 1.0, 2.0))
+
+    for _j in (j_pairs, j_array, j_tuple)
+        @test bounds(j) == bounds(_j)
+        @test indices(j) ==indices(_j)
+        @test j(x) == _j(x)
+        @constinferred _j(x)
+    end
+end
+
 
 @testset "Koopman Expectation " begin
     u0_dist = (1 => Uniform(.9*π/4, 1.1*π/4),)
