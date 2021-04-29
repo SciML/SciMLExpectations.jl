@@ -3,7 +3,16 @@ using Test, TestExtras,
     StaticArrays, ComponentArrays, 
     ForwardDiff, FiniteDiff,Zygote
 
-include("default_systems.jl")
+## Array
+function pend!(du, u, p, t)
+    du[1] = u[2]
+    du[2] = -p[1]/p[2]*sin(u[1])
+    nothing
+end
+pendsa(u,p,t) = SVector(u[2], -p[1]/p[2]*sin(u[1]))
+
+g(soln) = soln[1, end]
+tspan = (0.0,10.0)
 
 eoms = (pend!, pendsa, pend!)
 u0s = ([π/2, 0.0], 
