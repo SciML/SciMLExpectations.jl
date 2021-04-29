@@ -92,7 +92,6 @@ function expectation(g::F, prob::deT, u0, p, args...;
     _u0, u0_pair = transform_interface(prob.u0, u0)
     _p, p_pair = transform_interface(prob.p, p)
     prob_update::deT = remake(prob, u0 = _u0, p = _p)
-
     return expectation(g, prob_update, u0_pair, p_pair, args...; kwargs...)
 end
 

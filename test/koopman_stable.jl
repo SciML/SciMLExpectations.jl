@@ -3,30 +3,58 @@ using Test, TestExtras,
     StaticArrays, ComponentArrays, 
     ForwardDiff, FiniteDiff,Zygote
 
-## Array
-function pend!(du, u, p, t)
-    du[1] = u[2]
-    du[2] = -p[1]/p[2]*sin(u[1])
-    nothing
-end
-pendsa(u,p,t) = SVector(u[2], -p[1]/p[2]*sin(u[1]))
+include("default_systems.jl")
 
-g(soln) = soln[1, end]
-tspan = (0.0,10.0)
-u0_dist = (1 => Uniform(.9*π/2, 1.1*π/2),)
-ps_dist = (2 => Uniform(.9, 1.1), )
+eoms = (pend!, pendsa, pend!)
+u0s = ([π/2, 0.0], 
+    SVector(π/2, 0.0),
+    ComponentArray(state=(θ = π/2, θ̇ = 0.0)))
+ps = ([9.807, 1.0],
+    SVector(9.807, 1.0),
+    ComponentArray(g=9.807, ℓ = 1.0))
+
+@testset "Koopman Array/Tuple Interface Transform" begin
+    @testset "Mixed Distributions" begin
+        u_dist = [0.0, Uniform(-.1,.1)]
+        u_pair = (2=>u_dist[2],)
+        for u ∈ u0s
+            @test DiffEqUncertainty.transform_interface(u, u_dist) == (map(zero, u), u_pair)
+            @test DiffEqUncertainty.transform_interface(u, (u_dist...,)) == (map(zero, u), u_pair)
+        end
+    end
+
+    @testset "No Distributions" begin
+        u_dist = [0.0, 0.0]
+        u_pair = ()
+        for u ∈ u0s
+            @test DiffEqUncertainty.transform_interface(u, u_dist) == (map(zero, u), u_pair)
+            @test DiffEqUncertainty.transform_interface(u, (u_dist...,)) == (map(zero, u), u_pair)
+        end
+    end
+
+    @testset "All Distributions" begin
+        u_dist = [Normal(0.0,1.0), Uniform(-.1,.1)]
+        u_pair = (1=>u_dist[1], 2=>u_dist[2])
+        for u ∈ u0s
+            @test DiffEqUncertainty.transform_interface(u, u_dist) == (map(zero, u), u_pair)
+            @test DiffEqUncertainty.transform_interface(u, (u_dist...,)) == (map(zero, u), u_pair)
+        end
+    end
+
+    @testset "Type Stability" begin
+        u_dist = (0.0, Uniform(-.1,.1))
+        for u ∈ u0s
+            @constinferred DiffEqUncertainty.transform_interface(u, u_dist)
+        end
+    end
+end
 
 @testset "Koopman Expectation " begin
-    eoms = (pend!, pendsa, pend!)
-    u0s = ([π/2, 0.0], 
-        SVector(π/2, 0.0),
-        ComponentArray(state=(θ = π/2, θ̇ = 0.0)))
-    ps = ([9.807, 1.0],
-        SVector(9.807, 1.0),
-        ComponentArray(g=9.807, ℓ = 1.0))
+    u0_dist = (1 => Uniform(.9*π/4, 1.1*π/4),)
+    ps_dist = (2 => Uniform(.9, 1.1), )
     @testset "Type Stability" begin
         for (f,u,p) ∈ zip(eoms, u0s, ps)
-            prob = ODEProblem(f, u, tspan, p)
+            prob = ODEProblem(f, u, tspan, p)        
             @constinferred expectation(g, prob, u0_dist, ps_dist, Koopman(), Tsit5())
         end
     end
