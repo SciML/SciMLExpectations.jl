@@ -5,23 +5,28 @@ using Test, TestExtras,
 
 import DiffEqUncertainty: bounds, indices
 
-## Array
 function pend!(du, u, p, t)
     du[1] = u[2]
     du[2] = -p[1]/p[2]*sin(u[1])
     nothing
+end
+function pendca!(du, u, p, t)
+    du.state.θ = u.state.θ̇
+    du.state.θ̇ = -p.g/p.ℓ*sin(u.state.θ)
 end
 pendsa(u,p,t) = SVector(u[2], -p[1]/p[2]*sin(u[1]))
 
 g(soln) = soln[1, end]
 tspan = (0.0,10.0)
 
-eoms = (pend!, pendsa, pend!)
+eoms = (pend!, pendsa, pend!, pendca!)
 u0s = ([π/2, 0.0], 
     SVector(π/2, 0.0),
+    ComponentArray(state=(θ = π/2, θ̇ = 0.0)),
     ComponentArray(state=(θ = π/2, θ̇ = 0.0)))
 ps = ([9.807, 1.0],
     SVector(9.807, 1.0),
+    ComponentArray(g=9.807, ℓ = 1.0),
     ComponentArray(g=9.807, ℓ = 1.0))
 
 @testset "Koopman Array/Tuple Interface Transform" begin
@@ -89,12 +94,20 @@ end
 
 
 @testset "Koopman Expectation " begin
-    u0_dist = (1 => Uniform(.9*π/4, 1.1*π/4),)
-    ps_dist = (2 => Uniform(.9, 1.1), )
+    u0_dists = (
+                 (1 => Uniform(.9*π/4, 1.1*π/4),),
+                 (Uniform(.9*π/4, 1.1*π/4), 0.0)
+    )
+    ps_dists = (
+                 (2 => Uniform(.9, 1.1), ),
+                 (Uniform(.9, 1.1), 1.0)
+    )
     @testset "Type Stability" begin
-        for (f,u,p) ∈ zip(eoms, u0s, ps)
-            prob = ODEProblem(f, u, tspan, p)        
-            @constinferred expectation(g, prob, u0_dist, ps_dist, Koopman(), Tsit5())
+        for (u0_dist, ps_dist) ∈ zip(u0_dists, ps_dists)
+            for (f,u,p) ∈ zip(eoms, u0s, ps)
+                prob = ODEProblem(f, u, tspan, p)        
+                @constinferred expectation(g, prob, u0_dist, ps_dist, Koopman(), Tsit5())
+            end
         end
     end
 end

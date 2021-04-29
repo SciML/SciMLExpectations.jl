@@ -5,9 +5,9 @@ using DiffEqBase, Statistics, Reexport, RecursiveArrayTools,
     Distributions, KernelDensity, Zygote, LinearAlgebra
 @reexport using Quadrature
 
+include("jointpdf.jl")
 include("probints.jl")
 include("koopman.jl")
-include("jointpdf.jl")
 
 # Type Piracy, should upstream
 Base.eltype(K::UnivariateKDE)  = eltype(K.density)
@@ -18,7 +18,6 @@ export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
 export expectation#, centralmoment
 export Koopman, MonteCarlo
 export PrefusedAD,PostfusedAD, NonfusedAD
-export myintegrate
-export JointPdf
+export myintegrate, JointPdf
 
 end

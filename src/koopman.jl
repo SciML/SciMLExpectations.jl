@@ -70,21 +70,24 @@ function transform_interface(prob_x::TX, x) where TX
     _x, x_pair
 end
 
-function build_integrand(g::F, prob::deT, u0_pair, p_pair, args...; kwargs...) where {F, deT}
-    dists = (last.(u0_pair)..., last.(p_pair)...)
-    dists_idx = ArrayPartition(first.(u0_pair), first.(p_pair)) 
+function build_integrand(g::F, prob::deT, u0s, ps, args...; kwargs...) where {F, deT}
+    jpdf = JointPdf(u0s, ps)
+    build_integrand(g, prob, jpdf, args...; kwargs...)
+end
+
+function build_integrand(g::F, prob::deT, jpdf::JointPdf, args...; kwargs...) where {F, deT}
+    dists_idx = indices(jpdf)
 
     integrand = function(x,p)
         p2 = inject(x, p, dists_idx)
         prob_update::deT = remake(prob, u0 = p2.x[1], p = p2.x[2])  #deT for compiler hint for stability
         Sx = solve(prob_update, args...; kwargs...)
         # push!(results, Sx)
-        w = prod(pdf(a, b) for (a, b) in zip(dists, x))
-        g(Sx)*w
+        g(Sx)*jpdf(x)
     end
 end
 
-
+# TODO Add CoV kwargs
 # g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::Koopman, args...;
 #                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
 function expectation(g::F, prob::deT, u0, p, args...; 
@@ -93,36 +96,40 @@ function expectation(g::F, prob::deT, u0, p, args...;
     _u0, u0_pair = transform_interface(prob.u0, u0)
     _p, p_pair = transform_interface(prob.p, p)
     prob_update::deT = remake(prob, u0 = _u0, p = _p)
-    return expectation(g, prob_update, u0_pair, p_pair, args...; kwargs...)
+    jpdf = JointPdf(u0_pair, p_pair)
+    return expectation(g, prob_update, jpdf, args...; kwargs...)
 end
 
-function expectation(g::F, prob::deT, u0_pair::uT, p_pair::pT, expalg::Koopman, args...; 
+function expectation(g::F, prob::deT, u0_pair::uT, p_pair::pT, args...; 
+            kwargs...) where {F,deT, 
+                                uT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
+                                pT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}}
+
+    jpdf = JointPdf(u0_pair, p_pair)
+    return expectation(g, prob, jpdf, args...; kwargs...)
+end
+
+function expectation(g::F, prob::deT, jpdf::JointPdf, expalg::Koopman, args...; 
                         adalg::A = NonfusedAD(),
                         maxiters=1000000,
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
                         nout=1,
-                        kwargs...) where {F,deT, 
-                                          uT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
-                                          pT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}},
-                                          A<:AbstractExpectationADAlgorithm}
+                        kwargs...) where {F,deT, A<:AbstractExpectationADAlgorithm}
 
     # determine DE solve return type and construct array to store results
     # TODO integrate into build_integrand
     #solT = Core.Compiler.return_type(Core.kwfunc(solve), 
     #                                Tuple{typeof(values(kwargs)), typeof(solve),
     #                                typeof(prob), typeof.(args)...})
-    # @show Core.Compiler.return_tupe(g, solT)
     # results = solT[]
 
     quad_p = ArrayPartition(deepcopy(prob.u0), deepcopy(prob.p))
-
-    integrand = build_integrand(g, prob, u0_pair, p_pair, args...; kwargs...)
+    integrand = build_integrand(g, prob, jpdf, args...; kwargs...)
  
     # tuple bounds required for type stability w/ HCubature
-    lb = tuple(minimum.(last.(u0_pair))..., minimum.(last.(p_pair))...)
-    ub = tuple(maximum.(last.(u0_pair))..., maximum.(last.(p_pair))...)
+    lb, ub = bounds(jpdf)
 
     sol = myintegrate(quadalg, adalg, integrand, lb, ub, quad_p;
             nout = nout, batch = batch, reltol=ireltol, abstol=iabstol, maxiters=maxiters, kwargs...)
@@ -133,8 +140,7 @@ end
 function myintegrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
                         nout = 1, batch = 0,
                         kwargs...) where {F,T,P}
-    #TODO check batch iip type stability
-    # iip = batch > 1
+    #TODO check batch iip type stability w/ QuadratureProblem{XXXX}
     prob = QuadratureProblem{false}(f,lb,ub,p; nout = nout, batch = batch)
     res = solve(prob, quadalg; kwargs...)
     res.u #TODO revert to returning full solution, i.e. res
