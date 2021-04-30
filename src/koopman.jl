@@ -132,13 +132,13 @@ function expectation(g, prob, jpdf::JointPdf, expalg::Koopman, args...;
     # tuple bounds required for type stability w/ HCubature
     lb, ub = bounds(jpdf)
 
-    sol = myintegrate(quadalg, adalg, integrand, lb, ub, quad_p;
+    sol = integrate(quadalg, adalg, integrand, lb, ub, quad_p;
             nout = nout, batch = batch, reltol=ireltol, abstol=iabstol, maxiters=maxiters, kwargs...)
 
     return sol#, EnsembleSolution(results,0.0, true)
 end
 
-function myintegrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
+function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
                         nout = 1, batch = 0,
                         kwargs...) where {F,T,P}
     #TODO check batch iip type stability w/ QuadratureProblem{XXXX}
@@ -151,66 +151,65 @@ function primalnorm(nout, norm)
     x->norm(@view x[1:nout])
 end
 
-Zygote.@adjoint function myintegrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T, params::P; 
+Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T, params::P; 
                             nout = 1, batch = 0, norm = norm,  
                             kwargs...) where {F,T,P}
-    @show "nonfusedAD"
-    primal = myintegrate(quadalg, adalg, f, lb, ub, params; 
+
+    primal = integrate(quadalg, adalg, f, lb, ub, params; 
         norm = norm, nout = nout, batch = batch, 
         kwargs...)
-    @show "primal done"
-    function myintegrate_pullbacks(Δ)
+
+    function integrate_pullbacks(Δ)
         function dfdp(x,params)
             _,back = Zygote.pullback(p->f(x,p),params)
             back(Δ)[1]
         end
-        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; 
+        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params; 
             norm = norm, nout = nout*length(params), batch = batch,
             kwargs...)
         # ∂lb = -f(lb,params)  #needs correct for dim > 1
         # ∂ub = f(ub,params)
         return nothing, nothing, nothing, nothing, nothing, ∂p
     end 
-    primal, myintegrate_pullbacks
+    primal, integrate_pullbacks
 end
 
-Zygote.@adjoint function myintegrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub::T, params::P; 
+Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub::T, params::P; 
                             nout = 1, batch = 0, norm = norm,
                             kwargs...) where {F,T,P}
-	@show "post fusedAD"
-    primal = myintegrate(quadalg, adalg, f, lb, ub, params; 
+
+    primal = integrate(quadalg, adalg, f, lb, ub, params; 
         norm = norm, nout = nout, batch = batch, 
         kwargs...)
-    @show "primal done"
 
     _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
 
-    function myintegrate_pullbacks(Δ)
+    function integrate_pullbacks(Δ)
         function dfdp(x,params)
             y, back = Zygote.pullback(p->f(x,p),params)
             [y; back(Δ)[1]]   #TODO need to match proper arrray type? promote_type???
         end
-        ∂p = myintegrate(quadalg, adalg, dfdp, lb, ub, params; 
+        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params; 
             norm = _norm, nout = nout + nout*length(params), batch = batch, 
             kwargs...)
         return nothing, nothing, nothing, nothing, nothing, @view ∂p[(nout+1):end]
     end 
-    primal, myintegrate_pullbacks
+    primal, integrate_pullbacks
 end
 
 # from Seth Axen via Slack
 # Does not work w/ ArrayPartition unless with following hack
 # TODO add ArrayPartition similar fix upstream, see https://github.com/SciML/RecursiveArrayTools.jl/issues/135
 # Base.similar(A::ArrayPartition, ::Type{T}, dims::NTuple{N,Int}) where {T,N} = similar(Array(A), T, dims)
-Zygote.@adjoint function myintegrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::T, params::P; 
+Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::T, params::P; 
                             nout = 1, batch = 0, norm = norm,
                             kwargs...) where {F,T,P}
-	@show "pre fusedAD"
+
     ∂f_∂params(x, params) = only(Zygote.jacobian(p -> f(x, p), params))
 	f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper arrray type? promote_type???
 	_norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
 
-    res = myintegrate(quadalg, adalg, f_augmented, lb, ub, params; 
+    res = integrate(quadalg, adalg, f_augmented, lb, ub, params; 
         norm = _norm, nout = nout + nout*length(params), batch = batch,
         kwargs...)
 	primal = first(res)
