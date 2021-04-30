@@ -11,6 +11,12 @@ struct GenericDistribution{TF, TRF, N, T}
     # TODO idxs::ArrayPartition{Int, Tuple{NTuple{NU,Int}, NTuple{NP,Int}}}  needs to get embedded in cov in ExpectationProblem
 end
 
+function GenericDistribution(dists)
+    pdf_func(x) = prod(pdf(f,y) for (f,y) in zip(dists,x))
+    rand_func() = map(rand, dists)
+    GenericDistribution(pdf_func, rand_func, minimum.(dists), maximum.(dists))
+end
+
 pdf(d::GenericDistribution, x) = d.pdf_func(x)
 minimum(d::GenericDistribution) = d.lb
 maximum(d::GenericDistribution) = d.ub
@@ -36,6 +42,9 @@ struct ExpectationProblem{TG, TS, TH, TF} <: AbstractUncertaintyProblem
     h::TH  # cov,        h: 𝕏 × ℙ → 𝕐 × ℚ
     f::TF  # pdf,        f: 𝕏 → ℝ
 end  
+
+# integrand(ep::ExpectationProblem) = ep.g(ep.S(ep.h(x,p)...))*ep.f(x)
+# function ExpectationProblem(g::TG, S::TS, 
 
 # function GenericDistribution(u0_pair::UT,p_pair::PT) where {UT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
 #                                                 PT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}}
