@@ -34,6 +34,5 @@ function JointPdf(u0s::U, ps::P) where {U,P}
 end
 
 (j::JointPdf)(x) = j.f(x) 
-
 bounds(j::JointPdf) = j.lb, j.ub
 indices(j::JointPdf) = j.idxs

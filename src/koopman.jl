@@ -24,7 +24,6 @@ PostfusedAD() = PostfusedAD(true)
 # end
 
 # function barrier. Need disbatch for zygote w/o mutation using zygote.buffer() ??? May not be needed as this is non-mutating?
-# double check correctness, especially with CA w/ additional states
 function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, TP}
     it::Int = 0      #type annotation to ensure boxed variable is type stable. See: https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
     dist_it::Int = 1
@@ -70,12 +69,15 @@ function transform_interface(prob_x::TX, x) where TX
     _x, x_pair
 end
 
-function build_integrand(g::F, prob::deT, u0s, ps, args...; kwargs...) where {F, deT}
+function build_integrand(g, prob, u0s, ps, args...; kwargs...)
     jpdf = JointPdf(u0s, ps)
     build_integrand(g, prob, jpdf, args...; kwargs...)
 end
 
-function build_integrand(g::F, prob::deT, jpdf::JointPdf, args...; kwargs...) where {F, deT}
+function build_integrand(g, prob::deT, jpdf::JointPdf, args...; 
+            u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
+            kwargs...) where {deT}
+    
     dists_idx = indices(jpdf)
 
     integrand = function(x,p)
@@ -90,8 +92,8 @@ end
 # TODO Add CoV kwargs
 # g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::Koopman, args...;
 #                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-function expectation(g::F, prob::deT, u0, p, args...; 
-                        kwargs...) where {F,deT}
+function expectation(g, prob::deT, u0, p, args...; 
+                        kwargs...) where {deT}
 
     _u0, u0_pair = transform_interface(prob.u0, u0)
     _p, p_pair = transform_interface(prob.p, p)
@@ -100,23 +102,22 @@ function expectation(g::F, prob::deT, u0, p, args...;
     return expectation(g, prob_update, jpdf, args...; kwargs...)
 end
 
-function expectation(g::F, prob::deT, u0_pair::uT, p_pair::pT, args...; 
-            kwargs...) where {F,deT, 
-                                uT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
-                                pT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}}
+function expectation(g, prob, u0_pair::uT, p_pair::pT, args...; 
+            kwargs...) where {uT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
+                              pT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}}
 
     jpdf = JointPdf(u0_pair, p_pair)
     return expectation(g, prob, jpdf, args...; kwargs...)
 end
 
-function expectation(g::F, prob::deT, jpdf::JointPdf, expalg::Koopman, args...; 
+function expectation(g, prob, jpdf::JointPdf, expalg::Koopman, args...; 
                         adalg::A = NonfusedAD(),
                         maxiters=1000000,
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
                         nout=1,
-                        kwargs...) where {F,deT, A<:AbstractExpectationADAlgorithm}
+                        kwargs...) where {A<:AbstractExpectationADAlgorithm}
 
     # determine DE solve return type and construct array to store results
     # TODO integrate into build_integrand

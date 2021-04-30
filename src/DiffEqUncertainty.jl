@@ -18,6 +18,6 @@ export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
 export expectation#, centralmoment
 export Koopman, MonteCarlo
 export PrefusedAD,PostfusedAD, NonfusedAD
-export myintegrate, JointPdf
+export myintegrate, JointPdf, build_integrand
 
 end
