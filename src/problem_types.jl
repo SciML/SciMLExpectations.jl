@@ -13,7 +13,8 @@ end
 
 function GenericDistribution(dists)
     pdf_func(x) = prod(pdf(f,y) for (f,y) in zip(dists,x))
-    rand_func() = map(rand, dists)
+    rand_func() = [rand(d) for d in dists]
+    #rand_func() = map(rand, dists)   # TODO what type should this return?
     GenericDistribution(pdf_func, rand_func, minimum.(dists), maximum.(dists))
 end
 
