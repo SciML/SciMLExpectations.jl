@@ -2,10 +2,10 @@ module DiffEqUncertainty
 
 # LinearAlgebra
 using DiffEqBase, Statistics, Reexport, RecursiveArrayTools,
-    Distributions, KernelDensity, Zygote, LinearAlgebra
+    Distributions, KernelDensity, Zygote, LinearAlgebra, Random
 @reexport using Quadrature
 
-include("jointpdf.jl")
+include("problem_types.jl")
 include("probints.jl")
 include("koopman.jl")
 
@@ -18,6 +18,6 @@ export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
 export expectation#, centralmoment
 export Koopman, MonteCarlo
 export PrefusedAD,PostfusedAD, NonfusedAD
-export myintegrate, JointPdf, build_integrand
+export integrate, GenericDistribution, build_integrand, SystemMap, ExpectationProblem
 
 end

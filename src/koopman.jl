@@ -70,22 +70,22 @@ function transform_interface(prob_x::TX, x) where TX
 end
 
 function build_integrand(g, prob, u0s, ps, args...; kwargs...)
-    jpdf = JointPdf(u0s, ps)
-    build_integrand(g, prob, jpdf, args...; kwargs...)
+    gpdf = GenericDistribution(u0s, ps)
+    build_integrand(g, prob, gpdf, args...; kwargs...)
 end
 
-function build_integrand(g, prob::deT, jpdf::JointPdf, args...; 
+function build_integrand(g, prob::deT, gpdf::GenericDistribution, args...; 
             u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
             kwargs...) where {deT}
     
-    dists_idx = indices(jpdf)
+    dists_idx = indices(gpdf) #TODO update indices
 
     integrand = function(x,p)
         p2 = inject(x, p, dists_idx)
         prob_update::deT = remake(prob, u0 = p2.x[1], p = p2.x[2])  #deT for compiler hint for stability
         Sx = solve(prob_update, args...; kwargs...)
         # push!(results, Sx)
-        g(Sx)*jpdf(x)
+        g(Sx)*gpdf(x)
     end
 end
 
@@ -98,19 +98,19 @@ function expectation(g, prob::deT, u0, p, args...;
     _u0, u0_pair = transform_interface(prob.u0, u0)
     _p, p_pair = transform_interface(prob.p, p)
     prob_update::deT = remake(prob, u0 = _u0, p = _p)
-    jpdf = JointPdf(u0_pair, p_pair)
-    return expectation(g, prob_update, jpdf, args...; kwargs...)
+    gpdf = GenericDistribution(u0_pair, p_pair)
+    return expectation(g, prob_update, gpdf, args...; kwargs...)
 end
 
 function expectation(g, prob, u0_pair::uT, p_pair::pT, args...; 
             kwargs...) where {uT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
                               pT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}}
 
-    jpdf = JointPdf(u0_pair, p_pair)
-    return expectation(g, prob, jpdf, args...; kwargs...)
+    gpdf = GenericDistribution(u0_pair, p_pair)
+    return expectation(g, prob, gpdf, args...; kwargs...)
 end
 
-function expectation(g, prob, jpdf::JointPdf, expalg::Koopman, args...; 
+function expectation(g, prob, gpdf::GenericDistribution, expalg::Koopman, args...; 
                         adalg::A = NonfusedAD(),
                         maxiters=1000000,
                         batch=0,
@@ -127,10 +127,10 @@ function expectation(g, prob, jpdf::JointPdf, expalg::Koopman, args...;
     # results = solT[]
 
     quad_p = ArrayPartition(deepcopy(prob.u0), deepcopy(prob.p))
-    integrand = build_integrand(g, prob, jpdf, args...; kwargs...)
+    integrand = build_integrand(g, prob, gpdf, args...; kwargs...)
  
     # tuple bounds required for type stability w/ HCubature
-    lb, ub = bounds(jpdf)
+    lb, ub = extrema(gpdf)
 
     sol = integrate(quadalg, adalg, integrand, lb, ub, quad_p;
             nout = nout, batch = batch, reltol=ireltol, abstol=iabstol, maxiters=maxiters, kwargs...)

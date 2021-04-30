@@ -65,7 +65,7 @@ ps = ([9.807, 1.0],
     end
 end
 
-@testset "Koopman JointPdf Transform" begin
+@testset "Koopman GenericDistribution Transform" begin
     udist = (1=> Uniform(-1,1), 3=>Normal(0,1))
     pdist = (1=> Uniform(5,6), )
     x = [mean.(last.(udist))...; mean.(last.(pdist))...]
@@ -74,15 +74,15 @@ end
             x-> prod(pdf(a,b) for (a,b) in zip((last.(udist)...,last.(pdist)...),x))
     end
     
-    j= JointPdf(f, first.(udist), minimum.(last.(udist)), maximum.(last.(udist)), 
+    j= GenericDistribution(f, first.(udist), minimum.(last.(udist)), maximum.(last.(udist)), 
                                  first.(pdist), minimum.(last.(pdist)), maximum.(last.(pdist)))
-    @constinferred JointPdf(f, first.(udist), minimum.(last.(udist)), maximum.(last.(udist)), 
+    @constinferred GenericDistribution(f, first.(udist), minimum.(last.(udist)), maximum.(last.(udist)), 
                                  first.(pdist), minimum.(last.(pdist)), maximum.(last.(pdist)))
-    j_pairs = JointPdf(udist,pdist)
-    @constinferred JointPdf(udist,pdist)
-    j_array = JointPdf([last(udist[1]), 1.0, last(udist[2])], [last(pdist[1]), 1.0, 2.0])
-    j_tuple = JointPdf((last(udist[1]), 1.0, last(udist[2])), (last(pdist[1]), 1.0, 2.0))
-    @constinferred JointPdf((last(udist[1]), 1.0, last(udist[2])), (last(pdist[1]), 1.0, 2.0))
+    j_pairs = GenericDistribution(udist,pdist)
+    @constinferred GenericDistribution(udist,pdist)
+    j_array = GenericDistribution([last(udist[1]), 1.0, last(udist[2])], [last(pdist[1]), 1.0, 2.0])
+    j_tuple = GenericDistribution((last(udist[1]), 1.0, last(udist[2])), (last(pdist[1]), 1.0, 2.0))
+    @constinferred GenericDistribution((last(udist[1]), 1.0, last(udist[2])), (last(pdist[1]), 1.0, 2.0))
 
     for _j in (j_pairs, j_array, j_tuple)
         @test bounds(j) == bounds(_j)
