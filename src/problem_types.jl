@@ -3,20 +3,21 @@ import Distributions: pdf
 
 abstract type AbstractUncertaintyProblem end
 
-struct GenericDistribution{TF, TRF, N, T}
+struct GenericDistribution{TF, TRF, TLB, TUB}
     pdf_func::TF
     rand_func::TRF
-    lb::NTuple{N,T}
-    ub::NTuple{N,T}
-    # TODO idxs::ArrayPartition{Int, Tuple{NTuple{NU,Int}, NTuple{NP,Int}}}  needs to get embedded in cov in ExpectationProblem
+    lb::TLB
+    ub::TUB
 end
 
-function GenericDistribution(dists)
-    pdf_func(x) = prod(pdf(f,y) for (f,y) in zip(dists,x))
-    rand_func() = [rand(d) for d in dists]
-    #rand_func() = map(rand, dists)   # TODO what type should this return?
-    GenericDistribution(pdf_func, rand_func, minimum.(dists), maximum.(dists))
-end
+# function GenericDistribution(dists...)
+#     # TODO add support to mix univariate and MV distrributions???
+#     pdf_func(x) = prod(pdf(f,y) for (f,y) in zip(dists,x))
+#     rand_func() =  [rand(d) for d in dists] #mapreduce(rand, vcat, dists)
+#     lb = minimum.(dists)
+#     ub = maximum.(dists)
+#     GenericDistribution(pdf_func, rand_func, lb, ub)
+# end
 
 pdf(d::GenericDistribution, x) = d.pdf_func(x)
 minimum(d::GenericDistribution) = d.lb
@@ -24,25 +25,60 @@ maximum(d::GenericDistribution) = d.ub
 extrema(d::GenericDistribution) = minimum(d), maximum(d)
 rand(d::GenericDistribution) = d.rand_func()
 
-struct SystemMap{DT<:DiffEqBase.DEProblem}
-    de_prob::DT
-    args
-    kwargs
+struct SystemMap{DT<:DiffEqBase.DEProblem,A,K}
+    prob::DT
+    args::A
+    kwargs::K
 end
 SystemMap(prob, args...; kwargs...) = SystemMap(prob, args, kwargs)
 
 function (sm::SystemMap{DT})(u0,p) where DT
-    prob::DT = remake(sm.de_prob, u0 = u0, p = p)::DT
+    prob::DT = remake(sm.prob, u0 = u0, p = p)::DT
     solve(prob, sm.args...; sm.kwargs...)
 end
 
-struct ExpectationProblem{TG, TS, TH, TF} <: AbstractUncertaintyProblem
+# function (sm::SystemMap{DT})(u0,p) where DT
+#     sm(u0, p)
+# end
+
+struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
     # ∫ g(S(h(x,p)))*f(x)dx
-    g::TG  # observable, g: 𝕐 → ℝ
-    S::TS  # mapping,    S: 𝕐 × ℚ → 𝕐
-    h::TH  # cov,        h: 𝕏 × ℙ → 𝕐 × ℚ
-    f::TF  # pdf,        f: 𝕏 → ℝ
-end  
+    S::TS  # mapping,                 S: 𝕐 × ℚ → 𝕐
+    g::TG  # observable(output_func), g: 𝕐 → ℝ
+    h::TH  # cov(input_func),         h: 𝕏 × ℙ → 𝕐 × ℚ
+    d::TF  # distribution,            pdf(d,x): 𝕏 → ℝ
+    params::TP
+end 
+
+function ExpectationProblem(S, pdist, params)
+    g(x) = x
+    h(x,u,p) = x,p
+    ExpectationProblem(S,g,h,pdist,ArrayPartition(eltype(params)[], params))
+end
+
+ExpectationProblem(sm::SystemMap, g, h, d) = 
+    ExpectationProblem(sm,g,h,d,ArrayPartition(deepcopy(sm.prob.u0),deepcopy(sm.prob.p)))
+
+
+function build_integrand(ep::ExpectationProblem)
+    @unpack S, g, h, d = ep
+    Ug = g∘S∘h
+    function(x,p)
+        g(S(h(x, p.x[1], p.x[2])...))*pdf(d,x)
+    end
+end
+
+
+# function ExpectationProblem(g, S::SystemMap, u0_pair::uT, p_pair::pT) 
+#                                 where {uT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
+#                                        pT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}}
+
+#     idxs = ArrayPartition(first.(u0_pair), first.(p_pair)) 
+# end
+
+
+
+
 
 # integrand(ep::ExpectationProblem) = ep.g(ep.S(ep.h(x,p)...))*ep.f(x)
 # function ExpectationProblem(g::TG, S::TS, 

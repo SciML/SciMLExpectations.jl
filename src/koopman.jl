@@ -23,6 +23,21 @@ PostfusedAD() = PostfusedAD(true)
 # x.norm_partials, Δ->(T(Δ),)
 # end
 
+# function copyset(x, val, idx)
+#     it::Int = 0
+#     dist_it::Int = 0
+#     state = map(p.x[1]) do i
+#         it += 1
+#         if dist_it <= length(dists_idx.x[1]) && dists_idx.x[1][dist_it[1]] == it
+#             dist_it += 1
+#             return eltype(TX)(x[dist_it - 1])
+#         else
+#             return eltype(TX)(p.x[1][it])
+#         end
+#     end
+# end
+
+
 # function barrier. Need disbatch for zygote w/o mutation using zygote.buffer() ??? May not be needed as this is non-mutating?
 function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, TP}
     it::Int = 0      #type annotation to ensure boxed variable is type stable. See: https://docs.julialang.org/en/v1/manual/performance-tips/#man-performance-captured
@@ -78,7 +93,7 @@ function build_integrand(g, prob::deT, gpdf::GenericDistribution, args...;
             u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
             kwargs...) where {deT}
     
-    dists_idx = indices(gpdf) #TODO update indices
+    dists_idx = ArrayPartition((1,), (2,3))#indices(gpdf) #TODO update indices
 
     integrand = function(x,p)
         p2 = inject(x, p, dists_idx)
@@ -108,6 +123,27 @@ function expectation(g, prob, u0_pair::uT, p_pair::pT, args...;
 
     gpdf = GenericDistribution(u0_pair, p_pair)
     return expectation(g, prob, gpdf, args...; kwargs...)
+end
+
+function DiffEqBase.solve(ep::ExpectationProblem, expalg::Koopman, args...; 
+                        adalg::A = NonfusedAD(),
+                        maxiters=1000000,
+                        batch=0,
+                        quadalg=HCubatureJL(),
+                        ireltol=1e-2, iabstol=1e-2,
+                        nout=1,
+                        kwargs...) where {A<:AbstractExpectationADAlgorithm}
+
+    @unpack d, params = ep
+    integrand = build_integrand(ep)
+    lb, ub = extrema(d)   #TODO make tuples?
+
+    sol = integrate(quadalg, adalg, integrand, lb, ub, params;
+            reltol=ireltol, abstol=iabstol, maxiters=maxiters, 
+            nout = nout, batch = batch, 
+            kwargs...)
+
+    return sol
 end
 
 function expectation(g, prob, gpdf::GenericDistribution, expalg::Koopman, args...; 
@@ -323,6 +359,10 @@ aasdf(x) = x
 #     T = promote_type(eltype(lb),eltype(ub), eltype(ext_state_val))
 #     intprob = QuadratureProblem(integrand, lb, ub, T.(param_view), batch=batch, nout=nout)
 #     sol = solve(intprob, quadalg, reltol=ireltol, abstol=iabstol, maxiters=maxiters)
+# end
+
+# function solve(ep::ExpectationProblem, expalg::MonteCarlo, args...; trajectories, kwargs...)
+    
 # end
 
 # function expectation(g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::MonteCarlo, args...;
