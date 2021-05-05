@@ -1,7 +1,3 @@
-abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
-struct Koopman <:AbstractExpectationAlgorithm end
-struct MonteCarlo <: AbstractExpectationAlgorithm end
-
 abstract type AbstractExpectationADAlgorithm  end
 struct NonfusedAD <: AbstractExpectationADAlgorithm end
 struct PrefusedAD <: AbstractExpectationADAlgorithm
@@ -13,15 +9,17 @@ struct PostfusedAD <: AbstractExpectationADAlgorithm
 end
 PostfusedAD() = PostfusedAD(true)
 
-# Zygote.@adjoint function Zygote.literal_getproperty(
-#         x::T,::Val{:norm_partials}) where {T<:Union{PrefusedAD, PostfusedAD}}
-#     x.norm_partials, Δ->(T(Δ),)
-# end
+abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
+struct Koopman{T} <:AbstractExpectationAlgorithm where T<:AbstractExpectationADAlgorithm
+    sensealg::T
+end
 
-# Zygote.@adjoint function Zygote.literal_getfield(
-#     x::T,::Val{:norm_partials}) where {T<:Union{PrefusedAD, PostfusedAD}}
-# x.norm_partials, Δ->(T(Δ),)
-# end
+Koopman() = Koopman(NonfusedAD())
+struct MonteCarlo <: AbstractExpectationAlgorithm 
+    trajectories::Int
+end
+
+
 
 # function copyset(x, val, idx)
 #     it::Int = 0
@@ -66,66 +64,39 @@ function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, 
     ArrayPartition(state, param)
 end
 
-# TODO add check if min(dist) == max(dist), i.e. is on a manifold???
-function transform_interface(prob_x::TX, x) where TX
-    dists = filter(y-> !isa(y[2],Number), tuple(enumerate(x)...))
-    x_pair = map(y->Pair(y[1],y[2]), dists) 
-    
-    it::Int = 0
-    _x = map(prob_x) do i
-                it+=1
-                if x[it] isa Number
-                    return eltype(TX)(x[it])
-                else
-                    return zero(eltype(TX))
-                end
-            end
-    
-    _x, x_pair
+function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
+    _montecarlo(mapping(exprob), exprob, expalg.trajectories)
 end
 
-function build_integrand(g, prob, u0s, ps, args...; kwargs...)
-    gpdf = GenericDistribution(u0s, ps)
-    build_integrand(g, prob, gpdf, args...; kwargs...)
+function _montecarlo(::F, exprob::ExpectationProblem, trajectories) where F
+    params = parameters(exprob)
+    dist = distribution(exprob)
+    g = observable(exprob)
+    S = mapping(exprob)
+    h = input_cov(exprob)
+    mean(g(S(h(rand(dist), params.x[1], params.x[2])...)) for _ ∈ 1:trajectories)
 end
 
-function build_integrand(g, prob::deT, gpdf::GenericDistribution, args...; 
-            u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-            kwargs...) where {deT}
-    
-    dists_idx = ArrayPartition((1,), (2,3))#indices(gpdf) #TODO update indices
-
-    integrand = function(x,p)
-        p2 = inject(x, p, dists_idx)
-        prob_update::deT = remake(prob, u0 = p2.x[1], p = p2.x[2])  #deT for compiler hint for stability
-        Sx = solve(prob_update, args...; kwargs...)
-        # push!(results, Sx)
-        g(Sx)*gpdf(x)
+function _montecarlo(::SystemMap, exprob::ExpectationProblem, trajectories)
+    d = distribution(exprob)
+    cov = input_cov(exprob)
+    S = mapping(exprob)
+    prob_func = function (prob, i, repeat)
+        u0, p = cov(rand(d), prob.u0, prob.p)
+        remake(prob, u0=u0, p=p)
     end
+
+    output_func = (sol, i) -> (exprob.g(sol), false)
+
+    monte_prob = EnsembleProblem(S.prob;
+                output_func=output_func,
+                prob_func=prob_func)
+    sol = solve(monte_prob, S.args...;trajectories=trajectories,S.kwargs...)
+    mean(sol.u)# , sol
 end
 
-# TODO Add CoV kwargs
-# g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::Koopman, args...;
-#                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
-function expectation(g, prob::deT, u0, p, args...; 
-                        kwargs...) where {deT}
 
-    _u0, u0_pair = transform_interface(prob.u0, u0)
-    _p, p_pair = transform_interface(prob.p, p)
-    prob_update::deT = remake(prob, u0 = _u0, p = _p)
-    gpdf = GenericDistribution(u0_pair, p_pair)
-    return expectation(g, prob_update, gpdf, args...; kwargs...)
-end
-
-function expectation(g, prob, u0_pair::uT, p_pair::pT, args...; 
-            kwargs...) where {uT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}, 
-                              pT <:Union{AbstractArray{<:Pair,1}, Tuple{Vararg{<:Pair}}}}
-
-    gpdf = GenericDistribution(u0_pair, p_pair)
-    return expectation(g, prob, gpdf, args...; kwargs...)
-end
-
-function DiffEqBase.solve(ep::ExpectationProblem, expalg::Koopman, args...; 
+function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...; 
                         adalg::A = NonfusedAD(),
                         maxiters=1000000,
                         batch=0,
@@ -134,11 +105,10 @@ function DiffEqBase.solve(ep::ExpectationProblem, expalg::Koopman, args...;
                         nout=1,
                         kwargs...) where {A<:AbstractExpectationADAlgorithm}
 
-    @unpack d, params = ep
-    integrand = build_integrand(ep)
-    lb, ub = extrema(d)   #TODO make tuples?
+    integrand = build_integrand(prob)
+    lb, ub = extrema(prob.d)   #TODO make tuples?
 
-    sol = integrate(quadalg, adalg, integrand, lb, ub, params;
+    sol = integrate(quadalg, adalg, integrand, lb, ub, prob.params;
             reltol=ireltol, abstol=iabstol, maxiters=maxiters, 
             nout = nout, batch = batch, 
             kwargs...)
@@ -146,33 +116,6 @@ function DiffEqBase.solve(ep::ExpectationProblem, expalg::Koopman, args...;
     return sol
 end
 
-function expectation(g, prob, gpdf::GenericDistribution, expalg::Koopman, args...; 
-                        adalg::A = NonfusedAD(),
-                        maxiters=1000000,
-                        batch=0,
-                        quadalg=HCubatureJL(),
-                        ireltol=1e-2, iabstol=1e-2,
-                        nout=1,
-                        kwargs...) where {A<:AbstractExpectationADAlgorithm}
-
-    # determine DE solve return type and construct array to store results
-    # TODO integrate into build_integrand
-    #solT = Core.Compiler.return_type(Core.kwfunc(solve), 
-    #                                Tuple{typeof(values(kwargs)), typeof(solve),
-    #                                typeof(prob), typeof.(args)...})
-    # results = solT[]
-
-    quad_p = ArrayPartition(deepcopy(prob.u0), deepcopy(prob.p))
-    integrand = build_integrand(g, prob, gpdf, args...; kwargs...)
- 
-    # tuple bounds required for type stability w/ HCubature
-    lb, ub = extrema(gpdf)
-
-    sol = integrate(quadalg, adalg, integrand, lb, ub, quad_p;
-            nout = nout, batch = batch, reltol=ireltol, abstol=iabstol, maxiters=maxiters, kwargs...)
-
-    return sol#, EnsembleSolution(results,0.0, true)
-end
 
 function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
                         nout = 1, batch = 0,
@@ -257,19 +200,6 @@ Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::
 end
 
 aasdf(x) = x
-# 
-
-# # tuplejoin from https://discourse.julialang.org/t/efficient-tuple-concatenation/5398/8
-# @inline tuplejoin(x) = x
-# @inline tuplejoin(x, y) = (x..., y...)
-# @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
-
-# _rand(x::T) where T <: Sampleable = rand(x)
-# _rand(x) = x
-
-# function __make_map(prob::ODEProblem, args...; kwargs...)
-#     (u,p) -> solve(remake(prob,u0=u,p=p), args...; kwargs...)
-# end
 
 # function expectation(g::Function, prob::DiffEqBase.AbstractODEProblem, u0, p, expalg::Koopman, args...;
 #                         u0_CoV=(u,p)->u, p_CoV=(u,p)->p,
