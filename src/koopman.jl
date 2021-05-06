@@ -63,7 +63,7 @@ function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, 
 end
 
 function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
-    _montecarlo(mapping(exprob), exprob, expalg.trajectories)
+    _montecarlo(mapping(exprob), exprob, expalg.trajectories) #TODO need common return type
 end
 
 function _montecarlo(::F, exprob::ExpectationProblem, trajectories) where F
@@ -90,7 +90,7 @@ function _montecarlo(::SystemMap, exprob::ExpectationProblem, trajectories)
                 output_func=output_func,
                 prob_func=prob_func)
     sol = solve(monte_prob, S.args...;trajectories=trajectories,S.kwargs...)
-    mean(sol.u)# , sol
+    mean(sol.u)# 
 end
 
 function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...; 

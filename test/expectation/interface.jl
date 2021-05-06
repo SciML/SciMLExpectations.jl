@@ -15,18 +15,18 @@ include("setup.jl")
     rand_f = let dists = dists; 
         () -> [rand(d) for d in dists]; 
     end
-    lb = tuple(minimum.(dists)...)
-    ub = tuple(maximum.(dists)...)
+    lb = [minimum.(dists)...]
+    ub = [maximum.(dists)...]
 
     P = Product([dists...])
     gd_ind = @constinferred GenericDistribution(dists...)
     gd_raw = @constinferred GenericDistribution(pdf_f, rand_f, lb, ub)
-    @constinferred GenericDistribution(pdf_f, rand_f, [lb...], [ub...])
+    @constinferred GenericDistribution(pdf_f, rand_f, lb, ub)
 
     for gd in (gd_ind, gd_raw)
-        @test minimum(gd) == tuple(minimum(P)...)
-        @test maximum(gd) == tuple(maximum(P)...)
-        @test extrema(gd) == (tuple(minimum(P)...), tuple(maximum(P)...))
+        @test minimum(gd) == minimum(P)
+        @test maximum(gd) == maximum(P)
+        @test extrema(gd) == extrema(P)
         @test pdf(gd,x) ≈ pdf(P,x)
         @constinferred pdf(gd,x)
         

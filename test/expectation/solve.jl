@@ -1,11 +1,12 @@
 using Test, TestExtras,
     DiffEqUncertainty, OrdinaryDiffEq, Distributions,
+    Quadrature, Cubature, Cuba,
     StaticArrays, ComponentArrays, Random
 
 const DEU = DiffEqUncertainty
 # include("setup.jl")
 
-quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp()]#, CubaSUAVE(), CubaDivonne(), CubaCuhre()]
+quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
 # batchmode = [EnsembleSerial(), EnsembleThreads()]#, EnsembleGPUArray()]
 
 function eom!(du,u,p,t,A)
@@ -28,14 +29,20 @@ end
 sm = SystemMap(prob, Tsit5(); save_everystep=false)
 
 
-@testset "Koopman Expectation, nout = 1" begin
-  g(sol) = sol[1,end]
-  exprob = ExpectationProblem(sm, g, cov, gd)
-  analytical = (exp(A*tspan[end])*[mean(d) for d in u0s_dist])[1]
-
-  for alg ∈ quadalgs
-    @info "$alg"
-    @test solve(exprob, Koopman(); quadalg = alg)[1] ≈ analytical rtol=1e-2  
-    # @test expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg)[1] ≈ analytical rtol=1e-2
+@testset "Expectation Correctness" begin
+  analytical = (exp(A*tspan[end])*[mean(d) for d in u0s_dist])
+  @testset "Scalar Observable (nout = 1)" begin
+    g(sol) = sol[1,end]
+    exprob = ExpectationProblem(sm, g, cov, gd)
+    for alg ∈ quadalgs
+      @test solve(exprob, Koopman(); quadalg = alg)[1] ≈ analytical[1] rtol=1e-2
+    end
+  end
+  @testset "Vector-Valued Observable (nout > 1)" begin
+    g(sol) = sol[:,end]
+    exprob = ExpectationProblem(sm, g, cov, gd; nout = length(u0))
+    for alg ∈ quadalgs
+      @test solve(exprob, Koopman(); quadalg = alg) ≈ analytical rtol=1e-2
+    end
   end
 end
