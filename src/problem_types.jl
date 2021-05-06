@@ -8,16 +8,22 @@ struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
     h::TH  # cov(input_func),         h: 𝕏 × ℙ → 𝕐 × ℚ
     d::TF  # distribution,            pdf(d,x): 𝕏 → ℝ
     params::TP
+    nout::Int
 end 
 
-function ExpectationProblem(S, pdist, params)
+function ExpectationProblem(S, pdist, params; nout = 1)
     g(x) = x
     h(x,u,p) = x,p
-    ExpectationProblem(S, g, h, pdist, ArrayPartition(eltype(params)[], params))
+    ExpectationProblem(S, g, h, pdist, 
+        ArrayPartition(eltype(params)[], params), 
+        nout)
 end
 
-ExpectationProblem(sm::SystemMap, g, h, d) = 
-    ExpectationProblem(sm, g, h, d, ArrayPartition(deepcopy(sm.prob.u0),deepcopy(sm.prob.p)))
+function ExpectationProblem(sm::SystemMap, g, h, d; nout = 1)
+    ExpectationProblem(sm, g, h, d, 
+        ArrayPartition(deepcopy(sm.prob.u0),deepcopy(sm.prob.p)),
+        nout)
+end
 
 distribution(prob::ExpectationProblem) = prob.d
 mapping(prob::ExpectationProblem) = prob.S

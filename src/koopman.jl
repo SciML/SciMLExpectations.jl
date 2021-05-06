@@ -100,7 +100,6 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                         batch=0,
                         quadalg=HCubatureJL(),
                         ireltol=1e-2, iabstol=1e-2,
-                        nout=1,
                         kwargs...) where {A<:AbstractExpectationADAlgorithm}
 
     integrand = build_integrand(prob)
@@ -108,7 +107,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
 
     sol = integrate(quadalg, adalg, integrand, lb, ub, prob.params;
             reltol=ireltol, abstol=iabstol, maxiters=maxiters, 
-            nout = nout, batch = batch, 
+            nout = prob.nout, batch = batch, 
             kwargs...)
 
     return sol
