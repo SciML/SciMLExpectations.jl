@@ -34,7 +34,8 @@ parameters(prob::ExpectationProblem) = prob.params
 function build_integrand(prob::ExpectationProblem)
     @unpack S, g, h, d = prob
     function(x,p)
-        g(S(h(x, p.x[1], p.x[2])...))*pdf(d,x)
+        ū, p̄ = h(x, p.x[1], p.x[2])
+        g(S(ū,p̄))*pdf(d,x)
     end
 end
 

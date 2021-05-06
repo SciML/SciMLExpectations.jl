@@ -12,8 +12,9 @@ function GenericDistribution(d, ds...)
     dists = (d, ds...)
     pdf_func(x) = exp(sum(logpdf(f,y) for (f,y) in zip(dists, x)))
     rand_func() =  [rand(d) for d in dists] 
-    lb = map(minimum, dists)
-    ub = map(maximum, dists)
+    lb = SVector(map(minimum, dists)...)
+    ub = SVector(map(maximum, dists)...)
+    
     GenericDistribution(pdf_func, rand_func, lb, ub)
 end
 

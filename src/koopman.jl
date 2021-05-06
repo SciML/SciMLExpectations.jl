@@ -13,7 +13,6 @@ abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
 struct Koopman{T} <:AbstractExpectationAlgorithm where T<:AbstractExpectationADAlgorithm
     sensealg::T
 end
-
 Koopman() = Koopman(NonfusedAD())
 struct MonteCarlo <: AbstractExpectationAlgorithm 
     trajectories::Int
@@ -118,8 +117,7 @@ function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, 
                         kwargs...) where {F,T,P}
     #TODO check batch iip type stability w/ QuadratureProblem{XXXX}
     prob = QuadratureProblem{false}(f,lb,ub,p; nout = nout, batch = batch)
-    res = solve(prob, quadalg; kwargs...)
-    res.u #TODO revert to returning full solution, i.e. res
+    solve(prob, quadalg; kwargs...)
 end
 
 function primalnorm(nout, norm)

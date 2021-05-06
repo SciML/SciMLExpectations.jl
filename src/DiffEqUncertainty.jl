@@ -1,7 +1,7 @@
 module DiffEqUncertainty
 
 # LinearAlgebra
-using DiffEqBase, Statistics, Reexport, RecursiveArrayTools,
+using DiffEqBase, Statistics, Reexport, RecursiveArrayTools, StaticArrays,
     Distributions, KernelDensity, Zygote, LinearAlgebra, Random
 using Parameters: @unpack
 
