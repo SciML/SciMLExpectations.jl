@@ -4,7 +4,7 @@ abstract type AbstractUncertaintyProblem end
 struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
     # ∫ g(S(h(x,p)))*f(x)dx
     S::TS  # mapping,                 S: 𝕐 × ℚ → 𝕐
-    g::TG  # observable(output_func), g: 𝕐 → ℝ
+    g::TG  # observable(output_func), g: 𝕐 → ℝ  #TODO Should g be extended to g(x,p)?
     h::TH  # cov(input_func),         h: 𝕏 × ℙ → 𝕐 × ℚ
     d::TF  # distribution,            pdf(d,x): 𝕏 → ℝ
     params::TP

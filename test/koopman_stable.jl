@@ -3,6 +3,8 @@ using Test, TestExtras,
     StaticArrays, ComponentArrays, 
     ForwardDiff, FiniteDiff, Zygote, Random
 
+const DEU = DiffEqUncertainty
+
 function pend!(du, u, p, t)
     du[1] = u[2]
     du[2] = -p[1]/p[2]*sin(u[1])
@@ -27,49 +29,79 @@ ps = ([9.807, 1.0],
     ComponentArray(g=9.807, ℓ = 1.0),
     ComponentArray(g=9.807, ℓ = 1.0))
 
-@testset "GenericDistribution" begin
-    dists = (Uniform(1,2), Uniform(3,4), Normal(0,1))
-    x = [mean(d) for d in dists]
+# @testset "GenericDistribution" begin
+#     dists = (Uniform(1,2), Uniform(3,4), Normal(0,1))
+#     x = [mean(d) for d in dists]
 
-    pdf_f = let dists = dists
-        x->mapreduce(pdf, *, dists, x)
-    end
-    rand_f = let dists = dists; 
-        () -> [rand(d) for d in dists]; 
-    end
-    lb = tuple(minimum.(dists)...)
-    ub = tuple(maximum.(dists)...)
+#     pdf_f = let dists = dists
+#         x->mapreduce(pdf, *, dists, x)
+#     end
+#     rand_f = let dists = dists; 
+#         () -> [rand(d) for d in dists]; 
+#     end
+#     lb = tuple(minimum.(dists)...)
+#     ub = tuple(maximum.(dists)...)
 
-    P = Product([dists...])
-    gd_ind = @constinferred GenericDistribution(dists...)
-    gd_raw = @constinferred GenericDistribution(pdf_f, rand_f, lb, ub)
-    @constinferred GenericDistribution(pdf_f, rand_f, [lb...], [ub...])
+#     P = Product([dists...])
+#     gd_ind = @constinferred GenericDistribution(dists...)
+#     gd_raw = @constinferred GenericDistribution(pdf_f, rand_f, lb, ub)
+#     @constinferred GenericDistribution(pdf_f, rand_f, [lb...], [ub...])
 
-    for gd in (gd_ind, gd_raw)
-        @test minimum(gd) == tuple(minimum(P)...)
-        @test maximum(gd) == tuple(maximum(P)...)
-        @test extrema(gd) == (tuple(minimum(P)...), tuple(maximum(P)...))
-        @test pdf(gd,x) ≈ pdf(P,x)
-        @constinferred pdf(gd,x)
+#     for gd in (gd_ind, gd_raw)
+#         @test minimum(gd) == tuple(minimum(P)...)
+#         @test maximum(gd) == tuple(maximum(P)...)
+#         @test extrema(gd) == (tuple(minimum(P)...), tuple(maximum(P)...))
+#         @test pdf(gd,x) ≈ pdf(P,x)
+#         @constinferred pdf(gd,x)
         
-        Random.seed!(0)
-        @test rand(gd) == begin 
-            Random.seed!(0); 
-            rand(P)
-        end
-        @constinferred rand(gd)
-    end
-end
+#         Random.seed!(0)
+#         @test rand(gd) == begin 
+#             Random.seed!(0); 
+#             rand(P)
+#         end
+#         @constinferred rand(gd)
+#     end
+# end
 
-@testset "SystemMap" begin
-    for (f,u,p) ∈ zip(eoms, u0s, ps)
-        prob = ODEProblem(f, u, tspan, p)        
-        sm = @constinferred SystemMap(prob, Tsit5(); saveat=1.0)
-        sm_soln = @constinferred sm(u,p)
-        soln = solve(prob, Tsit5(); saveat=1.0)
-        @test sm_soln.t == soln.t
-        @test sm_soln.u == soln.u
+# @testset "SystemMap" begin
+#     for (f,u,p) ∈ zip(eoms, u0s, ps)
+#         prob = ODEProblem(f, u, tspan, p)        
+#         sm = @constinferred SystemMap(prob, Tsit5(); saveat=1.0)
+#         sm_soln = @constinferred sm(u,p)
+#         soln = solve(prob, Tsit5(); saveat=1.0)
+#         @test sm_soln.t == soln.t
+#         @test sm_soln.u == soln.u
+#     end
+# end
+
+@testset "ExpectationProblem" begin
+    getters = (DEU.distribution, DEU.mapping, DEU.observable, DEU.input_cov, DEU.parameters)
+    dists = (Uniform(1,2), Uniform(3,4), Truncated(Normal(0,1),-5,5))
+    gd = GenericDistribution(dists...)
+    @testset "DEProblem Interface" begin
+        x = [mean(d) for d in dists]
+        g(soln) = soln[1,end]
+        h(x,u,p) = x,p
+        prob = ODEProblem(eoms[1], u0s[1], tspan, ps[1])        
+        sm = SystemMap(prob, Tsit5(); saveat=1.0)
+        ep = @constinferred ExpectationProblem(sm, g, h, gd)
+        for foo ∈ getters
+            @constinferred foo(ep)
+        end
+        f = build_integrand(ep)
+        @constinferred f(x, DEU.parameters(ep))
     end
+    
+    @testset "General Map Interface" begin
+        f(x,p) = sum(p.*sin.(x))
+        ep = @constinferred ExpectationProblem(f, gd, [1.0,1.0,2.0])
+        for foo ∈ getters
+            @constinferred foo(ep)
+        end
+        f = build_integrand(ep)
+        @constinferred f([0.0, 1.0, 2.0], DEU.parameters(ep))
+    end
+
 end
 
 # @testset "Koopman Expectation " begin
