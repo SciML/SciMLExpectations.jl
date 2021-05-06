@@ -20,7 +20,6 @@ struct MonteCarlo <: AbstractExpectationAlgorithm
 end
 
 
-
 # function copyset(x, val, idx)
 #     it::Int = 0
 #     dist_it::Int = 0
@@ -95,7 +94,6 @@ function _montecarlo(::SystemMap, exprob::ExpectationProblem, trajectories)
     mean(sol.u)# , sol
 end
 
-
 function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...; 
                         adalg::A = NonfusedAD(),
                         maxiters=1000000,
@@ -115,7 +113,6 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
 
     return sol
 end
-
 
 function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
                         nout = 1, batch = 0,
@@ -176,14 +173,13 @@ Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub:
     primal, integrate_pullbacks
 end
 
-# from Seth Axen via Slack
-# Does not work w/ ArrayPartition unless with following hack
-# TODO add ArrayPartition similar fix upstream, see https://github.com/SciML/RecursiveArrayTools.jl/issues/135
-# Base.similar(A::ArrayPartition, ::Type{T}, dims::NTuple{N,Int}) where {T,N} = similar(Array(A), T, dims)
 Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::T, params::P; 
                             nout = 1, batch = 0, norm = norm,
                             kwargs...) where {F,T,P}
-
+    # from Seth Axen via Slack
+    # Does not work w/ ArrayPartition unless with following hack
+    # Base.similar(A::ArrayPartition, ::Type{T}, dims::NTuple{N,Int}) where {T,N} = similar(Array(A), T, dims)
+    # TODO add ArrayPartition similar fix upstream, see https://github.com/SciML/RecursiveArrayTools.jl/issues/135
     ∂f_∂params(x, params) = only(Zygote.jacobian(p -> f(x, p), params))
 	f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper arrray type? promote_type???
 	_norm = adalg.norm_partials ? norm : primalnorm(nout, norm)

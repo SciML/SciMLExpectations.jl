@@ -32,4 +32,10 @@ function build_integrand(prob::ExpectationProblem)
     end
 end
 
+## 
+# struct CentralMomentProblem
+#     ns::NTuple{Int,N}
+#     altype::Union{NestedExpectation, BinomialExpansion} #Should rely be in solve
+#     exp_prob::ExpectationProblem
+# end
 

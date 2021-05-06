@@ -8,12 +8,12 @@ struct GenericDistribution{TF, TRF, TLB, TUB}
 end
 
 # included b/c Distribution.Product method of mixed distirbutions are type instable
-function GenericDistribution(dists...)
-    # TODO add support to mix univariate and MV distrributions???
-    pdf_func(x) = prod(pdf(f,y) for (f,y) in zip(dists,x))
-    rand_func() =  [rand(d) for d in dists] #mapreduce(rand, vcat, dists)
-    lb = minimum.(dists)
-    ub = maximum.(dists)
+function GenericDistribution(d, ds...)
+    dists = (d, ds...)
+    pdf_func(x) = exp(sum(logpdf(f,y) for (f,y) in zip(dists, x)))
+    rand_func() =  [rand(d) for d in dists] 
+    lb = map(minimum, dists)
+    ub = map(maximum, dists)
     GenericDistribution(pdf_func, rand_func, lb, ub)
 end
 
