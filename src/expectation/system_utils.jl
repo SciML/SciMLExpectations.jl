@@ -1,3 +1,4 @@
+#Callable wrapper for DE solves. Enables seperation of args/kwargs...
 struct SystemMap{DT<:DiffEqBase.DEProblem,A,K}
     prob::DT
     args::A

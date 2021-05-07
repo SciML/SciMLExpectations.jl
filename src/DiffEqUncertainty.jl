@@ -5,17 +5,16 @@ using DiffEqBase, Statistics, Reexport, RecursiveArrayTools, StaticArrays,
     Distributions, KernelDensity, Zygote, LinearAlgebra, Random
 using Parameters: @unpack
 
-import DiffEqBase: solve
-# import Base: rand, maximum, minimum, extrema
-# import Distributions: pdf
-
 @reexport using Quadrature
+import DiffEqBase: solve
 
-include("system_utils.jl")
-include("distribution_utils.jl")
-include("problem_types.jl")
+include("expectation/system_utils.jl")
+include("expectation/distribution_utils.jl")
+include("expectation/problem_types.jl")
+include("expectation/expectation.jl")
+
 include("probints.jl")
-include("koopman.jl")
+
 
 # Type Piracy, should upstream
 Base.eltype(K::UnivariateKDE)  = eltype(K.density)
@@ -32,9 +31,8 @@ Base.maximum(d::Product) = maximum.(d.v)
 Base.extrema(d::Product) = minimum(d), maximum(d)
 
 export ProbIntsUncertainty,AdaptiveProbIntsUncertainty
-export expectation#, centralmoment
-export Koopman, MonteCarlo
-export PrefusedAD,PostfusedAD, NonfusedAD
-export integrate, GenericDistribution, build_integrand, SystemMap, ExpectationProblem
+
+export Koopman, MonteCarlo, PrefusedAD, PostfusedAD, NonfusedAD
+export GenericDistribution, SystemMap, ExpectationProblem, build_integrand
 
 end

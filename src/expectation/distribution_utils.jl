@@ -1,5 +1,6 @@
 ## GenericDistribution wrapper
-
+# Defines a generic distribution that just wraps functions for pdf function, rand and bounds. 
+# User can use this for define any arbitray joint pdf
 struct GenericDistribution{TF, TRF, TLB, TUB}
     pdf_func::TF
     rand_func::TRF
@@ -7,7 +8,8 @@ struct GenericDistribution{TF, TRF, TLB, TUB}
     ub::TUB
 end
 
-# included b/c Distribution.Product method of mixed distirbutions are type instable
+# Forms joint pdf for independent univariate distributions
+# included b/c Distributions.jl Product method of mixed distirbutions are type instable
 function GenericDistribution(d, ds...)
     dists = (d, ds...)
     pdf_func(x) = exp(sum(logpdf(f,y) for (f,y) in zip(dists, x)))

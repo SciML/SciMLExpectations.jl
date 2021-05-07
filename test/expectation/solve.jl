@@ -4,7 +4,6 @@ using Test, TestExtras,
     StaticArrays, ComponentArrays, Random
 
 const DEU = DiffEqUncertainty
-# include("setup.jl")
 
 quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
 # batchmode = [EnsembleSerial(), EnsembleThreads()]#, EnsembleGPUArray()]
