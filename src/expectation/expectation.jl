@@ -18,6 +18,22 @@ struct MonteCarlo <: AbstractExpectationAlgorithm
     trajectories::Int
 end
 
+# Builds integrand for DEProblems
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman) where F<:SystemMap
+    @unpack S, g, h, d = prob
+    function(x,p)
+        ū, p̄ = h(x, p.x[1], p.x[2])
+        g(S(ū,p̄), p̄)*pdf(d,x)   
+    end
+end
+
+# Builds integrand for arbitrary functions
+function build_integrand(prob::ExpectationProblem, ::Koopman)
+    @unpack g, d = prob
+    function(x,p)
+        g(x,p)*pdf(d,x)
+    end
+end
 
 #TODO need common return type for koopman() and MonteCarlo() solves
 # solve expectation problem of generic callable functions via MonteCarlo
@@ -67,6 +83,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
 
     return sol
 end
+
 
 # Integrate function to test new Adjoints, will need to roll up to Quadrature.jl
 function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub::TB, p; 
