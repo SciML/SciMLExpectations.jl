@@ -57,7 +57,7 @@ end
         gd = GenericDistribution(dists...)
         @testset "DiffEq" begin
             x = [mean(d) for d in dists]
-            g(soln) = soln[1,end]
+            g(soln,p) = soln[1,end]
             h(x,u,p) = x,p
             prob = ODEProblem(eoms[1], u0s[1], tspan, ps[1])        
             sm = SystemMap(prob, Tsit5(); saveat=1.0)

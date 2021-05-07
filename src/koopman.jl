@@ -69,19 +69,22 @@ function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
     g = observable(exprob)
     S = mapping(exprob)
     h = input_cov(exprob)
-    mean(g(S(h(rand(dist), params.x[1], params.x[2])...)) for _ ∈ 1:expalg.trajectories)
+    mean(g(S(h(rand(dist), [], params)...), params) for _ ∈ 1:expalg.trajectories)
 end
 
 function DiffEqBase.solve(exprob::ExpectationProblem{F}, expalg::MonteCarlo) where F<:SystemMap
     d = distribution(exprob)
     cov = input_cov(exprob)
     S = mapping(exprob)
+
     prob_func = function (prob, i, repeat)
         u0, p = cov(rand(d), prob.u0, prob.p)
         remake(prob, u0=u0, p=p)
     end
 
-    output_func = (sol, i) -> (exprob.g(sol), false)
+    output_func = let p = parameters(exprob).x[2]
+        (sol, i) -> (exprob.g(sol,p), false)
+    end
 
     monte_prob = EnsembleProblem(S.prob;
                 output_func=output_func,
