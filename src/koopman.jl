@@ -10,8 +10,8 @@ end
 PostfusedAD() = PostfusedAD(true)
 
 abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
-struct Koopman{T} <:AbstractExpectationAlgorithm where T<:AbstractExpectationADAlgorithm
-    sensealg::T
+struct Koopman{TS} <:AbstractExpectationAlgorithm where TS<:AbstractExpectationADAlgorithm
+    sensealg::TS
 end
 Koopman() = Koopman(NonfusedAD())
 struct MonteCarlo <: AbstractExpectationAlgorithm 
@@ -62,20 +62,17 @@ function inject(x, p::ArrayPartition{T,Tuple{TX, TP}}, dists_idx) where {T, TX, 
     ArrayPartition(state, param)
 end
 
-function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
-    _montecarlo(mapping(exprob), exprob, expalg.trajectories) #TODO need common return type
-end
-
-function _montecarlo(::F, exprob::ExpectationProblem, trajectories) where F
+#TODO need common return type for koopman() and MonteCarlo() solves
+function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo) 
     params = parameters(exprob)
     dist = distribution(exprob)
     g = observable(exprob)
     S = mapping(exprob)
     h = input_cov(exprob)
-    mean(g(S(h(rand(dist), params.x[1], params.x[2])...)) for _ ∈ 1:trajectories)
+    mean(g(S(h(rand(dist), params.x[1], params.x[2])...)) for _ ∈ 1:expalg.trajectories)
 end
 
-function _montecarlo(::SystemMap, exprob::ExpectationProblem, trajectories)
+function DiffEqBase.solve(exprob::ExpectationProblem{F}, expalg::MonteCarlo) where F<:SystemMap
     d = distribution(exprob)
     cov = input_cov(exprob)
     S = mapping(exprob)
@@ -89,8 +86,8 @@ function _montecarlo(::SystemMap, exprob::ExpectationProblem, trajectories)
     monte_prob = EnsembleProblem(S.prob;
                 output_func=output_func,
                 prob_func=prob_func)
-    sol = solve(monte_prob, S.args...;trajectories=trajectories,S.kwargs...)
-    mean(sol.u)# 
+    sol = solve(monte_prob, S.args...;trajectories=expalg.trajectories,S.kwargs...)
+    mean(sol.u)
 end
 
 function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...; 
@@ -112,16 +109,16 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
     return sol
 end
 
-function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f::F, lb::T, ub::T, p::P; 
+function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub::TB, p; 
                         nout = 1, batch = 0,
-                        kwargs...) where {F,T,P}
+                        kwargs...) where {TB}
     #TODO check batch iip type stability w/ QuadratureProblem{XXXX}
     prob = QuadratureProblem{false}(f,lb,ub,p; nout = nout, batch = batch)
     solve(prob, quadalg; kwargs...)
 end
 
-function primalnorm(nout, norm)
-    x->norm(@view x[1:nout])
+function primalnorm(nout, fnorm)
+    x->fnorm(@view x[1:nout])
 end
 
 Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T, params::P; 
