@@ -57,7 +57,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                         ireltol=1e-2, iabstol=1e-2,
                         kwargs...) where {A<:AbstractExpectationADAlgorithm}
 
-    integrand = build_integrand(prob)
+    integrand = build_integrand(prob, expalg)
     lb, ub = extrema(prob.d)
 
     sol = integrate(quadalg, expalg.sensealg, integrand, lb, ub, prob.params;

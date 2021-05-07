@@ -65,7 +65,7 @@ end
             for foo ∈ getters
                 @constinferred foo(ep)
             end
-            f = build_integrand(ep)
+            f = build_integrand(ep, Koopman())
             @constinferred f(x, DEU.parameters(ep))
         end
         @testset "General Map" begin
@@ -74,7 +74,7 @@ end
             for foo ∈ getters
                 @constinferred foo(ep)
             end
-            f = build_integrand(ep)
+            f = build_integrand(ep, Koopman())
             @constinferred f([0.0, 1.0, 2.0], DEU.parameters(ep))
         end
     end

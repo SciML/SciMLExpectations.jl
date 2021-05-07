@@ -33,7 +33,7 @@ input_cov(prob::ExpectationProblem) = prob.h
 parameters(prob::ExpectationProblem) = prob.params
 
 # Builds integrand for DEProblems
-function build_integrand(prob::ExpectationProblem{F}) where F<:SystemMap
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman) where F<:SystemMap
     @unpack S, g, h, d = prob
     function(x,p)
         ū, p̄ = h(x, p.x[1], p.x[2])
@@ -42,7 +42,7 @@ function build_integrand(prob::ExpectationProblem{F}) where F<:SystemMap
 end
 
 # Builds integrand for arbitrary functions
-function build_integrand(prob::ExpectationProblem)
+function build_integrand(prob::ExpectationProblem, ::Koopman)
     @unpack g, d = prob
     function(x,p)
         g(x,p)*pdf(d,x)
