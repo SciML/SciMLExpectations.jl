@@ -9,9 +9,6 @@ const DEU = DiffEqUncertainty
 quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
 # batchmode = [EnsembleSerial(), EnsembleThreads()]#, EnsembleGPUArray()]
 
-
-
-
 @testset "DiffEq Expectation Correctness" begin
   function eom!(du,u,p,t,A)
     @inbounds begin
@@ -68,6 +65,6 @@ end
     for alg ∈ quadalgs
       @test solve(exprob, Koopman(); quadalg = alg) ≈ analytical rtol=1e-2
     end
-    # @test solve(exprob, MonteCarlo(10000)) ≈ analytical rtol=1e-2
+    @test solve(exprob, MonteCarlo(10000)) ≈ analytical rtol=1e-2
   end
 end
