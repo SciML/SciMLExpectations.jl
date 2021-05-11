@@ -19,8 +19,9 @@ Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
 DiffEqBase = "6"
-Distributions = "0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24"
+Distributions = "0.18, 0.19, 0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
 KernelDensity = "0.6"
 Quadrature = "0.1, 1.0"
 Reexport = "0.2, 1.0"
 julia = "1"
+
