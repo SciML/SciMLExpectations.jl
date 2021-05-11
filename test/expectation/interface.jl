@@ -57,16 +57,34 @@ end
         gd = GenericDistribution(dists...)
         @testset "DiffEq" begin
             x = [mean(d) for d in dists]
-            g(soln,p) = soln[1,end]
             h(x,u,p) = x,p
             prob = ODEProblem(eoms[1], u0s[1], tspan, ps[1])        
             sm = SystemMap(prob, Tsit5(); saveat=1.0)
+            
+            # nout = 1
+            g(soln,p) = soln[1,end]
             ep = @constinferred ExpectationProblem(sm, g, h, gd)
             for foo ∈ getters
                 @constinferred foo(ep)
             end
-            f = build_integrand(ep, Koopman())
+            f = @constinferred build_integrand(ep, Koopman(), Val(false))
             @constinferred f(x, DEU.parameters(ep))
+
+            fbatch = @constinferred build_integrand(ep, Koopman(), Val(true))
+            y = reshape(repeat(x, outer=5), :, 5)
+            dy = similar(y[1,:])
+            @constinferred fbatch(dy, y, DEU.parameters(ep))
+  
+            # nout > 1
+            g2(soln,p) = [soln[1,end], soln[2,end]]
+            ep = @constinferred ExpectationProblem(sm, g2, h, gd; nout = 2)
+            f = @constinferred build_integrand(ep, Koopman(), Val(false))
+            @constinferred f(x, DEU.parameters(ep))
+
+            fbatch = @constinferred build_integrand(ep, Koopman(), Val(true))
+            y = reshape(repeat(x, outer=5), :, 5)
+            dy = similar(y[1:2,:])
+            @constinferred fbatch(dy, y, DEU.parameters(ep))
         end
         @testset "General Map" begin
             f(x,p) = sum(p.*sin.(x))
@@ -74,7 +92,7 @@ end
             for foo ∈ getters
                 @constinferred foo(ep)
             end
-            f = build_integrand(ep, Koopman())
+            f = @constinferred build_integrand(ep, Koopman(), Val(false))
             @constinferred f([0.0, 1.0, 2.0], DEU.parameters(ep))
         end
     end

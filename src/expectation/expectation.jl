@@ -18,8 +18,17 @@ struct MonteCarlo <: AbstractExpectationAlgorithm
     trajectories::Int
 end
 
+# Builds integrand for arbitrary functions
+# TODO return in and out of place functions as tuple?
+function build_integrand(prob::ExpectationProblem, ::Koopman, ::Val{false})
+    @unpack g, d = prob
+    function(x,p)
+        g(x,p)*pdf(d,x)
+    end
+end
+
 # Builds integrand for DEProblems
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman) where F<:SystemMap
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman, ::Val{false}) where F<:SystemMap
     @unpack S, g, h, d = prob
     function(x,p)
         ū, p̄ = h(x, p.x[1], p.x[2])
@@ -27,11 +36,42 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman) where F<:System
     end
 end
 
-# Builds integrand for arbitrary functions
-function build_integrand(prob::ExpectationProblem, ::Koopman)
-    @unpack g, d = prob
-    function(x,p)
-        g(x,p)*pdf(d,x)
+function _make_view(x::Union{Vector{T}, Adjoint{T, Vector{T}}}, i) where T
+    @view x[i]
+end
+
+function _make_view(x, i)
+    @view x[:,i]
+end
+
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman, ::Val{true}) where F<:SystemMap
+    @unpack S, g, h, d = prob
+
+    if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
+        set_result! = @inline function(dx, sol)
+            dx[:] .= sol[:]
+        end
+    else
+        set_result! = @inline function (dx, sol)
+            dx .= reshape(sol[:,:], size(dx))
+        end
+    end
+
+    prob_func = function (prob, i, repeat, x)  # TODO is it better to make prob/output funcs outside of integrand, then call w/ closure?
+        u0, p = h((_make_view(x,i)), prob.u0, prob.p)
+        remake(prob, u0=u0, p=p)
+    end
+
+    output_func(sol, i, x) = (g(sol,sol.prob.p)*pdf(d, (_make_view(x,i))), false)
+
+    function(dx, x, p) where T
+        trajectories = size(x,2)
+        # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
+        ensprob = EnsembleProblem(S.prob; output_func= (sol, i) -> output_func(sol, i, x), 
+                                            prob_func= (prob, i, repeat) -> prob_func(prob, i, repeat, x)) 
+        sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
+        set_result!(dx, sol)
+        nothing
     end
 end
 
@@ -73,7 +113,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                         ireltol=1e-2, iabstol=1e-2,
                         kwargs...) where {A<:AbstractExpectationADAlgorithm}
 
-    integrand = build_integrand(prob, expalg)
+    integrand = build_integrand(prob, expalg, Val(batch > 1))
     lb, ub = extrema(prob.d)
 
     sol = integrate(quadalg, expalg.sensealg, integrand, lb, ub, prob.params;
@@ -81,7 +121,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
             nout = prob.nout, batch = batch, 
             kwargs...)
 
-    return sol
+    return sol 
 end
 
 
@@ -90,7 +130,7 @@ function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub
                         nout = 1, batch = 0,
                         kwargs...) where {TB}
     #TODO check batch iip type stability w/ QuadratureProblem{XXXX}
-    prob = QuadratureProblem{false}(f,lb,ub,p; nout = nout, batch = batch)
+    prob = QuadratureProblem{batch > 1}(f,lb,ub,p; nout = nout, batch = batch)
     solve(prob, quadalg; kwargs...)
 end
 
