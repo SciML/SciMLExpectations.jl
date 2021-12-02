@@ -89,7 +89,7 @@ end
 
 @testset "Koopman Expectation AD, batch" begin
   g(sol) = sol[1,end]
-  loss(p, alg, bmode) = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode; quadalg = alg, batch = 10)[1]
+  loss(p, alg, bmode) = expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(), bmode; quadalg = alg, batch = 100)[1]
   dp1 = FiniteDiff.finite_difference_gradient(p->loss(p, CubatureJLh(), EnsembleThreads()),p)
   for bmode ∈ batchmode
     for alg ∈ quadalgs
