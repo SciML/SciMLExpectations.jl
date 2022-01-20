@@ -2,11 +2,6 @@ abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
 struct Koopman <:AbstractExpectationAlgorithm end
 struct MonteCarlo <: AbstractExpectationAlgorithm end
 
-# tuplejoin from https://discourse.julialang.org/t/efficient-tuple-concatenation/5398/8
-@inline tuplejoin(x) = x
-@inline tuplejoin(x, y) = (x..., y...)
-@inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
-
 _rand(x::T) where T <: Sampleable = rand(x)
 _rand(x) = x
 
