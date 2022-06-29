@@ -1,7 +1,7 @@
 module DiffEqUncertainty
 
 using DiffEqBase, Statistics, Distributions, Reexport
-@reexport using Quadrature
+@reexport using Integrals
 using KernelDensity
 
 include("probints.jl")
