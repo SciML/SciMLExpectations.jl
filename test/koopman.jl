@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, Distributions,
-      DiffEqUncertainty, Test, Integrals, Cubature, Cuba,
+      DiffEqUncertainty, Test, Integrals, IntegralsCubature, IntegralsCuba,
       FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity, LinearAlgebra
 
 quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
