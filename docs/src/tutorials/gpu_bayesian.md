@@ -22,8 +22,8 @@ Let's start by importing all of the necessary libraries:
 using Turing, Distributions, DifferentialEquations
 using MCMCChains, Plots, StatsPlots
 using Random
-using DiffEqUncertainty
-using KernelDensity, DiffEqUncertainty
+using SciMLExpectations
+using KernelDensity, SciMLExpectations
 using Cuba, DiffEqGPU
 
 Random.seed!(1);
@@ -131,7 +131,7 @@ This is the Monte Carlo approach and it converges to the correct answer by
 However, the [Koopman expectation](https://arxiv.org/abs/2008.08737) can converge
 with much fewer points, allowing the use of higher order quadrature methods to
 converge exponentially faster in many cases. To use the Koopman expectation
-functionality provided by [DiffEqUncertainty.jl](https://github.com/SciML/DiffEqUncertainty.jl),
+functionality provided by [SciMLExpectations.jl](https://github.com/SciML/SciMLExpectations.jl),
 we first need to define our observable function `g`. This function designates the
 thing about the solution we wish to calculate the expectation of. Thus for our
 question "what is the expected value of `x`at time `t=10`?", we would simply use:

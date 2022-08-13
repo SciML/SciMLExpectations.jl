@@ -1,6 +1,6 @@
-# Optimization Under Uncertainty with DiffEqUncertainty.jl
+# Optimization Under Uncertainty with SciMLExpectations.jl
 
-This tutorial gives and overview of how to leverage the efficient Koopman expectation method from DiffEqUncertainty to perform optimization under uncertainty. We demonstrate this by using a bouncing ball model with an uncertain model parameter. We also demonstrate its application to problems with probabilistic constraints, in particular a special class of constraints called chance constraints.
+This tutorial gives and overview of how to leverage the efficient Koopman expectation method from SciMLExpectations to perform optimization under uncertainty. We demonstrate this by using a bouncing ball model with an uncertain model parameter. We also demonstrate its application to problems with probabilistic constraints, in particular a special class of constraints called chance constraints.
 
 ## System Model
 First lets consider a 2D bouncing ball, where the states are the horizontal position $x$, horizontal velocity $\dot{x}$, vertical position $y$, and vertical velocity $\dot{y}$. This model has two system parameters, acceleration due to gravity and coefficient of restitution (models energy loss when the ball impacts the ground). We can simulate such a system using `ContinuousCallback` as
@@ -94,10 +94,10 @@ With the observable defined, we can compute the expected squared miss distance f
 mean_ensemble = mean([obs(sol) for sol in ensemblesol])
 ```
 
-Alternatively, we can use the `Koopman()` algorithm in DiffEqUncertainty.jl to compute this expectation much more efficiently as
+Alternatively, we can use the `Koopman()` algorithm in SciMLExpectations.jl to compute this expectation much more efficiently as
 
 ```julia
-using DiffEqUncertainty
+using SciMLExpectations
 
 p_uncertain = [9.807, cor_dist]
 expectation(obs, prob, u0, p_uncertain, Koopman(), Tsit5();

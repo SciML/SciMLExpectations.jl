@@ -1,8 +1,8 @@
 using Test, TestExtras,
-      DiffEqUncertainty, OrdinaryDiffEq, Distributions,
+      SciMLExpectations, OrdinaryDiffEq, Distributions,
       StaticArrays, ComponentArrays, Random, ForwardDiff
 
-const DEU = DiffEqUncertainty
+const DEU = SciMLExpectations
 include("setup.jl")
 
 function (sm::SystemMap{DT})(u0, p) where {DT}
@@ -100,5 +100,3 @@ end end
         @constinferred f([0.0, 1.0, 2.0], DEU.parameters(ep))
     end
 end end
-
-

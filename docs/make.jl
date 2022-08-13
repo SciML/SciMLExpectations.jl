@@ -1,10 +1,10 @@
-using Documenter, DiffEqUncertainty
+using Documenter, SciMLExpectations
 
 include("pages.jl")
 
-makedocs(sitename = "DiffEqUncertainty.jl",
+makedocs(sitename = "SciMLExpectations.jl",
          authors = "Chris Rackauckas",
-         modules = [DiffEqUncertainty],
+         modules = [SciMLExpectations],
          strict = [
              :doctest,
              :linkcheck,
@@ -16,8 +16,8 @@ makedocs(sitename = "DiffEqUncertainty.jl",
          clean = true, doctest = false,
          format = Documenter.HTML(analytics = "UA-90474609-3",
                                   assets = ["assets/favicon.ico"],
-                                  canonical = "https://DiffEqUncertainty.sciml.ai/stable/"),
+                                  canonical = "https://SciMLExpectations.sciml.ai/stable/"),
          pages = pages)
 
-deploydocs(repo = "github.com/SciML/DiffEqUncertainty.jl.git";
+deploydocs(repo = "github.com/SciML/SciMLExpectations.jl.git";
            push_preview = true)

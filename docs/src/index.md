@@ -1,12 +1,17 @@
-# DiffEqUncertainty.jl:
+# SciMLExpectations.jl: Expectated Values of Simulations and Uncertainty Quantification
+
+SciMLExpectations.jl is a package for quantifying the uncertainties of simulations by
+calculating the expectations of observables with respect to input uncertainties. Its goal
+is to make it fast and easy to compute solution moments in a differentiable way in order
+to enable fast optimization under uncertainty.
 
 ## Installation
 
-To install DiffEqUncertainty.jl, use the Julia package manager:
+To install SciMLExpectations.jl, use the Julia package manager:
 
 ```julia
 using Pkg
-Pkg.add("DiffEqUncertainty")
+Pkg.add("SciMLExpectations")
 ```
 
 ## Contributing
