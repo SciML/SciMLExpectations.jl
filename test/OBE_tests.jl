@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, Distributions,
-      DiffEqUncertainty, Test, Integrals, IntegralsCubature, IntegralsCuba,
+      SciMLExpectations, Test, Integrals, IntegralsCubature, IntegralsCuba,
       FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity, LinearAlgebra
 
 quadalgs = [

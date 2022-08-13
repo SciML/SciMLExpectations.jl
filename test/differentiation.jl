@@ -1,9 +1,9 @@
 using Test, TestExtras,
-      DiffEqUncertainty, OrdinaryDiffEq, Distributions,
+      SciMLExpectations, OrdinaryDiffEq, Distributions,
       StaticArrays, ComponentArrays, Random, FiniteDiff,
       ForwardDiff, RecursiveArrayTools
 
-const DEU = DiffEqUncertainty
+const DEU = SciMLExpectations
 include("setup.jl")
 
 @testset "Koopman Expectation AD" begin

@@ -1,9 +1,9 @@
 using Test, TestExtras,
-      DiffEqUncertainty, OrdinaryDiffEq, Distributions,
+      SciMLExpectations, OrdinaryDiffEq, Distributions,
       Integrals, IntegralsCubature, IntegralsCuba,
       StaticArrays, ComponentArrays, Random
 
-const DEU = DiffEqUncertainty
+const DEU = SciMLExpectations
 
 quadalgs = [
     HCubatureJL(),

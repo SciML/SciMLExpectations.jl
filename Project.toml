@@ -1,7 +1,7 @@
-name = "DiffEqUncertainty"
-uuid = "ef61062a-5684-51dc-bb67-a0fcdec5c97d"
+name = "SciMLExpectations"
+uuid = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "1.9.0"
+version = "2.0.0"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"

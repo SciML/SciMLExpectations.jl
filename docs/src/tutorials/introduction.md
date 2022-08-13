@@ -1,4 +1,4 @@
-# An Introduction to Expectations via DiffEqUncertainty.jl
+# An Introduction to Expectations via SciMLExpectations.jl
 
 ## System Model
 
@@ -53,10 +53,10 @@ g(sol) = sol(4.0)
 mean([g(sol) for sol in ensemblesol])
 ```
 
-Alternatively, DiffEqUncertainty.jl offers a convenient interface for this type of calculation, `expectation()`.
+Alternatively, SciMLExpectations.jl offers a convenient interface for this type of calculation, `expectation()`.
 
 ```julia
-using DiffEqUncertainty
+using SciMLExpectations
 expectation(g, prob, u0_dist, p, MonteCarlo(), Tsit5(); trajectories=100000)
 ```
 
@@ -270,7 +270,7 @@ var_koop = koop[2] - mean_koop^2
 As the system is linear, we expect the skewness to be unchanged from the inital distribution. Becasue the distribution is a truncated Normal distribution centered on the mean, the true skewness is `0.0`.
 
 ### nth Central Moment
-DiffEqUncertainty provides a convenience function `centralmoment` around this approach for higher-order central moments. It takes an integer for the number of central moments you wish to compute. While the rest of the arguments are the same as for  `expectation()`. The following will return central moments 1-5.
+SciMLExpectations provides a convenience function `centralmoment` around this approach for higher-order central moments. It takes an integer for the number of central moments you wish to compute. While the rest of the arguments are the same as for  `expectation()`. The following will return central moments 1-5.
 
 ```julia
 g(sol) = sol(4.0)[1]

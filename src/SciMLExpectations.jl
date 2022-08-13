@@ -1,4 +1,4 @@
-module DiffEqUncertainty
+module SciMLExpectations
 
 # LinearAlgebra
 using DiffEqBase, Statistics, Reexport, RecursiveArrayTools, StaticArrays,
