@@ -10,11 +10,23 @@ end
 PostfusedAD() = PostfusedAD(true)
 
 abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
+
+"""
+```julia
+Koopman()
+```
+"""
 struct Koopman{TS} <:
        AbstractExpectationAlgorithm where {TS <: AbstractExpectationADAlgorithm}
     sensealg::TS
 end
 Koopman() = Koopman(NonfusedAD())
+
+"""
+```julia
+MonteCarlo(trajectories::Int)
+```
+"""
 struct MonteCarlo <: AbstractExpectationAlgorithm
     trajectories::Int
 end
@@ -83,7 +95,8 @@ function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
     params = parameters(exprob)
     dist = distribution(exprob)
     g = observable(exprob)
-    ExpectationSolution(mean(g(rand(dist), params) for _ in 1:(expalg.trajectories)), nothing, nothing)
+    ExpectationSolution(mean(g(rand(dist), params) for _ in 1:(expalg.trajectories)),
+                        nothing, nothing)
 end
 
 # solve expectation over DEProblem via MonteCarlo
@@ -105,7 +118,7 @@ function DiffEqBase.solve(exprob::ExpectationProblem{F},
                                  output_func = output_func,
                                  prob_func = prob_func)
     sol = solve(monte_prob, S.args...; trajectories = expalg.trajectories, S.kwargs...)
-    ExpectationSolution(mean(sol.u),nothing,nothing)
+    ExpectationSolution(mean(sol.u), nothing, nothing)
 end
 
 # Solve Koopman expectation
@@ -123,7 +136,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                     nout = prob.nout, batch = batch,
                     kwargs...)
 
-    return ExpectationSolution(sol.u,sol.resid,sol)
+    return ExpectationSolution(sol.u, sol.resid, sol)
 end
 
 # Integrate function to test new Adjoints, will need to roll up to Integrals.jl
