@@ -35,19 +35,19 @@ p_dist = [1.5,1.0,3.0,truncated(Normal(1.0,.1),.6, 1.4)]
 g(sol) = sol[1,end]
 
 expectation(g, prob, u0_dist, p_dist, MonteCarlo(), Tsit5(); trajectories = 100_000)
-expectation(g, prob, u0_dist, p_dist, Koopman(), Tsit5())  
+expectation(g, prob, u0_dist, p_dist, Koopman(), Tsit5())
 ```
 
 If we wish to compute the variance, or 2nd central moment, of this same observable, we can do so as
 
 ```julia
-centralmoment(2, g, prob, u0_dist, p_dist, Koopman(), Tsit5())[2]  
+centralmoment(2, g, prob, u0_dist, p_dist, Koopman(), Tsit5())[2]
 ```
 
 See [SciMLTutorials.jl](https://github.com/SciML/SciMLTutorials.jl) for additional examples.
 
 ### Expectations
-DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, `g` of the states of a dynamical system as the system evolves in time. These algorithms are applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported. 
+DiffEqUncertainty.jl provides algorithms for computing the expectation of an observable, or quantity of interest, `g` of the states of a dynamical system as the system evolves in time. These algorithms are applicable to ODEs with initial condition and/or parametric uncertainty. Process noise is not currently supported.
 
 You can compute the expectation by using the `expectation` function:
 
@@ -75,18 +75,3 @@ The following algorithms are available:
 - `nout`: Output size of observable `g`. Used to specify vector-valued expectations
 - `batch`: The preferred number of points to batch. This allows user-side
   parallelization of the expectation. See Quadrature.jl for additional details
-
-### Central Moments
-These algorithms can also be used to compute higher order central moments via `centralmoments`. This function returns the central moments up to the requested number.
-
-```julia
-centralmoments(n, args...; kwargs...)
-```
-
-- `n`: highest-order central moment to be computed. `centralmoments` will return an `n` length array with central moments 1 through `n`
-- `args` and `kwargs`: This function wraps `expectation`. See `expectation` for additional options.
-
-## ProbInts
-Users interested in using this functionality should check out the [DifferentialEquations.jl documentation](https://diffeq.sciml.ai/stable/analysis/uncertainty_quantification/#ProbInts-1).
-
-
