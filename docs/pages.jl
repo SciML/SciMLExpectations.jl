@@ -3,13 +3,13 @@
 pages = [
     "Home" => "index.md",
     "Tutorials" => [
-        "introduction.md",
-        "optimization_under_uncertainty.md",
-        "gpu_bayesian.md"
+        "tutorials/introduction.md",
+        "tutorials/optimization_under_uncertainty.md",
+        "tutorials/gpu_bayesian.md"
     ],
     "Manual" => [
-        "problem.md",
-        "solve.md",
-        "algorithms.md"
+        "manual/problem.md",
+        "manual/solve.md",
+        "manual/algorithms.md"
     ]
 ]
