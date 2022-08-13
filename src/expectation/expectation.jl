@@ -20,7 +20,6 @@ struct MonteCarlo <: AbstractExpectationAlgorithm
 end
 
 # Builds integrand for arbitrary functions
-# TODO return in and out of place functions as tuple?
 function build_integrand(prob::ExpectationProblem, ::Koopman, ::Val{false})
     @unpack g, d = prob
     function (x, p)
