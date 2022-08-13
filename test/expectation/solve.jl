@@ -1,6 +1,6 @@
 using Test, TestExtras,
     DiffEqUncertainty, OrdinaryDiffEq, Distributions,
-    Quadrature, Cubature, Cuba,
+    Integrals, IntegralsCubature, IntegralsCuba,
     StaticArrays, ComponentArrays, Random
 
 const DEU = DiffEqUncertainty
@@ -16,7 +16,7 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
     end
     nothing
   end
-  
+
   u0 = [1.0, 1.0]
   tspan = (0.0, 3.0)
   p = [1.0; 2.0]
@@ -25,7 +25,11 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
   u0s_dist = (Uniform(1,10), Truncated(Normal(3.0,1),0.0,6.0))
   gd = GenericDistribution(u0s_dist...)
   cov(x,u,p) = x,p
-  sm = SystemMap(prob, Tsit5(); save_everystep=false)
+
+  sm = function (u0,p)
+    _prob = remake(prob, u0=u0, p=p)
+    solve(_prob, Tsit5(), save_everystep=false)
+  end
 
   analytical = (exp(A*tspan[end])*[mean(d) for d in u0s_dist])
   @testset "Scalar Observable (nout = 1)" begin
@@ -47,7 +51,7 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
     g(sol, p) = sol[:,end]
     exprob = ExpectationProblem(sm, g, cov, gd; nout = length(u0))
     for alg ∈ quadalgs
-      @test solve(exprob, Koopman(); quadalg = alg, ireltol = 1e-3,  iabstol = 1e-3) ≈ analytical rtol=1e-2  
+      @test solve(exprob, Koopman(); quadalg = alg, ireltol = 1e-3,  iabstol = 1e-3) ≈ analytical rtol=1e-2
       # @constinferred solve(exprob, Koopman(); quadalg = alg)   # Commented b/c no "broken" inferred macros and is not stable due to Quadrature.jl
       if alg ∈ quadalgs_batch
         s = solve(exprob, Koopman(); quadalg = alg, ireltol = 1e-3,  iabstol = 1e-3, batch = 20)[1]
@@ -64,8 +68,8 @@ end
   gd = GenericDistribution(Uniform(0,1), Truncated(Normal(0,1),-4,4))
   p = [1.0, 2.0, 3.0]
   @testset "Scalar Observable (nout = 1)" begin
-    g(u,p) = sum(p.*sin.(u[1])) + cos(u[2]) 
-    analytical = 2*sin(1/2)^2*sum(p) + 1/sqrt(exp(1)) 
+    g(u,p) = sum(p.*sin.(u[1])) + cos(u[2])
+    analytical = 2*sin(1/2)^2*sum(p) + 1/sqrt(exp(1))
     exprob = ExpectationProblem(g, gd, p)
     for alg ∈ quadalgs
       @test solve(exprob, Koopman(); quadalg = alg)[1] ≈ analytical rtol=1e-2

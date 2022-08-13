@@ -1,5 +1,5 @@
 using OrdinaryDiffEq, Distributions,
-      DiffEqUncertainty, Test, Quadrature, Cubature, Cuba,
+      DiffEqUncertainty, Test, Integrals, IntegralsCubature, IntegralsCuba,
       FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity, LinearAlgebra
 
 quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
@@ -183,7 +183,7 @@ end
 
 # u0 = [1.0, 1.0]
 # p = [1.0, 2.0]
-# prob = ODEForwardSensitivityProblem(eom!,u0,(0.0,3.0),p,saveat=0:3)  
+# prob = ODEForwardSensitivityProblem(eom!,u0,(0.0,3.0),p,saveat=0:3)
 # function g(sol)
 #     J = extract_local_sensitivities(sol,true)[2]
 #     det(J'*J)

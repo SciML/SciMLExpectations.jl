@@ -4,7 +4,7 @@ struct PrefusedAD <: AbstractExpectationADAlgorithm
     norm_partials::Bool
 end
 PrefusedAD() = PrefusedAD(true)
-struct PostfusedAD <: AbstractExpectationADAlgorithm 
+struct PostfusedAD <: AbstractExpectationADAlgorithm
     norm_partials::Bool
 end
 PostfusedAD() = PostfusedAD(true)
@@ -14,7 +14,7 @@ struct Koopman{TS} <:AbstractExpectationAlgorithm where TS<:AbstractExpectationA
     sensealg::TS
 end
 Koopman() = Koopman(NonfusedAD())
-struct MonteCarlo <: AbstractExpectationAlgorithm 
+struct MonteCarlo <: AbstractExpectationAlgorithm
     trajectories::Int
 end
 
@@ -32,7 +32,7 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman, ::Val{false}) w
     @unpack S, g, h, d = prob
     function(x,p)
         ū, p̄ = h(x, p.x[1], p.x[2])
-        g(S(ū,p̄), p̄)*pdf(d,x)   
+        g(S(ū,p̄), p̄)*pdf(d,x)
     end
 end
 
@@ -67,8 +67,8 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman, ::Val{true}) wh
     function(dx, x, p) where T
         trajectories = size(x,2)
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
-        ensprob = EnsembleProblem(S.prob; output_func= (sol, i) -> output_func(sol, i, x), 
-                                            prob_func= (prob, i, repeat) -> prob_func(prob, i, repeat, x)) 
+        ensprob = EnsembleProblem(S.prob; output_func= (sol, i) -> output_func(sol, i, x),
+                                            prob_func= (prob, i, repeat) -> prob_func(prob, i, repeat, x))
         sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
         set_result!(dx, sol)
         nothing
@@ -77,7 +77,7 @@ end
 
 #TODO need common return type for koopman() and MonteCarlo() solves
 # solve expectation problem of generic callable functions via MonteCarlo
-function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo) 
+function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
     params = parameters(exprob)
     dist = distribution(exprob)
     g = observable(exprob)
@@ -106,7 +106,7 @@ function DiffEqBase.solve(exprob::ExpectationProblem{F}, expalg::MonteCarlo) whe
 end
 
 # Solve Koopman expectation
-function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...; 
+function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                         maxiters=1000000,
                         batch=0,
                         quadalg=HCubatureJL(),
@@ -117,30 +117,30 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
     lb, ub = extrema(prob.d)
 
     sol = integrate(quadalg, expalg.sensealg, integrand, lb, ub, prob.params;
-            reltol=ireltol, abstol=iabstol, maxiters=maxiters, 
-            nout = prob.nout, batch = batch, 
+            reltol=ireltol, abstol=iabstol, maxiters=maxiters,
+            nout = prob.nout, batch = batch,
             kwargs...)
 
-    return sol 
+    return sol
 end
 
 
 # Integrate function to test new Adjoints, will need to roll up to Quadrature.jl
-function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub::TB, p; 
+function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub::TB, p;
                         nout = 1, batch = 0,
                         kwargs...) where {TB}
-    #TODO check batch iip type stability w/ QuadratureProblem{XXXX}
-    prob = QuadratureProblem{batch > 1}(f,lb,ub,p; nout = nout, batch = batch)
+    #TODO check batch iip type stability w/ IntegralProblem{XXXX}
+    prob = IntegralProblem{batch > 1}(f,lb,ub,p; nout = nout, batch = batch)
     solve(prob, quadalg; kwargs...)
 end
 
 # defines adjoint via ∫∂/∂p f(x,p) dx
-Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T, params::P; 
-                            nout = 1, batch = 0, norm = norm,  
+Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T, params::P;
+                            nout = 1, batch = 0, norm = norm,
                             kwargs...) where {F,T,P}
 
-    primal = integrate(quadalg, adalg, f, lb, ub, params; 
-        norm = norm, nout = nout, batch = batch, 
+    primal = integrate(quadalg, adalg, f, lb, ub, params;
+        norm = norm, nout = nout, batch = batch,
         kwargs...)
 
     function integrate_pullbacks(Δ)
@@ -148,24 +148,24 @@ Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::
             _,back = Zygote.pullback(p->f(x,p),params)
             back(Δ)[1]
         end
-        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params; 
+        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params;
             norm = norm, nout = nout*length(params), batch = batch,
             kwargs...)
         # ∂lb = -f(lb,params)  #needs correct for dim > 1
         # ∂ub = f(ub,params)
         return nothing, nothing, nothing, nothing, nothing, ∂p
-    end 
+    end
     primal, integrate_pullbacks
 end
 
 # defines adjoint via ∫[f(x,p; ∂/∂p f(x,p)] dx, ie it fuses the primal, post the primal calculation
 # has flag to only compute quad norm with respect to only the primal in the pull-back. Gives same quadrature points as doing forwarddiff
-Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub::T, params::P; 
+Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub::T, params::P;
                             nout = 1, batch = 0, norm = norm,
                             kwargs...) where {F,T,P}
 
-    primal = integrate(quadalg, adalg, f, lb, ub, params; 
-        norm = norm, nout = nout, batch = batch, 
+    primal = integrate(quadalg, adalg, f, lb, ub, params;
+        norm = norm, nout = nout, batch = batch,
         kwargs...)
 
     _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
@@ -175,16 +175,16 @@ Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub:
             y, back = Zygote.pullback(p->f(x,p),params)
             [y; back(Δ)[1]]   #TODO need to match proper arrray type? promote_type???
         end
-        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params; 
-            norm = _norm, nout = nout + nout*length(params), batch = batch, 
+        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params;
+            norm = _norm, nout = nout + nout*length(params), batch = batch,
             kwargs...)
         return nothing, nothing, nothing, nothing, nothing, @view ∂p[(nout+1):end]
-    end 
+    end
     primal, integrate_pullbacks
 end
 
-# Fuses primal and partials prior to pullback, I doubt this will stick around based on required system evals. 
-Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::T, params::P; 
+# Fuses primal and partials prior to pullback, I doubt this will stick around based on required system evals.
+Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::T, params::P;
                             nout = 1, batch = 0, norm = norm,
                             kwargs...) where {F,T,P}
     # from Seth Axen via Slack
@@ -195,14 +195,14 @@ Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::
 	f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper arrray type? promote_type???
 	_norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
 
-    res = integrate(quadalg, adalg, f_augmented, lb, ub, params; 
+    res = integrate(quadalg, adalg, f_augmented, lb, ub, params;
         norm = _norm, nout = nout + nout*length(params), batch = batch,
         kwargs...)
 	primal = first(res)
     function integrate_pullback(Δy)
 		∂params = Δy .* conj.(@view(res[(nout+1):end]))
         return nothing, nothing, nothing, nothing, nothing, ∂params
-    end 
+    end
     primal, integrate_pullback
 end
 
