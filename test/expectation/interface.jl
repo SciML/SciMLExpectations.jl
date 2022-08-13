@@ -5,13 +5,6 @@ using Test, TestExtras,
 const DEU = DiffEqUncertainty
 include("setup.jl")
 
-struct SystemMap{DT <: DiffEqBase.DEProblem, A, K}
-    prob::DT
-    args::A
-    kwargs::K
-end
-SystemMap(prob, args...; kwargs...) = SystemMap(prob, args, kwargs)
-
 function (sm::SystemMap{DT})(u0, p) where {DT}
     prob::DT = remake(sm.prob,
                       u0 = convert(typeof(sm.prob.u0), u0),
