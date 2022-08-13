@@ -79,13 +79,12 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
     end
 end
 
-#TODO need common return type for koopman() and MonteCarlo() solves
 # solve expectation problem of generic callable functions via MonteCarlo
 function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
     params = parameters(exprob)
     dist = distribution(exprob)
     g = observable(exprob)
-    mean(g(rand(dist), params) for _ in 1:(expalg.trajectories))
+    ExpectationSolution(mean(g(rand(dist), params) for _ in 1:(expalg.trajectories)), nothing, nothing)
 end
 
 # solve expectation over DEProblem via MonteCarlo
@@ -107,7 +106,7 @@ function DiffEqBase.solve(exprob::ExpectationProblem{F},
                                  output_func = output_func,
                                  prob_func = prob_func)
     sol = solve(monte_prob, S.args...; trajectories = expalg.trajectories, S.kwargs...)
-    mean(sol.u)
+    ExpectationSolution(mean(sol.u),nothing,nothing)
 end
 
 # Solve Koopman expectation
@@ -125,10 +124,10 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                     nout = prob.nout, batch = batch,
                     kwargs...)
 
-    return sol
+    return ExpectationSolution(sol.u,sol.resid,sol)
 end
 
-# Integrate function to test new Adjoints, will need to roll up to Quadrature.jl
+# Integrate function to test new Adjoints, will need to roll up to Integrals.jl
 function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub::TB, p;
                    nout = 1, batch = 0,
                    kwargs...) where {TB}
