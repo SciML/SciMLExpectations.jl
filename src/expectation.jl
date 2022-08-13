@@ -39,16 +39,6 @@ function build_integrand(prob::ExpectationProblem, ::Koopman, ::Val{false})
     end
 end
 
-# Builds integrand for DEProblems
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{false}) where {F <: SystemMap}
-    @unpack S, g, h, d = prob
-    function (x, p)
-        ū, p̄ = h(x, p.x[1], p.x[2])
-        g(S(ū, p̄), p̄) * pdf(d, x)
-    end
-end
-
 function _make_view(x::Union{Vector{T}, Adjoint{T, Vector{T}}}, i) where {T}
     @view x[i]
 end
