@@ -1,7 +1,7 @@
 using Test, TestExtras,
       DiffEqUncertainty, OrdinaryDiffEq, Distributions,
       StaticArrays, ComponentArrays, Random, FiniteDiff,
-      ForwardDiff
+      ForwardDiff, RecursiveArrayTools
 
 const DEU = DiffEqUncertainty
 include("setup.jl")
@@ -19,7 +19,7 @@ include("setup.jl")
         g(soln, p) = soln
         gd = product_distribution(Uniform(9, 11),Uniform(0.9 * π / 4, 1.1 * π / 4))
         ep = ExpectationProblem(sm, g, h, gd)
-        solve(ep, Koopman())
+        solve(ep, Koopman()).u
 
     end
     @testset "Correctness" begin
@@ -28,8 +28,8 @@ include("setup.jl")
     end
     @testset "Type Stability" begin
         pt = 0.0
-        @test_broken @constinferred ForwardDiff.derivative(loss, pt)
-        cfg = ForwardDiff.GradientConfig(loss∘first, [pt, 0.0])  # required, as config heuristic is type unstable, see: https://juliadiff.org/ForwardDiff.jl/latest/user/advanced.html#Configuring-Chunk-Size-1
-        @test_broken @constinferred ForwardDiff.gradient(loss∘first,[pt, 0.0], cfg)
+        #@test_broken @constinferred ForwardDiff.derivative(loss, pt)
+        #cfg = ForwardDiff.GradientConfig(loss∘first, [pt, 0.0])  # required, as config heuristic is type unstable, see: https://juliadiff.org/ForwardDiff.jl/latest/user/advanced.html#Configuring-Chunk-Size-1
+        #@test_broken @constinferred ForwardDiff.gradient(loss∘first,[pt, 0.0], cfg)
     end
 end
