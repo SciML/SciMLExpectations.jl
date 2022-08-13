@@ -10,20 +10,13 @@ struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
     d::TF  # distribution,            pdf(d,x): 𝕏 → ℝ
     params::TP
     nout::Int
-end 
+end
 
 # Constructor for general maps/functions
 function ExpectationProblem(g, pdist, params; nout = 1)
-    h(x,u,p) = x, p
-    S(x,p) = x
+    h(x, u, p) = x, p
+    S(x, p) = x
     ExpectationProblem(S, g, h, pdist, params, nout)
-end
-
-# Constructor for DEProblems
-function ExpectationProblem(sm::SystemMap, g, h, d; nout = 1)
-    ExpectationProblem(sm, g, h, d, 
-        ArrayPartition(deepcopy(sm.prob.u0),deepcopy(sm.prob.p)),
-        nout)
 end
 
 distribution(prob::ExpectationProblem) = prob.d
@@ -32,10 +25,9 @@ observable(prob::ExpectationProblem) = prob.g
 input_cov(prob::ExpectationProblem) = prob.h
 parameters(prob::ExpectationProblem) = prob.params
 
-## 
+##
 # struct CentralMomentProblem
 #     ns::NTuple{Int,N}
 #     altype::Union{NestedExpectation, BinomialExpansion} #Should rely be in solve
 #     exp_prob::ExpectationProblem
 # end
-

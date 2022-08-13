@@ -2,43 +2,51 @@ using OrdinaryDiffEq, Distributions,
       DiffEqUncertainty, Test, Integrals, IntegralsCubature, IntegralsCuba,
       FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity, LinearAlgebra
 
-quadalgs = [HCubatureJL(), CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), CubaCuhre()]
+quadalgs = [
+    HCubatureJL(),
+    CubatureJLh(),
+    CubatureJLp(),
+    CubaSUAVE(),
+    CubaDivonne(),
+    CubaCuhre(),
+]
 batchmode = [EnsembleSerial(), EnsembleThreads(), EnsembleCPUArray()]#, EnsembleGPUArray()]
 
-function eom!(du,u,p,t)
-  @inbounds begin
-    du[1] = u[2]
-    du[2] = -p[1]*u[1] - p[2]*u[2]
-  end
-  nothing
+function eom!(du, u, p, t)
+    @inbounds begin
+        du[1] = u[2]
+        du[2] = -p[1] * u[1] - p[2] * u[2]
+    end
+    nothing
 end
 
-u0 = [1.0;1.0]
-tspan = (0.0,3.0)
+u0 = [1.0; 1.0]
+tspan = (0.0, 3.0)
 p = [1.0, 2.0]
-prob = ODEProblem(eom!,u0,tspan,p)
+prob = ODEProblem(eom!, u0, tspan, p)
 
 A = [0.0 1.0; -p[1] -p[2]]
-u0s_dist = [Uniform(1,10), Uniform(2,6)]
+u0s_dist = [Uniform(1, 10), Uniform(2, 6)]
 
 @testset "Koopman Expectation, nout = 1" begin
-  g(sol) = sol[1,end]
-  analytical = (exp(A*tspan[end])*mean.(u0s_dist))[1]
+    g(sol) = sol[1, end]
+    analytical = (exp(A * tspan[end]) * mean.(u0s_dist))[1]
 
-  for alg ∈ quadalgs
-    @info "$alg"
-    @test expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg)[1] ≈ analytical rtol=1e-2
-  end
+    for alg in quadalgs
+        @info "$alg"
+        @test expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg)[1]≈analytical rtol=1e-2
+    end
 end
 
 @testset "Koopman Expectation, nout > 1" begin
-  g(sol) = sol[:,end]
-  analytical = (exp(A*tspan[end])*mean.(u0s_dist))
+    g(sol) = sol[:, end]
+    analytical = (exp(A * tspan[end]) * mean.(u0s_dist))
 
-  for alg ∈ quadalgs
-    @info "$alg"
-    @test expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg, nout =2) ≈ analytical rtol=1e-2
-  end
+    for alg in quadalgs
+        @info "$alg"
+        @test expectation(g, prob, u0s_dist, p, Koopman(), Tsit5(); quadalg = alg,
+                          nout = 2)≈analytical rtol=1e-2
+    end
 end
 
 # @testset "Koopman Expectation, nout = 1, batch" begin
