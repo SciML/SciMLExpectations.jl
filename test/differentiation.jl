@@ -3,7 +3,6 @@ using Test, TestExtras,
       StaticArrays, ComponentArrays, Random, FiniteDiff,
       ForwardDiff, RecursiveArrayTools
 
-const DEU = SciMLExpectations
 include("setup.jl")
 
 @testset "Koopman Expectation AD" begin

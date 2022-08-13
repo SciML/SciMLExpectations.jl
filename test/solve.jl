@@ -3,8 +3,6 @@ using Test, TestExtras,
       Integrals, IntegralsCubature, IntegralsCuba,
       StaticArrays, ComponentArrays, Random
 
-const DEU = SciMLExpectations
-
 quadalgs = [
     HCubatureJL(),
     CubatureJLh(),
