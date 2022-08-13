@@ -8,6 +8,7 @@ using Parameters: @unpack
 @reexport using Integrals
 import DiffEqBase: solve
 
+include("expectation/system_utils.jl")
 include("expectation/distribution_utils.jl")
 include("expectation/problem_types.jl")
 include("expectation/expectation.jl")
