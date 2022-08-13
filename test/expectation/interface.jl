@@ -25,7 +25,7 @@ end
     lb = [minimum.(dists)...]
     ub = [maximum.(dists)...]
 
-    P = Product([dists...])
+    P = product_distribution([dists...])
     gd_ind = @constinferred GenericDistribution(dists...)
     gd_raw = @constinferred GenericDistribution(pdf_f, rand_f, lb, ub)
     @constinferred GenericDistribution(pdf_f, rand_f, lb, ub)
@@ -57,7 +57,7 @@ end end
 
 @testset "ExpectationProblem" begin @testset "Interface" begin
     getters = (DEU.distribution, DEU.mapping, DEU.observable, DEU.input_cov, DEU.parameters)
-    dists = (Uniform(1, 2), Uniform(3, 4), Truncated(Normal(0, 1), -5, 5))
+    dists = (Uniform(1, 2), Uniform(3, 4), truncated(Normal(0, 1), -5, 5))
     gd = GenericDistribution(dists...)
     @testset "DiffEq" begin
         x = [mean(d) for d in dists]

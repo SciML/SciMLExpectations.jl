@@ -1,4 +1,3 @@
-
 abstract type AbstractUncertaintyProblem end
 
 struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
@@ -21,7 +20,7 @@ end
 
 # Constructor for DEProblems
 function ExpectationProblem(sm::SystemMap, g, h, d; nout = 1)
-    ExpectationProblem(sm, g, h, d, 
+    ExpectationProblem(sm, g, h, d,
         ArrayPartition(deepcopy(sm.prob.u0),deepcopy(sm.prob.p)),
         nout)
 end

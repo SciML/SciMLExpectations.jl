@@ -27,14 +27,11 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
     p = [1.0; 2.0]
     A = [0.0 1.0; -p[1] -p[2]]
     prob = ODEProblem((du, u, p, t) -> eom!(du, u, p, t, A), u0, tspan, p)
-    u0s_dist = (Uniform(1, 10), Truncated(Normal(3.0, 1), 0.0, 6.0))
+    u0s_dist = (Uniform(1, 10), truncated(Normal(3.0, 1), 0.0, 6.0))
     gd = GenericDistribution(u0s_dist...)
     cov(x, u, p) = x, p
 
-    sm = function (u0, p)
-        _prob = remake(prob, u0 = u0, p = p)
-        solve(_prob, Tsit5(), save_everystep = false)
-    end
+    sm = SystemMap(prob, Tsit5(), save_everystep = false)
 
     analytical = (exp(A * tspan[end]) * [mean(d) for d in u0s_dist])
     @testset "Scalar Observable (nout = 1)" begin
@@ -73,7 +70,7 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
 end
 
 @testset "General Map Expectation Solve" begin
-    gd = GenericDistribution(Uniform(0, 1), Truncated(Normal(0, 1), -4, 4))
+    gd = GenericDistribution(Uniform(0, 1), truncated(Normal(0, 1), -4, 4))
     p = [1.0, 2.0, 3.0]
     @testset "Scalar Observable (nout = 1)" begin
         g(u, p) = sum(p .* sin.(u[1])) + cos(u[2])
