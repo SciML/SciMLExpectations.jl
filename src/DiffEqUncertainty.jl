@@ -8,13 +8,11 @@ using Parameters: @unpack
 @reexport using Integrals
 import DiffEqBase: solve
 
-include("expectation/system_utils.jl")
-include("expectation/distribution_utils.jl")
-include("expectation/problem_types.jl")
-include("expectation/solution_types.jl")
-include("expectation/expectation.jl")
-
-include("probints.jl")
+include("system_utils.jl")
+include("distribution_utils.jl")
+include("problem_types.jl")
+include("solution_types.jl")
+include("expectation.jl")
 
 # Type Piracy, should upstream
 Base.eltype(K::UnivariateKDE) = eltype(K.density)
@@ -29,8 +27,6 @@ Base.extrema(d::AbstractMvNormal) = minimum(d), maximum(d)
 Base.minimum(d::Product) = minimum.(d.v)
 Base.maximum(d::Product) = maximum.(d.v)
 Base.extrema(d::Product) = minimum(d), maximum(d)
-
-export ProbIntsUncertainty, AdaptiveProbIntsUncertainty
 
 export Koopman, MonteCarlo, PrefusedAD, PostfusedAD, NonfusedAD
 export GenericDistribution, SystemMap, ExpectationProblem, build_integrand
