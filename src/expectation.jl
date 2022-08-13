@@ -39,55 +39,12 @@ function build_integrand(prob::ExpectationProblem, ::Koopman, ::Val{false})
     end
 end
 
-# Builds integrand for DEProblems
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{false}) where {F <: SystemMap}
-    @unpack S, g, h, d = prob
-    function (x, p)
-        ū, p̄ = h(x, p.x[1], p.x[2])
-        g(S(ū, p̄), p̄) * pdf(d, x)
-    end
-end
-
 function _make_view(x::Union{Vector{T}, Adjoint{T, Vector{T}}}, i) where {T}
     @view x[i]
 end
 
 function _make_view(x, i)
     @view x[:, i]
-end
-
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{true}) where {F <: SystemMap}
-    @unpack S, g, h, d = prob
-
-    if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
-        set_result! = @inline function (dx, sol)
-            dx[:] .= sol[:]
-        end
-    else
-        set_result! = @inline function (dx, sol)
-            dx .= reshape(sol[:, :], size(dx))
-        end
-    end
-
-    prob_func = function (prob, i, repeat, x)  # TODO is it better to make prob/output funcs outside of integrand, then call w/ closure?
-        u0, p = h((_make_view(x, i)), prob.u0, prob.p)
-        remake(prob, u0 = u0, p = p)
-    end
-
-    output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
-
-    function (dx, x, p) where {T}
-        trajectories = size(x, 2)
-        # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
-        ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
-                                  prob_func = (prob, i, repeat) -> prob_func(prob, i,
-                                                                             repeat, x))
-        sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
-        set_result!(dx, sol)
-        nothing
-    end
 end
 
 # solve expectation problem of generic callable functions via MonteCarlo
@@ -97,28 +54,6 @@ function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
     g = observable(exprob)
     ExpectationSolution(mean(g(rand(dist), params) for _ in 1:(expalg.trajectories)),
                         nothing, nothing)
-end
-
-# solve expectation over DEProblem via MonteCarlo
-function DiffEqBase.solve(exprob::ExpectationProblem{F},
-                          expalg::MonteCarlo) where {F <: SystemMap}
-    d = distribution(exprob)
-    cov = input_cov(exprob)
-    S = mapping(exprob)
-    g = observable(exprob)
-
-    prob_func = function (prob, i, repeat)
-        u0, p = cov(rand(d), prob.u0, prob.p)
-        remake(prob, u0 = u0, p = p)
-    end
-
-    output_func(sol, i) = (g(sol, sol.prob.p), false)
-
-    monte_prob = EnsembleProblem(S.prob;
-                                 output_func = output_func,
-                                 prob_func = prob_func)
-    sol = solve(monte_prob, S.args...; trajectories = expalg.trajectories, S.kwargs...)
-    ExpectationSolution(mean(sol.u), nothing, nothing)
 end
 
 # Solve Koopman expectation
