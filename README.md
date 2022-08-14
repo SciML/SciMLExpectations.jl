@@ -1,14 +1,26 @@
 # SciMLExpectations.jl: Expectated Values of Simulations and Uncertainty Quantification
 
 [![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://scimlexpectations.sciml.ai/stable/)
+[![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/dev/modules/SciMLExpectations/)
+
 [![Build Status](https://github.com/SciML/SciMLExpectations.jl/workflows/CI/badge.svg)](https://github.com/SciML/SciMLExpectations.jl/actions?query=workflow%3ACI)
-[![Coverage Status](https://coveralls.io/repos/SciML/SciMLExpectations.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/SciML/SciMLExpectations.jl?branch=master)
-[![codecov.io](http://codecov.io/github/SciML/SciMLExpectations.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaDiffEq/SciMLExpectations.jl?branch=master)
+[![Coverage Status](https://coveralls.io/repos/SciML/SciMLExpectations.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaDiffEq/SciMLExpectations.jl?branch=master)
+[![codecov.io](http://codecov.io/github/JuliaDiffEq/SciMLExpectations.jl/coverage.svg?branch=master)](http://codecov.io/github/SciML/SciMLExpectations.jl?branch=master)
+
+[![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
+[![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
 
 SciMLExpectations.jl is a package for quantifying the uncertainties of simulations by
 calculating the expectations of observables with respect to input uncertainties. Its goal
 is to make it fast and easy to compute solution moments in a differentiable way in order
 to enable fast optimization under uncertainty.
+
+## Tutorials and Documentation
+
+For information on using the package, see the [SciMLExpectations](https://docs.sciml.ai/dev/modules/SciMLExpectations/) section of the
+[SciML docs](docs.sciml.ai). For information on specific previous versions of this package, see the 
+[see the stable SciMLExpectations-only documentation](https://scimlexpectations.sciml.ai/stable/).
 
 ### Example
 
