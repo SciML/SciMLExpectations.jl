@@ -1,6 +1,6 @@
 using OrdinaryDiffEq, Distributions,
       SciMLExpectations, Test, Integrals, IntegralsCubature, IntegralsCuba,
-      FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, DiffEqSensitivity, LinearAlgebra
+      FiniteDiff, Zygote, ForwardDiff, DiffEqGPU, SciMLSensitivity, LinearAlgebra
 
 quadalgs = [
     HCubatureJL(),
