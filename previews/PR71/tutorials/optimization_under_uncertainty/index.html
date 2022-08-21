@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Optimization Under Uncertainty with SciMLExpectations.jl · SciMLExpectations.jl</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-90474609-3"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-90474609-3', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../../assets/warner.js"></script><link rel="canonical" href="https://SciMLExpectations.sciml.ai/stable/tutorials/optimization_under_uncertainty/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SciMLExpectations.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../introduction/">An Introduction to Expectations via SciMLExpectations.jl</a></li><li class="is-active"><a class="tocitem" href>Optimization Under Uncertainty with SciMLExpectations.jl</a><ul class="internal"><li><a class="tocitem" href="#System-Model"><span>System Model</span></a></li><li><a class="tocitem" href="#Considering-Uncertainty"><span>Considering Uncertainty</span></a></li><li><a class="tocitem" href="#Optimization-Under-Uncertainty"><span>Optimization Under Uncertainty</span></a></li><li><a class="tocitem" href="#Probabilistic-Constraints"><span>Probabilistic Constraints</span></a></li></ul></li><li><a class="tocitem" href="../gpu_bayesian/">GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../../manual/problem/">ExpectationProblem</a></li><li><a class="tocitem" href="../../manual/solve/">Solving Expectation Problems</a></li><li><a class="tocitem" href="../../manual/algorithms/">Expectation Algorithms</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Optimization Under Uncertainty with SciMLExpectations.jl</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Optimization Under Uncertainty with SciMLExpectations.jl</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/SciML/SciMLExpectations.jl/blob/master/docs/src/tutorials/optimization_under_uncertainty.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Optimization-Under-Uncertainty-with-SciMLExpectations.jl"><a class="docs-heading-anchor" href="#Optimization-Under-Uncertainty-with-SciMLExpectations.jl">Optimization Under Uncertainty with SciMLExpectations.jl</a><a id="Optimization-Under-Uncertainty-with-SciMLExpectations.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization-Under-Uncertainty-with-SciMLExpectations.jl" title="Permalink"></a></h1><p>This tutorial gives and overview of how to leverage the efficient Koopman expectation method from SciMLExpectations to perform optimization under uncertainty. We demonstrate this by using a bouncing ball model with an uncertain model parameter. We also demonstrate its application to problems with probabilistic constraints, in particular a special class of constraints called chance constraints.</p><h2 id="System-Model"><a class="docs-heading-anchor" href="#System-Model">System Model</a><a id="System-Model-1"></a><a class="docs-heading-anchor-permalink" href="#System-Model" title="Permalink"></a></h2><p>First lets consider a 2D bouncing ball, where the states are the horizontal position <span>$x$</span>, horizontal velocity <span>$\dot{x}$</span>, vertical position <span>$y$</span>, and vertical velocity <span>$\dot{y}$</span>. This model has two system parameters, acceleration due to gravity and coefficient of restitution (models energy loss when the ball impacts the ground). We can simulate such a system using <code>ContinuousCallback</code> as</p><pre><code class="language-julia hljs">using OrdinaryDiffEq, Plots
+
+function ball!(du,u,p,t)
+    du[1] = u[2]
+    du[2] = 0.0
+    du[3] = u[4]
+    du[4] = -p[1]
+end
+
+ground_condition(u,t,integrator) = u[3]
+ground_affect!(integrator) = integrator.u[4] = -integrator.p[2] * integrator.u[4]
+ground_cb = ContinuousCallback(ground_condition, ground_affect!)
+
+u0 = [0.0,2.0,50.0,0.0]
+tspan = (0.0,50.0)
+p = [9.807, 0.9]
+
+prob = ODEProblem(ball!,u0,tspan,p)
+sol = solve(prob,Tsit5(),callback=ground_cb)
+plot(sol, vars=(1,3), label = nothing, xlabel=&quot;x&quot;, ylabel=&quot;y&quot;)</code></pre><p>For this particular problem, we wish to measure the impact distance from a point <span>$y=25$</span> on a wall at <span>$x=25$</span>. So, we introduce an additional callback that terminates the simulation on wall impact.</p><pre><code class="language-julia hljs">stop_condition(u,t,integrator) = u[1] - 25.0
+stop_cb = ContinuousCallback(stop_condition, terminate!)
+cbs = CallbackSet(ground_cb, stop_cb)
+
+tspan = (0.0, 1500.0)
+prob = ODEProblem(ball!,u0,tspan,p)
+sol = solve(prob,Tsit5(),callback=cbs)</code></pre><p>To help visualize this problem, we plot as follows, where the star indicates a desired impace location</p><pre><code class="language-julia hljs">rectangle(xc, yc, w, h) = Shape(xc .+ [-w,w,w,-w]./2.0, yc .+ [-h,-h,h,h]./2.0)
+
+begin
+    plot(sol, vars=(1,3), label=nothing, lw = 3, c=:black)
+    xlabel!(&quot;x [m]&quot;)
+    ylabel!(&quot;y [m]&quot;)
+    plot!(rectangle(27.5, 25, 5, 50), c=:red, label = nothing)
+    scatter!([25],[25],marker=:star, ms=10, label = nothing,c=:green)
+    ylims!(0.0,50.0)
+end</code></pre><h2 id="Considering-Uncertainty"><a class="docs-heading-anchor" href="#Considering-Uncertainty">Considering Uncertainty</a><a id="Considering-Uncertainty-1"></a><a class="docs-heading-anchor-permalink" href="#Considering-Uncertainty" title="Permalink"></a></h2><p>We now wish to introduce uncertainty in <code>p[2]</code>, the coefficient of restitution. This is defined via a continuous univiate distribution from Distributions.jl. We can then run a Monte Carlo simulation of 100,000 trajectories via the <code>EnsembleProblem</code> interface.</p><pre><code class="language-julia hljs">using Distributions
+
+cor_dist = truncated(Normal(0.9, 0.02), 0.9-3*0.02, 1.0)
+trajectories = 100000
+
+prob_func(prob,i,repeat) = remake(prob, p = [p[1], rand(cor_dist)])
+ensemble_prob = EnsembleProblem(prob,prob_func=prob_func)
+ensemblesol = solve(ensemble_prob,Tsit5(),EnsembleThreads(),trajectories=trajectories, callback=cbs)
+
+begin # plot
+    plot(ensemblesol, vars = (1,3), lw=1,alpha=0.2, label=nothing, idxs = 1:350)
+    xlabel!(&quot;x [m]&quot;)
+    ylabel!(&quot;y [m]&quot;)
+    plot!(rectangle(27.5, 25, 5, 50), c=:red, label = nothing)
+    scatter!([25],[25],marker=:star, ms=10, label = nothing, c=:green)
+    plot!(sol, vars=(1,3), label=nothing, lw = 3, c=:black, ls=:dash)
+    xlims!(0.0,27.5)
+end</code></pre><p>Here, we plot the first 350 Monte Carlo simulations along with the trajectory corrresponding to the mean of the distribution (dashed line).</p><p>We now wish to compute the expected squared impact distance from the star. This is called an &quot;observation&quot; of our system or an &quot;observable&quot; of interest.</p><p>We define this observable as</p><pre><code class="language-julia hljs">obs(sol) = abs2(sol[3,end]-25)</code></pre><p>With the observable defined, we can compute the expected squared miss distance from our Monte Carlo simulation results as</p><pre><code class="language-julia hljs">mean_ensemble = mean([obs(sol) for sol in ensemblesol])</code></pre><p>Alternatively, we can use the <code>Koopman()</code> algorithm in SciMLExpectations.jl to compute this expectation much more efficiently as</p><pre><code class="language-julia hljs">using SciMLExpectations
+
+p_uncertain = [9.807, cor_dist]
+expectation(obs, prob, u0, p_uncertain, Koopman(), Tsit5();
+            ireltol = 1e-5, callback=cbs)</code></pre><h2 id="Optimization-Under-Uncertainty"><a class="docs-heading-anchor" href="#Optimization-Under-Uncertainty">Optimization Under Uncertainty</a><a id="Optimization-Under-Uncertainty-1"></a><a class="docs-heading-anchor-permalink" href="#Optimization-Under-Uncertainty" title="Permalink"></a></h2><p>We now wish to optimize the initial position (<span>$x_0,y_0$</span>) and horizontal velocity (<span>$\dot{x}_0$</span>) of the system to minimize the expected squared miss distance from the star, where <span>$x_0\in\left[-100,0\right]$</span>, <span>$y_0\in\left[1,3\right]$</span>, and <span>$\dot{x}_0\in\left[10,50\right]$</span>. We will demonstrate this using a gradient-based optimization approach from NLopt.jl using <code>ForwardDiff.jl</code> AD through the expectation calculation.</p><p>First, we load the required packages and define our loss function</p><pre><code class="language-julia hljs">using NLopt, DiffEqSensitivity, ForwardDiff
+
+make_u0(θ) = [θ[1],θ[2],θ[3], 0.0]
+
+function 𝔼_loss(θ)   # \bbE
+    u0 = make_u0(θ)
+    expectation(obs, prob, u0, p_uncertain, Koopman(), Tsit5();
+                 ireltol = 1e-5, callback=cbs)[1]
+end</code></pre><p>NLopt requires that this loss function return the loss as above, but also do an inplace update of the gradient. So, we wrap this function to put it in the form required by NLopt.</p><pre><code class="language-julia hljs">function 𝔼_loss_nlopt(x,∇)
+    length(∇) &gt; 0 ? ForwardDiff.gradient!(∇, 𝔼_loss,x) : nothing
+    𝔼_loss(x)
+end</code></pre><p>We then optimize using the <a href="https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/#mma-method-of-moving-asymptotes-and-ccsa">Method of Moving Asymptotes</a> algorithm (<code>:LD_MMA</code>)</p><pre><code class="language-julia hljs">opt = Opt(:LD_MMA, 3)
+opt.lower_bounds = [-100.0,1.0, 10.0]
+opt.upper_bounds = [0.0,3.0, 50.0]
+opt.xtol_rel = 1e-3
+opt.min_objective = 𝔼_loss_nlopt
+(minf,minx,ret) = NLopt.optimize(opt, [-1.0, 2.0, 50.0])</code></pre><p>Let&#39;s now visualize 350 Monte Carlo simulations</p><pre><code class="language-julia hljs">ensembleprob = EnsembleProblem(remake(prob,u0 = make_u0(minx)),prob_func=prob_func)
+ensemblesol = solve(ensembleprob,Tsit5(),EnsembleThreads(), trajectories=100_000, callback=cbs)
+
+begin
+    plot(ensemblesol, vars = (1,3), lw=1,alpha=0.1, label=nothing, idxs = 1:350)
+    plot!(solve(remake(prob, u0=make_u0(minx)),Tsit5(), callback=cbs),
+            vars=(1,3),label = nothing, c=:black, lw=3,ls=:dash)
+    xlabel!(&quot;x [m]&quot;)
+    ylabel!(&quot;y [m]&quot;)
+    plot!(rectangle(27.5, 25, 5, 50), c=:red, label = nothing)
+    scatter!([25],[25],marker=:star, ms=10, label = nothing,c=:green)
+    ylims!(0.0,50.0)
+    xlims!(minx[1], 27.5)
+end</code></pre><p>Looks pretty good! But, how long did it take? Let&#39;s benchmark.</p><pre><code class="language-julia hljs">using BenchmarkTools
+
+@btime NLopt.optimize($opt, $[-1.0, 2.0, 50.0])</code></pre><p>Not bad for bound constrained optimization under uncertainty of a hybrid system!</p><h2 id="Probabilistic-Constraints"><a class="docs-heading-anchor" href="#Probabilistic-Constraints">Probabilistic Constraints</a><a id="Probabilistic-Constraints-1"></a><a class="docs-heading-anchor-permalink" href="#Probabilistic-Constraints" title="Permalink"></a></h2><p>With this approach we can also consider probabilistic constraints. Let us now consider a wall at <span>$x=20$</span> with height 25.</p><pre><code class="language-julia hljs">constraint = [20.0, 25.0]
+begin
+    plot(rectangle(27.5, 25, 5, 50), c=:red, label = nothing)
+    xlabel!(&quot;x [m]&quot;)
+    ylabel!(&quot;y [m]&quot;)
+    plot!([constraint[1], constraint[1]],[0.0,constraint[2]], lw=5, c=:black, label=nothing)
+    scatter!([25],[25],marker=:star, ms=10, label = nothing,c=:green)
+    ylims!(0.0,50.0)
+    xlims!(minx[1], 27.5)
+end</code></pre><p>We now wish to minimize the same loss function as before, but introduce an inequality constraint such that the solution must have less than a 1% chance of colliding with the wall at <span>$x=20$</span>. This class of probabilistic constraints is called a chance constraint.</p><p>To do this, we first introduce a new callback and solve the system using the previous optimal solution</p><pre><code class="language-julia hljs">constraint_condition(u,t,integrator) = u[1] - constraint[1]
+constraint_affect!(integrator) = integrator.u[3] &lt; constraint[2] ? terminate!(integrator) : nothing
+constraint_cb = ContinuousCallback(constraint_condition, constraint_affect!, save_positions=(true,false));
+constraint_cbs = CallbackSet(ground_cb, stop_cb, constraint_cb)
+
+ensemblesol = solve(ensembleprob,Tsit5(),EnsembleThreads(), trajectories=350, callback=constraint_cbs, maxstep=0.1)
+
+begin
+    plot(ensemblesol, vars = (1,3), lw=1,alpha=0.1, label=nothing)
+    plot!(solve(remake(prob, u0=make_u0(minx)),Tsit5(), callback=constraint_cbs),
+            vars=(1,3),label = nothing, c=:black, lw=3, ls=:dash)
+
+    xlabel!(&quot;x [m]&quot;)
+    ylabel!(&quot;y [m]&quot;)
+    plot!(rectangle(27.5, 25, 5, 50), c=:red, label = nothing)
+    plot!([constraint[1], constraint[1]],[0.0,constraint[2]], lw=5, c=:black)
+    scatter!([25],[25],marker=:star, ms=10, label = nothing,c=:green)
+    ylims!(0.0,50.0)
+    xlims!(minx[1], 27.5)
+end</code></pre><p>That doesn&#39;t look good!</p><p>We now need a second observable for the system. In order to compute a probability of impact, we use an indicator function for if a trajectory impacts the wall. In other words, this functions returns 1 if the trajectory hits the wall and 0 otherwise.</p><pre><code class="language-julia hljs">constraint_obs(sol) = sol[1,end] ≈ constraint[1] ? one(sol[1,end]) : zero(sol[1,end])</code></pre><p>Using the previously computed optimal initial conditions, lets compute the probability of hitting this wall</p><pre><code class="language-julia hljs">expectation(constraint_obs, prob, make_u0(minx), p_uncertain, Koopman(), Tsit5();
+            ireltol= 1e-9, iabstol = 1e-9, callback=constraint_cbs)[1]</code></pre><p>We then setup the constraint function for NLopt just as before.</p><pre><code class="language-julia hljs">function 𝔼_constraint(θ)
+    u0 = [θ[1],θ[2],θ[3], 0.0]
+    expectation(constraint_obs, prob, u0, p_uncertain, Koopman(), Tsit5(),
+                ireltol= 1e-9, iabstol = 1e-9,callback=constraint_cbs)[1]
+end
+
+function 𝔼_constraint_nlopt(x,∇)
+    length(∇) &gt; 0 ? ForwardDiff.gradient!(∇, 𝔼_constraint,x) : nothing
+    𝔼_constraint(x) - 0.01
+end</code></pre><p>Note that NLopt requires the constraint function to be of the form <span>$g(x) \leq 0$</span>. Hence, why we return <code>𝔼_constraint(x) - 0.01</code> for the 1% chance constraint.</p><p>The rest of the NLopt setup looks the same as before with the exception of adding the inequality constraint</p><pre><code class="language-julia hljs">opt = Opt(:LD_MMA, 3)
+opt.lower_bounds = [-100.0, 1.0, 10.0]
+opt.upper_bounds = [0.0, 3.0, 50.0]
+opt.xtol_rel = 1e-3
+opt.min_objective = 𝔼_loss_nlopt
+inequality_constraint!(opt,𝔼_constraint_nlopt, 1e-5)
+(minf2,minx2,ret2) = NLopt.optimize(opt, [-1.0, 2.0, 50.0])</code></pre><p>The probability of impacting the wall is now</p><pre><code class="language-julia hljs">λ = 𝔼_constraint(minx2)</code></pre><p>We can check if this is within tolerance by</p><pre><code class="language-julia hljs">λ - 0.01 &lt;= 1e-5</code></pre><p>Again, we plot some Monte Carlo simulations from this result as follows</p><pre><code class="language-julia hljs">ensembleprob = EnsembleProblem(remake(prob,u0 = make_u0(minx2)),prob_func=prob_func)
+ensemblesol = solve(ensembleprob,Tsit5(),EnsembleThreads(),
+                    trajectories=350, callback=constraint_cbs)
+
+begin
+    plot(ensemblesol, vars = (1,3), lw=1,alpha=0.1, label=nothing)
+    plot!(solve(remake(prob, u0=make_u0(minx2)),Tsit5(), callback=constraint_cbs),
+            vars=(1,3),label = nothing, c=:black, lw=3, ls=:dash)
+    plot!([constraint[1], constraint[1]],[0.0,constraint[2]], lw=5, c=:black)
+
+    xlabel!(&quot;x [m]&quot;)
+    ylabel!(&quot;y [m]&quot;)
+    plot!(rectangle(27.5, 25, 5, 50), c=:red, label = nothing)
+    scatter!([25],[25],marker=:star, ms=10, label = nothing,c=:green)
+    ylims!(0.0,50.0)
+    xlims!(minx[1], 27.5)
+end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../introduction/">« An Introduction to Expectations via SciMLExpectations.jl</a><a class="docs-footer-nextpage" href="../gpu_bayesian/">GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.22 on <span class="colophon-date" title="Sunday 21 August 2022 09:18">Sunday 21 August 2022</span>. Using Julia version 1.8.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
