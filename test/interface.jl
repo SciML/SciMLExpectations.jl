@@ -13,7 +13,7 @@ function (sm::SystemMap{DT})(u0, p) where {DT}
 end
 
 @testset "GenericDistribution" begin
-    dists = (Uniform(1, 2), Uniform(3, 4), Normal(0, 1))
+    dists = (Uniform(1, 2), Uniform(3, 4), Normal(0, 1), Truncated(Normal(0, 1), -3, 3))
     x = [mean(d) for d in dists]
 
     pdf_f = let dists = dists

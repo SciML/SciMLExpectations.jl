@@ -12,7 +12,7 @@ struct GenericDistribution{TF, TRF, TLB, TUB}
     ub::TUB
 end
 
-function GenericDistribution(d, ds...)
+function GenericDistribution(d::Distributions.Sampleable, ds...)
     dists = (d, ds...)
     pdf_func(x) = exp(sum(logpdf(f, y) for (f, y) in zip(dists, x)))
     rand_func() = [rand(d) for d in dists]
