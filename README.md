@@ -1,8 +1,7 @@
 # SciMLExpectations.jl: Expectated Values of Simulations and Uncertainty Quantification
 
 [![Join the chat at https://gitter.im/JuliaDiffEq/Lobby](https://badges.gitter.im/JuliaDiffEq/Lobby.svg)](https://gitter.im/JuliaDiffEq/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](http://scimlexpectations.sciml.ai/stable/)
-[![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/dev/modules/SciMLExpectations/)
+[![Global Docs](https://img.shields.io/badge/docs-SciML-blue.svg)](https://docs.sciml.ai/SciMLExpectations/stable/)
 
 [![Build Status](https://github.com/SciML/SciMLExpectations.jl/workflows/CI/badge.svg)](https://github.com/SciML/SciMLExpectations.jl/actions?query=workflow%3ACI)
 [![Coverage Status](https://coveralls.io/repos/SciML/SciMLExpectations.jl/badge.svg?branch=master&service=github)](https://coveralls.io/github/JuliaDiffEq/SciMLExpectations.jl?branch=master)
@@ -20,7 +19,7 @@ to enable fast optimization under uncertainty.
 
 For information on using the package, see the [SciMLExpectations](https://docs.sciml.ai/dev/modules/SciMLExpectations/) section of the
 [SciML docs](docs.sciml.ai). For information on specific previous versions of this package, see the 
-[see the stable SciMLExpectations-only documentation](https://scimlexpectations.sciml.ai/stable/).
+[see the stable SciMLExpectations-only documentation](https://docs.sciml.ai/SciMLExpectations/stable/).
 
 ### Example
 

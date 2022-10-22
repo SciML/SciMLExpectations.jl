@@ -16,7 +16,7 @@ makedocs(sitename = "SciMLExpectations.jl",
          clean = true, doctest = false,
          format = Documenter.HTML(analytics = "UA-90474609-3",
                                   assets = ["assets/favicon.ico"],
-                                  canonical = "https://SciMLExpectations.sciml.ai/stable/"),
+                                  canonical = "https://docs.sciml.ai/SciMLExpectations/stable/"),
          pages = pages)
 
 deploydocs(repo = "github.com/SciML/SciMLExpectations.jl.git";
