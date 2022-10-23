@@ -130,8 +130,7 @@ This is the Monte Carlo approach and it converges to the correct answer by
 
 However, the [Koopman expectation](https://arxiv.org/abs/2008.08737) can converge
 with much fewer points, allowing the use of higher order quadrature methods to
-converge exponentially faster in many cases. To use the Koopman expectation
-functionality provided by [SciMLExpectations.jl](https://github.com/SciML/SciMLExpectations.jl),
+converge exponentially faster in many cases. To use the Koopman expectation,
 we first need to define our observable function `g`. This function designates the
 thing about the solution we wish to calculate the expectation of. Thus for our
 question "what is the expected value of `x`at time `t=10`?", we would simply use:
@@ -172,7 +171,7 @@ Are we done? No, we need to add some GPUs! As mentioned earlier, probability
 calculations can take quite a bit of ODE solves, so let's parallelize across
 the parameters. [DiffEqGPU.jl](https://github.com/SciML/DiffEqGPU.jl) allows you
 to GPU-parallelize across parameters by using the
-[Ensemble interface](https://diffeq.sciml.ai/stable/features/ensemble/). Note that
+[Ensemble interface](https://docs.sciml.ai/DiffEqDocs/stable/features/ensemble/). Note that
 you do not have to do any of the heavy lifting: all of the conversion to GPU
 kernels is done automaticaly by simply specifying `EnsembleGPUArray` as the
 ensembling method. For example:
