@@ -28,3 +28,28 @@ Zygote = "0.6"
 Parameters = "0.12"
 StaticArrays = "1"
 julia = "1.6"
+
+[extras]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+PkgBenchmark = "32113eaa-f34f-5b0d-bd6c-c81e245fc73d"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReferenceTests = "324d217c-45ce-50fc-942e-d289b448e8cf"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
+IntegralsCubature = "c31f79ba-6e32-46d4-a52f-182a8ac42a54"
+IntegralsCuba = "e00cd5f1-6337-4131-8b37-28b2fe4cd6cb"
+FiniteDiff = "6a86dc24-6348-571c-b903-95158fe2bd41"
+RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
+
+
+[targets]
+test = ["Test", "SafeTestsets", "TestExtras", "Pkg", "PkgBenchmark", "BenchmarkTools", "ReferenceTests",
+        "SymPy", "Random", "OrdinaryDiffEq","ComponentArrays","ForwardDiff", "Integrals", "IntegralsCubature",
+        "IntegralsCuba", "FiniteDiff", "RecursiveArrayTools"]
