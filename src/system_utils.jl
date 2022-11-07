@@ -166,7 +166,7 @@ function DiffEqBase.solve(exprob::ExpectationProblem{F},
 end
 
 function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{true}) where {F <: AbstractSystemMap}
+                         ::Val{false}) where {F <: ProcessNoiseSystemMap}
     @unpack S, g, h, d = prob
 
     if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
@@ -190,14 +190,15 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
 
     output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
 
-    function (dx, x, p) where {T}
+    function (x, p) where {T}
         trajectories = size(x, 2)
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
                                   prob_func = (prob, i, repeat) -> prob_func(prob, i,
                                                                              repeat, x))
         sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
-        set_result!(dx, sol)
-        nothing
+        # set_result!(dx, sol)
+        # nothing
+        sol[:]
     end
 end
