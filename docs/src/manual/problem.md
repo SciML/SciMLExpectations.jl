@@ -3,4 +3,5 @@
 ```@docs
 ExpectationProblem
 SystemMap
+GenericDistribution
 ```
