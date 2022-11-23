@@ -132,7 +132,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                           quadalg = HCubatureJL(),
                           ireltol = 1e-2, iabstol = 1e-2,
                           kwargs...) where {A <: AbstractExpectationADAlgorithm}
-    integrand = build_integrand(prob, expalg, Val(batch > 1))
+    integrand = build_integrand(prob, expalg, Val(batch > 0))
     lb, ub = extrema(prob.d)
 
     sol = integrate(quadalg, expalg.sensealg, integrand, lb, ub, prob.params;
@@ -148,7 +148,7 @@ function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub
                    nout = 1, batch = 0,
                    kwargs...) where {TB}
     #TODO check batch iip type stability w/ IntegralProblem{XXXX}
-    prob = IntegralProblem{batch > 1}(f, lb, ub, p; nout = nout, batch = batch)
+    prob = IntegralProblem{batch > 0}(f, lb, ub, p; nout = nout, batch = batch)
     solve(prob, quadalg; kwargs...)
 end
 

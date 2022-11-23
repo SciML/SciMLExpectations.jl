@@ -136,7 +136,7 @@ function (sm::ProcessNoiseSystemMap{DT})(Z, p) where {DT}
 end
 
 function ExpectationProblem(sm::ProcessNoiseSystemMap, g, h; nout = 1)
-    d = GenericDistribution((Normal() for i in 1:sm.n)...)
+    d = GenericDistribution((Truncated(Normal(),-3.0,3.0) for i in 1:sm.n)...)
     ExpectationProblem(sm, g, h, d, deepcopy(sm.prob.p), nout)
 end
 
@@ -167,6 +167,11 @@ end
 
 function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
                          ::Val{false}) where {F <: ProcessNoiseSystemMap}
+    error("Out of position problems currently not supported")
+end
+
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
+                         ::Val{true}) where {F <: ProcessNoiseSystemMap}
     @unpack S, g, h, d = prob
 
     if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
@@ -190,15 +195,14 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
 
     output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
 
-    function (x, p) where {T}
+    function (dx,x, p) where {T}
         trajectories = size(x, 2)
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
                                   prob_func = (prob, i, repeat) -> prob_func(prob, i,
                                                                              repeat, x))
         sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
-        # set_result!(dx, sol)
-        # nothing
-        sol[:]
+        set_result!(dx, sol)
+        nothing
     end
 end
