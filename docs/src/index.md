@@ -5,6 +5,10 @@ calculating the expectations of observables with respect to input uncertainties.
 is to make it fast and easy to compute solution moments in a differentiable way in order
 to enable fast optimization under uncertainty.
 
+!!! warn
+
+    This package is still under heavy construction. Use at your own risk!
+
 ## Installation
 
 To install SciMLExpectations.jl, use the Julia package manager:
