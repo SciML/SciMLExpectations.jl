@@ -1,7 +1,7 @@
 name = "SciMLExpectations"
 uuid = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "2.0.0"
+version = "2.0.1"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
