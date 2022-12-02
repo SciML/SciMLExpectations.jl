@@ -1158,7 +1158,7 @@ version = "1.77.0"
 deps = ["DiffEqBase", "Distributions", "Integrals", "KernelDensity", "LinearAlgebra", "Parameters", "Random", "RecursiveArrayTools", "Reexport", "StaticArrays", "Statistics", "Zygote"]
 path = "/home/runner/work/SciMLExpectations.jl/SciMLExpectations.jl"
 uuid = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
-version = "2.0.0"
+version = "2.0.1"
 
 [[deps.Scratch]]
 deps = ["Dates"]
