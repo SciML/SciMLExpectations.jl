@@ -90,7 +90,12 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
     end
 end
 
-# solve expectation problem of generic callable functions via MonteCarlo
+"""
+```julia
+solve(exprob::ExpectationProblem, expalg::MonteCarlo)
+```
+Solve an `ExpectationProblem` using Monte Carlo integration.
+"""
 function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
     params = parameters(exprob)
     dist = distribution(exprob)
@@ -99,7 +104,6 @@ function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
                         nothing, nothing)
 end
 
-# solve expectation over DEProblem via MonteCarlo
 function DiffEqBase.solve(exprob::ExpectationProblem{F},
                           expalg::MonteCarlo) where {F <: SystemMap}
     d = distribution(exprob)
@@ -121,7 +125,15 @@ function DiffEqBase.solve(exprob::ExpectationProblem{F},
     ExpectationSolution(mean(sol.u), nothing, nothing)
 end
 
-# Solve Koopman expectation
+
+"""
+```julia
+solve(exprob::ExpectationProblem, expalg::Koopman;
+      maxiters = 1000000, batch = 0 , quadalg = HCubatureJL(),
+      ireltol = 1e-2, iabstol = 1e-2, kwargs...)
+```
+Solve an `ExpectationProblem` using Koopman integration.
+"""
 function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                           maxiters = 1000000,
                           batch = 0,

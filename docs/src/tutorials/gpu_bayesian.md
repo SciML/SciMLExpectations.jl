@@ -18,20 +18,19 @@ Let's dive right in.
 
 Let's start by importing all of the necessary libraries:
 
-```julia
-using Turing, Distributions, DifferentialEquations
-using MCMCChains, Plots, StatsPlots
-using Random
-using SciMLExpectations
-using KernelDensity, SciMLExpectations
-using Cuba, DiffEqGPU
-
-Random.seed!(1);
+```@example Bayesian
+using OrdinaryDiffEq
+using Turing, MCMCChains, Distributions
+using KernelDensity
+using SciMLExpectations, IntegralsCuba
+using DiffEqGPU
+using Plots, StatsPlots
+using Random; Random.seed!(1);
 ```
 
 For this tutorial we will use the Lotka-Volterra equation:
 
-```julia
+```@example Bayesian
 function lotka_volterra(du,u,p,t)
   @inbounds begin
       x = u[1]
@@ -53,14 +52,14 @@ plot(sol)
 
 From the Lotka-Volterra equation we will generate a dataset with known parameters:
 
-```julia
+```@example Bayesian
 sol1 = solve(prob1,Tsit5(),saveat=0.1)
 ```
 
 Now let's assume our dataset should have noise. We can add this noise in and
 plot the noisy data against the generating set:
 
-```julia
+```@example Bayesian
 odedata = Array(sol1) + 0.8 * randn(size(Array(sol1)))
 plot(sol1, alpha = 0.3, legend = false); scatter!(sol1.t, odedata')
 ```
@@ -75,7 +74,7 @@ tutorial from Turing.jl.
 Following that tutorial, we choose a set of priors and perform `NUTS` sampling
 to arrive at the MCMC chain:
 
-```julia
+```@example Bayesian
 Turing.setadbackend(:forwarddiff)
 
 @model function fitlv(data, prob1)
@@ -103,7 +102,7 @@ chain = mapreduce(c -> sample(model, NUTS(.45),1000), chainscat, 1:3)
 This chain gives a discrete approximation to the probability distribution of our
 desired quantites. We can plot the chains to see this distributions in action:
 
-```julia
+```@example Bayesian
 plot(chain)
 ```
 
@@ -135,7 +134,7 @@ we first need to define our observable function `g`. This function designates th
 thing about the solution we wish to calculate the expectation of. Thus for our
 question "what is the expected value of `x`at time `t=10`?", we would simply use:
 
-```julia
+```@example Bayesian
 function g(sol)
     sol[1,end]
 end
@@ -147,7 +146,7 @@ the same constant `u0` as before. But, let's turn our Bayesian MCMC chains into
 distributions through [kernel density estimation](https://github.com/JuliaStats/KernelDensity.jl)
 (the plots of the distribution above are just KDE plots!).
 
-```julia
+```@example Bayesian
 p_kde = [kde(vec(Array(chain[:α]))),kde(vec(Array(chain[:β]))),
          kde(vec(Array(chain[:γ]))),kde(vec(Array(chain[:δ])))]
 ```
@@ -155,17 +154,28 @@ p_kde = [kde(vec(Array(chain[:α]))),kde(vec(Array(chain[:β]))),
 Now that we have our observable and our uncertainty distributions, let's calculate
 the expected value:
 
+!!! note
+    KDE not yet implemented in version 2 of SciMLExpectation
+
 ```julia
-expect = expectation(g, prob1, u0, p_kde, Koopman(), Tsit5(), quadalg = CubaCuhre())
+gd = GenericDistribution(p_kde...)
+h(x, u, p) = u, x
+sm = SystemMap(prob1, Tsit5())
+exprob = ExpectationProblem(sm, g, h, gd; nout=1)
+sol = solve(exprob, Koopman())
+sol.u
 ```
 
 Note how that gives the expectation and a residual for the error bound!
 
 ```julia
-expect.resid
+sol.resid
 ```
 
 ### GPU-Accelerated Expectations
+
+!!! note
+    Batch functionality not yet fully implemented in version 2 of SciMLExpectations.
 
 Are we done? No, we need to add some GPUs! As mentioned earlier, probability
 calculations can take quite a bit of ODE solves, so let's parallelize across
@@ -203,5 +213,6 @@ following is a GPU-accelerated uncertainty quanitified estimate of the expectati
 of the solution:
 
 ```julia
-expectation(g, prob1, u0, p_kde, Koopman(), Tsit5(), EnsembleGPUArray(), batch=100, quadalg = CubaCuhre())
+# batchmode = EnsembleGPUArray() #where to pass this?
+sol = solve(exprob, Koopman(),batch=100,quadalg = CubaSUAVE())
 ```

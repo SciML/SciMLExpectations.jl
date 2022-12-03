@@ -18,15 +18,16 @@ to enable fast optimization under uncertainty.
 
 ## Tutorials and Documentation
 
-For information on using the package, see the [SciMLExpectations](https://docs.sciml.ai/dev/modules/SciMLExpectations/) section of the
-[SciML docs](docs.sciml.ai). For information on specific previous versions of this package, see the 
-[see the stable SciMLExpectations-only documentation](https://docs.sciml.ai/SciMLExpectations/stable/).
+For information on using the package,
+[see the stable documentation](https://docs.sciml.ai/SciMLExpectations/stable/). Use the
+[in-development documentation](https://docs.sciml.ai/SciMLExpectations/dev/) for the version of
+the documentation, which contains the unreleased features.
+
 
 ### Example
 
 ```julia
-using SciMLExpectations, OrdinaryDiffEq, Distributions, Integrals,
-      IntegralsCubature, ComponentArrays, Random
+using SciMLExpectations, OrdinaryDiffEq, Distributions, IntegralsCubature
 
 function eom!(du, u, p, t, A)
     du .= A * u
@@ -44,6 +45,15 @@ cov(x, u, p) = x, p
 sm = SystemMap(prob, Tsit5(), save_everystep=false)
 
 analytical = (exp(A * tspan[end]) * [mean(d) for d in u0s_dist])
+analytical
+#=
+julia> analytical
+2-element Vector{Float64}:
+  1.5433991194037804
+ -1.120209038276938
+ =#
+
+
 
 g(sol, p) = sol[:, end]
 exprob = ExpectationProblem(sm, g, cov, gd; nout=length(u0))
