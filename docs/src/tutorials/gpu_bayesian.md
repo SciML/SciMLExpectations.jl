@@ -135,7 +135,7 @@ thing about the solution we wish to calculate the expectation of. Thus for our
 question "what is the expected value of `x`at time `t=10`?", we would simply use:
 
 ```@example Bayesian
-function g(sol)
+function g(sol,p)
     sol[1,end]
 end
 ```
@@ -152,17 +152,20 @@ p_kde = [kde(vec(Array(chain[:α]))),kde(vec(Array(chain[:β]))),
 ```
 
 Now that we have our observable and our uncertainty distributions, let's calculate
-the expected value:
-
-!!! note
-    KDE not yet implemented in version 2 of SciMLExpectation
+the expected value. Using `GenericDistribution`, SciMLExpectation can calculate expectations
+of any distribution-like object that supports evaluating the probability density function,
+for the `Koopman` solver algorithm, and generating random numbers for the `MonteCarlo` solver algorithm.
 
 ```julia
-gd = GenericDistribution(p_kde...)
+pdf_func(x) = prod(pdf.(p_kde,x))
+rand_func() = nothing # not needed for Koopman
+lb = [p_kde_i.x[begin] for p_kde_i in p_kde] #lower bound for integration
+ub = [p_kde_i.x[end] for p_kde_i in p_kde] #upper bound for integration
+gd = GenericDistribution(pdf_func,rand_func,lb,ub)
 h(x, u, p) = u, x
 sm = SystemMap(prob1, Tsit5())
 exprob = ExpectationProblem(sm, g, h, gd; nout=1)
-sol = solve(exprob, Koopman())
+sol = solve(exprob, Koopman();reltol=1e-2,abstol=1e-2)
 sol.u
 ```
 
