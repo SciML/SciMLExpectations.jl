@@ -216,6 +216,7 @@ following is a GPU-accelerated uncertainty quanitified estimate of the expectati
 of the solution:
 
 ```julia
-# batchmode = EnsembleGPUArray() #where to pass this?
-sol = solve(exprob, Koopman(),batch=100,quadalg = CubaSUAVE())
+sm = SystemMap(prob1, Tsit5(),EnsembleCPUArray(),extra_keyword_needed=nothing)
+exprob = ExpectationProblem(sm, g, h, gd; nout=1)
+sol = solve(exprob, Koopman(),batch=1000,quadalg = CubaSUAVE())
 ```

@@ -13,6 +13,10 @@ struct SystemMap{DT <: DiffEqBase.DEProblem, A, K}
     args::A
     kwargs::K
 end
+function SystemMap(prob, alg::OrdinaryDiffEqAlgorithm,
+                   ensemblealg::SciMLBase.EnsembleAlgorithm; kwargs...)
+    SystemMap(prob, (alg, ensemblealg), kwargs)
+end
 SystemMap(prob, args...; kwargs...) = SystemMap(prob, args, kwargs)
 
 function (sm::SystemMap{DT})(u0, p) where {DT}
