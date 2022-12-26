@@ -20,7 +20,7 @@ Base.minimum(K::UnivariateKDE) = minimum(K.x)
 Base.maximum(K::UnivariateKDE) = maximum(K.x)
 Base.extrema(K::UnivariateKDE) = minimum(K), maximum(K)
 
-export Koopman, MonteCarlo, PrefusedAD, PostfusedAD, NonfusedAD
+export Koopman, MonteCarlo
 export GenericDistribution, SystemMap, ExpectationProblem, build_integrand
 
 end
