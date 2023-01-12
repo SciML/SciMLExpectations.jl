@@ -9,7 +9,7 @@ function (sm::SystemMap{DT})(u0, p) where {DT}
     prob::DT = remake(sm.prob,
                       u0 = convert(typeof(sm.prob.u0), u0),
                       p = convert(typeof(sm.prob.p), p))
-    solve(prob, sm.args...; sm.kwargs...)
+    solve(prob, sm.alg; sm.kwargs...)
 end
 
 @testset "GenericDistribution" begin
