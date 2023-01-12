@@ -1,7 +1,7 @@
 module SciMLExpectations
 
 # LinearAlgebra
-using DiffEqBase, Statistics, Reexport, RecursiveArrayTools, StaticArrays,
+using DiffEqBase, SciMLBase, Statistics, Reexport, RecursiveArrayTools, StaticArrays,
       Distributions, KernelDensity, Zygote, LinearAlgebra, Random
 using Parameters: @unpack
 

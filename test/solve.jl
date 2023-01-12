@@ -40,7 +40,7 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
             # @constinferred solve(exprob, Koopman(); quadalg = alg)[1]  # Commented b/c no "broken" inferred macros and is not stable due to Quadrature.jl
             if alg ∈ quadalgs_batch
                 s = solve(exprob, Koopman(); quadalg = alg, ireltol = 1e-3, iabstol = 1e-3,
-                          batch = 20).u[1]
+                batch = 20).u[1]
                 @test s≈analytical[1] rtol=1e-2
                 # @constinferred solve(exprob, Koopman(); quadalg = alg, batch = 5)[1]  # Commented b/c no "broken" inferred macros and is not stable due to Quadrature.jl
             end
@@ -57,7 +57,7 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
             # @constinferred solve(exprob, Koopman(); quadalg = alg)   # Commented b/c no "broken" inferred macros and is not stable due to Quadrature.jl
             if alg ∈ quadalgs_batch
                 s = solve(exprob, Koopman(); quadalg = alg, ireltol = 1e-3, iabstol = 1e-3,
-                          batch = 20).u[1]
+                batch = 20).u[1]
                 @test s≈analytical[1] rtol=1e-2
                 # @constinferred solve(exprob, Koopman(); quadalg = alg, batch = 5)[1]  # Commented b/c no "broken" inferred macros and is not stable due to Quadrature.jl
             end

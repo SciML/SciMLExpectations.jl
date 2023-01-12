@@ -84,7 +84,7 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
                                   prob_func = (prob, i, repeat) -> prob_func(prob, i,
                                                                              repeat, x))
-        sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
+        sol = solve(ensprob, S.alg, S.ensemblealg; trajectories = trajectories, S.kwargs...)
         set_result!(dx, sol)
         nothing
     end
@@ -121,10 +121,10 @@ function DiffEqBase.solve(exprob::ExpectationProblem{F},
     monte_prob = EnsembleProblem(S.prob;
                                  output_func = output_func,
                                  prob_func = prob_func)
-    sol = solve(monte_prob, S.args...; trajectories = expalg.trajectories, S.kwargs...)
+    sol = solve(monte_prob, S.alg, S.ensemblealg; trajectories = expalg.trajectories,
+                S.kwargs...)
     ExpectationSolution(mean(sol.u), nothing, nothing)
 end
-
 
 """
 ```julia

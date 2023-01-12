@@ -9,7 +9,7 @@ The solution to an `ExpectationProblem`
 - `resid`
 - `original`
 """
-struct ExpectationSolution{uType,R,O}
+struct ExpectationSolution{uType, R, O}
     u::uType
     resid::R
     original::O
