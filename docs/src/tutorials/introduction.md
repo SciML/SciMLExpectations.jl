@@ -341,8 +341,6 @@ skew_g = (sol.u[3] - 3.0*mean_g*var_g - mean_g^3) / var_g^(3/2)
 As the system is linear, we expect the skewness to be unchanged from the inital distribution. Becasue the distribution is a truncated Normal distribution centered on the mean, the true skewness is `0.0`.
 
 ## Batch-Mode
-!!! note 
-    Functionality not yet fully implemented in version 2 of SciMLExpectations.
 
 It is also possible to solve the various simulations in parallel by using the `batch` kwarg and a batch-mode supported quadrature algorithm via the `quadalg` kwarg. To view the list of batch compatible quadrature algorithms, refer to [Integrals.jl](https://docs.sciml.ai/Integrals/stable/). Note: Batch-mode operation is built on top of DifferentialEquation.jl's `EnsembleProblem`. See the [EnsembleProblem documentation](https://docs.sciml.ai/DiffEqDocs/stable/features/ensemble/) for additional options.
 
@@ -360,6 +358,7 @@ p_dist = truncated(Normal(-.7, .1), -1,0)
 gd = GenericDistribution(u0_dist,p_dist)
 g(sol,p) = sol(6.0)[1]
 h(x,u,p) = [x[1]],[x[2]]
+sm = SystemMap(prob, Tsit5(), EnsembleThreads())
 exprob = ExpectationProblem(sm, g, h, gd; nout=1)
 # batchmode = EnsembleThreads() #where to pass this?
 sol = solve(exprob, Koopman(),batch=10,quadalg = CubaSUAVE())
@@ -380,6 +379,10 @@ solve(exprob, Koopman(),batch=0,quadalg = CubaSUAVE())
 It is also possible to parallelize across the GPU. However, one must be careful of the limitations of ensemble solutions with the GPU. Please refer to [DiffEqGPU.jl](https://github.com/SciML/DiffEqGPU.jl) for details.
 
 Here we load `DiffEqGPU` and modify our problem to use Float32 and to put the ODE in the required GPU form
+
+!!! note 
+    Switch `EnsembleCPUArray()` to `EnsembleGPUArray()` to make this example work on your GPU.
+    Currently, these docs are built on a machine without a GPU.
 
 ```julia
 using DiffEqGPU
@@ -404,11 +407,10 @@ gd = GenericDistribution(u0_dist,p_dist)
 g(sol,p) = sol(6.0f0)[1]
 h(x,u,p) = [x[1]],[x[2]]
 prob = ODEProblem(f,u0,tspan,p)
-sm = SystemMap(prob, Tsit5())#, EnsembleGPUArray())
+sm = SystemMap(prob, Tsit5(), EnsembleCPUArray())
 exprob = ExpectationProblem(sm, g, h, gd; nout=1)
-# batchmode = EnsembleGPUArray() #where to pass this, sm is not correct?
 sol = solve(exprob, Koopman(),batch=10,quadalg = CubaSUAVE())
-sol.u # Float64...
+sol.u
 ```
 
 The performance gains realized by leveraging batch GPU processing is problem dependent. In this case, the number of batch evaluations required to overcome the overhead of using the GPU exceeds the number of simulations required to converge to the quadrature solution.
