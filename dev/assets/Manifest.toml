@@ -40,9 +40,9 @@ version = "3.4.0"
 
 [[deps.AdvancedHMC]]
 deps = ["AbstractMCMC", "ArgCheck", "DocStringExtensions", "InplaceOps", "LinearAlgebra", "LogDensityProblems", "LogDensityProblemsAD", "ProgressMeter", "Random", "Requires", "Setfield", "Statistics", "StatsBase", "StatsFuns", "UnPack"]
-git-tree-sha1 = "6a88d903f4b4b23ac2941e742461a8074346fc83"
+git-tree-sha1 = "a46c052f3fa7c7c66877eb7bd30e4314e3f552a3"
 uuid = "0bf59076-c3b1-5ca4-86bd-e02cd72cde3d"
-version = "0.4.1"
+version = "0.4.2"
 
 [[deps.AdvancedMH]]
 deps = ["AbstractMCMC", "Distributions", "LogDensityProblems", "Random", "Requires"]
@@ -751,9 +751,9 @@ version = "1.5.1"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "Dates", "IniFile", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "752b7f2640a30bc991d37359d5fff50ce856ecde"
+git-tree-sha1 = "a1fd86ba1fae7c73fd98c7e60f8adf036c31d441"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.7.1"
+version = "1.7.2"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -1137,10 +1137,10 @@ uuid = "c7f686f2-ff18-58e9-bc7b-31028e88f75d"
 version = "5.6.1"
 
 [[deps.MCMCDiagnosticTools]]
-deps = ["AbstractFFTs", "DataAPI", "DataStructures", "Distributions", "LinearAlgebra", "MLJModelInterface", "Random", "SpecialFunctions", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "d1737c39191aa26f42a64e320de313f1d1fd74b1"
+deps = ["AbstractFFTs", "DataAPI", "DataStructures", "Distributions", "LinearAlgebra", "MLJModelInterface", "Random", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Tables"]
+git-tree-sha1 = "702e3e90205cfbe8f660701339291bf36100bf2f"
 uuid = "be115224-59cd-429b-ad48-344e309966f0"
-version = "0.2.1"
+version = "0.2.3"
 
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
@@ -1406,9 +1406,9 @@ version = "0.12.3"
 
 [[deps.Parsers]]
 deps = ["Dates", "SnoopPrecompile"]
-git-tree-sha1 = "6466e524967496866901a78fca3f2e9ea445a559"
+git-tree-sha1 = "8175fc2b118a3755113c8e68084dc1a9e63c61ee"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.5.2"
+version = "2.5.3"
 
 [[deps.Pipe]]
 git-tree-sha1 = "6842804e7867b115ca9de748a0cf6b364523c16d"
@@ -1575,9 +1575,9 @@ version = "2.35.0"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "SnoopPrecompile", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "9f9d83b485b5f3bfd0f8cb0b8733d573bd4c388f"
+git-tree-sha1 = "0ab70c6cd81764d0047921cfc42741d2c2ff402e"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.14"
+version = "0.2.15"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
