@@ -44,9 +44,10 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 ReferenceTests = "324d217c-45ce-50fc-942e-d289b448e8cf"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 
 [targets]
-test = ["Test", "SafeTestsets", "TestExtras", "Pkg", "PkgBenchmark", "BenchmarkTools", "ReferenceTests", "SymPy", "Random", "OrdinaryDiffEq", "ComponentArrays", "ForwardDiff", "Integrals", "IntegralsCubature", "IntegralsCuba", "FiniteDiff", "RecursiveArrayTools"]
+test = ["Test", "SafeTestsets", "TestExtras", "Pkg", "PkgBenchmark", "BenchmarkTools", "ReferenceTests", "SymPy", "StaticArrays", "Random", "OrdinaryDiffEq", "ComponentArrays", "ForwardDiff", "Integrals", "IntegralsCubature", "IntegralsCuba", "FiniteDiff", "RecursiveArrayTools"]
