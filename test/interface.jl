@@ -31,9 +31,9 @@ end
     @constinferred GenericDistribution(pdf_f, rand_f, lb, ub)
 
     for gd in (gd_ind, gd_raw)
-        @test minimum(gd) == minimum(P)
-        @test maximum(gd) == maximum(P)
-        @test extrema(gd) == extrema(P)
+        @test minimum([gd...]) == minimum([P...])
+        @test maximum([gd...]) == maximum([P...])
+        @test extrema([gd...]) == extrema([P...])
         @test pdf(gd, x) ≈ pdf(P, x)
         @constinferred pdf(gd, x)
 
