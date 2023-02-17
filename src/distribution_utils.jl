@@ -16,8 +16,8 @@ function GenericDistribution(d::Distributions.Sampleable, ds...)
     dists = (d, ds...)
     pdf_func(x) = exp(sum(logpdf(f, y) for (f, y) in zip(dists, x)))
     rand_func() = [rand(d) for d in dists]
-    lb = Tuple(map(minimum, dists)...)
-    ub = Tuple(map(maximum, dists)...)
+    lb = (map(minimum, dists)...)
+    ub = (map(maximum, dists)...)
 
     GenericDistribution(pdf_func, rand_func, lb, ub)
 end
