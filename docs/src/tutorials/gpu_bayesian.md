@@ -16,7 +16,7 @@ Let's dive right in.
 
 ## Bayesian Parameter Estimation with Uncertainty
 
-Let's start by importing all of the necessary libraries:
+Let's start by importing all the necessary libraries:
 
 ```@example Bayesian
 using OrdinaryDiffEq
@@ -29,7 +29,7 @@ using Random;
 Random.seed!(1);
 ```
 
-For this tutorial we will use the Lotka-Volterra equation:
+For this tutorial, we will use the Lotka-Volterra equation:
 
 ```@example Bayesian
 function lotka_volterra(du, u, p, t)
@@ -51,7 +51,7 @@ sol = solve(prob1, Tsit5())
 plot(sol)
 ```
 
-From the Lotka-Volterra equation we will generate a dataset with known parameters:
+From the Lotka-Volterra equation, we will generate a dataset with known parameters:
 
 ```@example Bayesian
 sol1 = solve(prob1, Tsit5(), saveat = 0.1)
@@ -102,22 +102,22 @@ chain = mapreduce(c -> sample(model, NUTS(0.45), 1000), chainscat, 1:3)
 ```
 
 This chain gives a discrete approximation to the probability distribution of our
-desired quantites. We can plot the chains to see this distributions in action:
+desired quantities. We can plot the chains to see these distributions in action:
 
 ```@example Bayesian
 plot(chain)
 ```
 
-Great! From our data we have arrived at a probability distribution for the
+Great! From our data, we have arrived at a probability distribution for
 our parameter values.
 
 ## Evaluating Model Hypotheses with the Koopman Expectation
 
-Now let's try and ask a question: what is the expected value of `x` (the first
+Now, let's try to ask a question: what is the expected value of `x` (the first
 term in the differential equation) at time `t=10` given the known uncertainties
 in our parameters? This is a good tutorial question because all other probabilistic
-statements can be phrased similarly. Asking a question like, "what is the probability
-that `x(T) > 1` at the final time `T`?", can similarly be phrased as an expected
+statements can be phrased similarly. Asking a question like, “what is the probability
+that `x(T) > 1` at the final time `T`?”, can similarly be phrased as an expected
 value (probability statements are expected values of characteristic functions
 which are 1 if true 0 if false). So in general, the kinds of questions we want
 to ask and answer are expectations about the solutions of the differential equation.
@@ -126,7 +126,7 @@ The trivial to solve this problem is to sample 100,000 sets of parameters from
 our parameter distribution given by the Bayesian estimation, solve the ODE
 100,000 times, and then take the average. But is 100,000 ODE solves enough?
 Well it's hard to tell, and even then, the convergence of this approach is slow.
-This is the Monte Carlo approach and it converges to the correct answer by
+This is the Monte Carlo approach, and it converges to the correct answer by
 `sqrt(N)`. Slow.
 
 However, the [Koopman expectation](https://arxiv.org/abs/2008.08737) can converge
@@ -134,7 +134,7 @@ with much fewer points, allowing the use of higher order quadrature methods to
 converge exponentially faster in many cases. To use the Koopman expectation,
 we first need to define our observable function `g`. This function designates the
 thing about the solution we wish to calculate the expectation of. Thus for our
-question "what is the expected value of `x`at time `t=10`?", we would simply use:
+question “what is the expected value of `x`at time `t=10`?” we would simply use:
 
 ```@example Bayesian
 function g(sol, p)
@@ -143,7 +143,7 @@ end
 ```
 
 Now we need to use the `expectation` call, where we need to provide our initial
-condition and parameters as probability distirbutions. For this case, we will use
+condition and parameters as probability distributions. For this case, we will use
 the same constant `u0` as before. But, let's turn our Bayesian MCMC chains into
 distributions through [kernel density estimation](https://github.com/JuliaStats/KernelDensity.jl)
 (the plots of the distribution above are just KDE plots!).
@@ -188,8 +188,8 @@ calculations can take quite a bit of ODE solves, so let's parallelize across
 the parameters. [DiffEqGPU.jl](https://github.com/SciML/DiffEqGPU.jl) allows you
 to GPU-parallelize across parameters by using the
 [Ensemble interface](https://docs.sciml.ai/DiffEqDocs/stable/features/ensemble/). Note that
-you do not have to do any of the heavy lifting: all of the conversion to GPU
-kernels is done automaticaly by simply specifying `EnsembleGPUArray` as the
+you do not have to do any of the heavy lifting: all the conversion to GPU
+kernels is done automatically by simply specifying `EnsembleGPUArray` as the
 ensembling method. For example:
 
 ```julia
@@ -215,8 +215,8 @@ monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy = false)
 ```
 
 Let's now use this in the ensembling method. We need to specify a `batch` for the
-number of ODEs solved at the same time, and pass in our enembling method. The
-following is a GPU-accelerated uncertainty quanitified estimate of the expectation
+number of ODEs solved at the same time, and pass in our ensembling method. The
+following is a GPU-accelerated uncertainty quantified estimate of the expectation
 of the solution:
 
 ```julia

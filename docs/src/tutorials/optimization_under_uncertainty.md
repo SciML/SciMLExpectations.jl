@@ -1,10 +1,10 @@
 # Optimization Under Uncertainty with SciMLExpectations.jl
 
-This tutorial gives and overview of how to leverage the efficient Koopman expectation method from SciMLExpectations to perform optimization under uncertainty. We demonstrate this by using a bouncing ball model with an uncertain model parameter. We also demonstrate its application to problems with probabilistic constraints, in particular a special class of constraints called chance constraints.
+This tutorial gives an overview of how to leverage the efficient Koopman expectation method from SciMLExpectations to perform optimization under uncertainty. We demonstrate this by using a bouncing ball model with an uncertain model parameter. We also demonstrate its application to problems with probabilistic constraints, in particular a special class of constraints called chance constraints.
 
 ## System Model
 
-First lets consider a 2D bouncing ball, where the states are the horizontal position $x$, horizontal velocity $\dot{x}$, vertical position $y$, and vertical velocity $\dot{y}$. This model has two system parameters, acceleration due to gravity and coefficient of restitution (models energy loss when the ball impacts the ground). We can simulate such a system using `ContinuousCallback` as
+First let's consider a 2D bouncing ball, where the states are the horizontal position $x$, horizontal velocity $\dot{x}$, vertical position $y$, and vertical velocity $\dot{y}$. This model has two system parameters, acceleration due to gravity and coefficient of restitution (models energy loss when the ball impacts the ground). We can simulate such a system using `ContinuousCallback` as
 
 ```@example control
 using OrdinaryDiffEq, Plots
@@ -43,7 +43,7 @@ sol = solve(prob, Tsit5(), callback = cbs)
 plot(sol, vars = (1, 3), label = nothing, xlabel = "x", ylabel = "y")
 ```
 
-To help visualize this problem, we plot as follows, where the star indicates a desired impace location
+To help visualize this problem, we plot as follows, where the star indicates a desired impact location
 
 ```@example control
 rectangle(xc, yc, w, h) = Shape(xc .+ [-w, w, w, -w] ./ 2.0, yc .+ [-h, -h, h, h] ./ 2.0)
@@ -60,7 +60,7 @@ end
 
 ## Considering Uncertainty
 
-We now wish to introduce uncertainty in `p[2]`, the coefficient of restitution. This is defined via a continuous univiate distribution from Distributions.jl. We can then run a Monte Carlo simulation of 100 trajectories via the `EnsembleProblem` interface.
+We now wish to introduce uncertainty in `p[2]`, the coefficient of restitution. This is defined via a continuous univariate distribution from Distributions.jl. We can then run a Monte Carlo simulation of 100 trajectories via the `EnsembleProblem` interface.
 
 ```@example control
 using Distributions
@@ -84,9 +84,9 @@ begin # plot
 end
 ```
 
-Here, we plot the first 350 Monte Carlo simulations along with the trajectory corrresponding to the mean of the distribution (dashed line).
+Here, we plot the first 350 Monte Carlo simulations along with the trajectory corresponding to the mean of the distribution (dashed line).
 
-We now wish to compute the expected squared impact distance from the star. This is called an "observation" of our system or an "observable" of interest.
+We now wish to compute the expected squared impact distance from the star. This is called an “observation” of our system or an “observable” of interest.
 
 We define this observable as
 
@@ -182,7 +182,7 @@ Not bad for bound constrained optimization under uncertainty of a hybrid system!
 
 ## Probabilistic Constraints
 
-With this approach we can also consider probabilistic constraints. Let us now consider a wall at $x=20$ with height 25.
+With this approach, we can also consider probabilistic constraints. Let us now consider a wall at $x=20$ with height 25.
 
 ```@example control
 constraint = [20.0, 25.0]
@@ -231,13 +231,13 @@ end
 
 That doesn't look good!
 
-We now need a second observable for the system. In order to compute a probability of impact, we use an indicator function for if a trajectory impacts the wall. In other words, this functions returns 1 if the trajectory hits the wall and 0 otherwise.
+We now need a second observable for the system. To compute a probability of impact, we use an indicator function for if a trajectory impacts the wall. In other words, this functions returns 1 if the trajectory hits the wall and 0 otherwise.
 
 ```@example control
 constraint_obs(sol, p) = sol[1, end] ≈ constraint[1] ? one(sol[1, end]) : zero(sol[1, end])
 ```
 
-Using the previously computed optimal initial conditions, lets compute the probability of hitting this wall
+Using the previously computed optimal initial conditions, let's compute the probability of hitting this wall
 
 ```@example control
 sm = SystemMap(remake(prob, u0 = make_u0(minx)), Tsit5(), callback = constraint_cbs)
@@ -246,7 +246,7 @@ sol = solve(exprob, Koopman(), ireltol = 1e-5)
 sol.u
 ```
 
-We then setup the constraint function for NLopt just as before.
+We then set up the constraint function for NLopt just as before.
 
 ```@example control
 function 𝔼_constraint(θ)
@@ -264,7 +264,7 @@ end
 
 Note that NLopt requires the constraint function to be of the form $g(x) \leq 0$. Hence, why we return `𝔼_constraint(x) - 0.01` for the 1% chance constraint.
 
-The rest of the NLopt setup looks the same as before with the exception of adding the inequality constraint
+The rest of the NLopt setup looks the same as before, except for adding the inequality constraint
 
 ```@example control
 opt = Opt(:LD_MMA, 3)
