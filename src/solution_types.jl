@@ -5,9 +5,9 @@ The solution to an `ExpectationProblem`
 
 ## Fields
 
-- `u`
-- `resid`
-- `original`
+  - `u`
+  - `resid`
+  - `original`
 """
 struct ExpectationSolution{uType, R, O}
     u::uType

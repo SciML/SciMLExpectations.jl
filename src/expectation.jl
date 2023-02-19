@@ -94,6 +94,7 @@ end
 ```julia
 solve(exprob::ExpectationProblem, expalg::MonteCarlo)
 ```
+
 Solve an `ExpectationProblem` using Monte Carlo integration.
 """
 function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
@@ -129,9 +130,10 @@ end
 """
 ```julia
 solve(exprob::ExpectationProblem, expalg::Koopman;
-      maxiters = 1000000, batch = 0 , quadalg = HCubatureJL(),
+      maxiters = 1000000, batch = 0, quadalg = HCubatureJL(),
       ireltol = 1e-2, iabstol = 1e-2, kwargs...)
 ```
+
 Solve an `ExpectationProblem` using Koopman integration.
 """
 function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;

@@ -2,8 +2,8 @@
 `GenericDistribution(d, ds...)`
 
 Defines a generic distribution that just wraps functions for pdf function, rand and bounds.
-User can use this for define any arbitray joint pdf. Included b/c Distributions.jl Product
-method of mixed distirbutions are type instable
+User can use this for define any arbitrary joint pdf. Included b/c Distributions.jl Product
+method of mixed distributions are type instable.
 """
 struct GenericDistribution{TF, TRF, TLB, TUB}
     pdf_func::TF
