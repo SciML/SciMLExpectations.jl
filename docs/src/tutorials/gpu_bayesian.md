@@ -7,7 +7,7 @@ this. It composes together a few different pieces of the SciML ecosystem:
 
  1. Parameter estimation with uncertainty with Bayesian differential equations by
     integrating the differentiable differential equation solvers with the
-    [Turing.jl library](https://turing.ml/dev/).
+    [Turing.jl library](https://turinglang.org/stable/).
  2. Fast calculation of probabilistic estimates of differential equation solutions
     with parametric uncertainty using the Koopman expectation.
  3. GPU-acceleration of batched differential equation solves.
@@ -70,7 +70,7 @@ Now let's assume that all we know is the data `odedata` and the model form.
 What we want to do is use the data to inform us of the parameters, but also
 get a probabilistic sense of the uncertainty around our parameter estimate. This
 is done via Bayesian estimation. For a full look at Bayesian estimation of
-differential equations, look at the [Bayesian differential equation](https://turing.ml/dev/tutorials/10-bayesiandiffeq/)
+differential equations, look at the [Bayesian differential equation](https://turinglang.org/stable/tutorials/10-bayesian-differential-equations/)
 tutorial from Turing.jl.
 
 Following that tutorial, we choose a set of priors and perform `NUTS` sampling
