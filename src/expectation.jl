@@ -1,36 +1,3 @@
-abstract type AbstractExpectationADAlgorithm end
-struct NonfusedAD <: AbstractExpectationADAlgorithm end
-struct PrefusedAD <: AbstractExpectationADAlgorithm
-    norm_partials::Bool
-end
-PrefusedAD() = PrefusedAD(true)
-struct PostfusedAD <: AbstractExpectationADAlgorithm
-    norm_partials::Bool
-end
-PostfusedAD() = PostfusedAD(true)
-
-abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
-
-"""
-```julia
-Koopman()
-```
-"""
-struct Koopman{TS} <:
-       AbstractExpectationAlgorithm where {TS <: AbstractExpectationADAlgorithm}
-    sensealg::TS
-end
-Koopman() = Koopman(NonfusedAD())
-
-"""
-```julia
-MonteCarlo(trajectories::Int)
-```
-"""
-struct MonteCarlo <: AbstractExpectationAlgorithm
-    trajectories::Int
-end
-
 # Builds integrand for arbitrary functions
 function build_integrand(prob::ExpectationProblem, ::Koopman, ::Val{false})
     @unpack g, d = prob

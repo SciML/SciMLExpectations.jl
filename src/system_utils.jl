@@ -1,3 +1,36 @@
+abstract type AbstractExpectationADAlgorithm end
+struct NonfusedAD <: AbstractExpectationADAlgorithm end
+struct PrefusedAD <: AbstractExpectationADAlgorithm
+    norm_partials::Bool
+end
+PrefusedAD() = PrefusedAD(true)
+struct PostfusedAD <: AbstractExpectationADAlgorithm
+    norm_partials::Bool
+end
+PostfusedAD() = PostfusedAD(true)
+
+abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
+
+"""
+```julia
+Koopman()
+```
+"""
+struct Koopman{TS} <:
+       AbstractExpectationAlgorithm where {TS <: AbstractExpectationADAlgorithm}
+    sensealg::TS
+end
+Koopman() = Koopman(NonfusedAD())
+
+"""
+```julia
+MonteCarlo(trajectories::Int)
+```
+"""
+struct MonteCarlo <: AbstractExpectationAlgorithm
+    trajectories::Int
+end
+
 #Callable wrapper for DE solves. Enables seperation of args/kwargs...
 
 abstract type AbstractSystemMap end
@@ -129,7 +162,9 @@ end
 ProcessNoiseSystemMap(prob, n, args...; kwargs...) = ProcessNoiseSystemMap(prob, n, args, kwargs)
 
 function (sm::ProcessNoiseSystemMap{DT})(Z, p) where {DT}
-    W(t) = sqrt(2) * sum(Z[k] * sin((k - 0.5) * pi * t) / ((k - 0.5) * pi) for k in 1:length(Z))
+    t0 = prob.tspan[1]
+    tend = prob.tspan[2]
+    W(t) = sqrt(2) * sqrt(tend-t0)*sum(Z[k] * sin((k - 0.5) * pi * (t-t0)/(tend-t0)) / ((k - 0.5) * pi) for k in 1:length(Z))
     prob::DT = remake(sm.prob, p = convert(typeof(sm.prob.p), p),
                                noise = NoiseFunction{false}(prob.tspan[1],W))
     solve(prob, sm.args...; sm.kwargs...)

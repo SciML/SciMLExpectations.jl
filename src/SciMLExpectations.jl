@@ -9,11 +9,13 @@ import DiffEqNoiseProcess
 @reexport using Integrals
 import DiffEqBase: solve
 
-include("distribution_utils.jl")
 include("problem_types.jl")
+include("distribution_utils.jl")
 include("solution_types.jl")
-include("expectation.jl")
 include("system_utils.jl")
+include("expectation.jl")
+
+
 
 # Type Piracy, should upstream
 Base.eltype(K::UnivariateKDE) = eltype(K.density)
