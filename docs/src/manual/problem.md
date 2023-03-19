@@ -3,5 +3,6 @@
 ```@docs
 ExpectationProblem
 SystemMap
+ProcessNoiseSystemMap
 GenericDistribution
 ```

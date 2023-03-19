@@ -90,6 +90,49 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
     end
 end
 
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
+                         ::Val{false}) where {F <: ProcessNoiseSystemMap}
+    error("Out of position problems currently not supported")
+end
+
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
+                         ::Val{true}) where {F <: ProcessNoiseSystemMap}
+    @unpack S, g, h, d = prob
+
+    if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
+        set_result! = @inline function (dx, sol)
+            dx[:] .= sol[:]
+        end
+    else
+        set_result! = @inline function (dx, sol)
+            dx .= reshape(sol[:, :], size(dx))
+        end
+    end
+
+    prob_func = function (prob, i, repeat, x)
+        Z, p = h((_make_view(x, i)), prob.u0, prob.p)
+        function W(u, p, t)
+            sqrt(2) *
+            sum(Z[k] * sin((k - 0.5) * pi * t) / ((k - 0.5) * pi) for k in 1:length(Z))
+        end
+        remake(prob, p = p,
+               noise = DiffEqNoiseProcess.NoiseFunction{false}(prob.tspan[1], W))
+    end
+
+    output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
+
+    function (dx, x, p) where {T}
+        trajectories = size(x, 2)
+        # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
+        ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
+                                  prob_func = (prob, i, repeat) -> prob_func(prob, i,
+                                                                             repeat, x))
+        sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
+        set_result!(dx, sol)
+        nothing
+    end
+end
+
 """
 ```julia
 solve(exprob::ExpectationProblem, expalg::MonteCarlo)
@@ -126,6 +169,31 @@ function DiffEqBase.solve(exprob::ExpectationProblem{F},
                 S.kwargs...)
     ExpectationSolution(mean(sol.u), nothing, nothing)
 end
+function DiffEqBase.solve(exprob::ExpectationProblem{F},
+                          expalg::MonteCarlo) where {F <: ProcessNoiseSystemMap}
+    d = distribution(exprob)
+    cov = input_cov(exprob)
+    S = mapping(exprob)
+    g = observable(exprob)
+
+    prob_func = function (prob, i, repeat)
+        Z, p = cov(rand(d), prob.u0, prob.p)
+        function W(u, p, t)
+            sqrt(2) *
+            sum(Z[k] * sin((k - 0.5) * pi * t) / ((k - 0.5) * pi) for k in 1:length(Z))
+        end
+        remake(prob, p = p,
+               noise = DiffEqNoiseProcess.NoiseFunction{false}(prob.tspan[1], W))
+    end
+
+    output_func(sol, i) = (g(sol, sol.prob.p), false)
+
+    monte_prob = EnsembleProblem(S.prob;
+                                 output_func = output_func,
+                                 prob_func = prob_func)
+    sol = solve(monte_prob, S.args...; trajectories = expalg.trajectories, S.kwargs...)
+    ExpectationSolution(mean(sol.u), nothing, nothing)
+end
 
 """
 ```julia
@@ -142,7 +210,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                           quadalg = HCubatureJL(),
                           ireltol = 1e-2, iabstol = 1e-2,
                           kwargs...) where {A <: AbstractExpectationADAlgorithm}
-    integrand = build_integrand(prob, expalg, Val(batch > 1))
+    integrand = build_integrand(prob, expalg, Val(batch > 0))
     lb, ub = extrema(prob.d)
 
     sol = integrate(quadalg, expalg.sensealg, integrand, lb, ub, prob.params;
@@ -158,7 +226,7 @@ function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub
                    nout = 1, batch = 0,
                    kwargs...) where {TB}
     #TODO check batch iip type stability w/ IntegralProblem{XXXX}
-    prob = IntegralProblem{batch > 1}(f, lb, ub, p; nout = nout, batch = batch)
+    prob = IntegralProblem{batch > 0}(f, lb, ub, p; nout = nout, batch = batch)
     solve(prob, quadalg; kwargs...)
 end
 

@@ -57,3 +57,8 @@ parameters(prob::ExpectationProblem) = prob.params
 #     altype::Union{NestedExpectation, BinomialExpansion} #Should rely be in solve
 #     exp_prob::ExpectationProblem
 # end
+
+function ExpectationProblem(sm::ProcessNoiseSystemMap, g, h; nout = 1)
+    d = GenericDistribution((Truncated(Normal(), -4.0, 4.0) for i in 1:(sm.n))...)
+    ExpectationProblem(sm, g, h, d, deepcopy(sm.prob.p), nout)
+end
