@@ -3,9 +3,10 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'UA-90474609-3', {'page_path': location.pathname + location.search + location.hash});
-</script><script data-outdated-warner src="assets/warner.js"></script><link rel="canonical" href="https://docs.sciml.ai/SciMLExpectations/stable/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="SciMLExpectations.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>SciMLExpectations.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Contributing"><span>Contributing</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/introduction/">An Introduction to Expectations via SciMLExpectations.jl</a></li><li><a class="tocitem" href="tutorials/optimization_under_uncertainty/">Optimization Under Uncertainty with SciMLExpectations.jl</a></li><li><a class="tocitem" href="tutorials/gpu_bayesian/">GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="manual/problem/">ExpectationProblem</a></li><li><a class="tocitem" href="manual/solve/">Solving Expectation Problems</a></li><li><a class="tocitem" href="manual/algorithms/">Expectation Algorithms</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/SciML/SciMLExpectations.jl/blob/master/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification"><a class="docs-heading-anchor" href="#SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification">SciMLExpectations.jl: Expected Values of Simulations and Uncertainty Quantification</a><a id="SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification-1"></a><a class="docs-heading-anchor-permalink" href="#SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification" title="Permalink"></a></h1><p>SciMLExpectations.jl is a package for quantifying the uncertainties of simulations by calculating the expectations of observables with respect to input uncertainties. Its goal is to make it fast and easy to compute solution moments in a differentiable way, to enable fast optimization under uncertainty.</p><div class="admonition is-category-warn"><header class="admonition-header">Warn</header><div class="admonition-body"><p>This package is still under heavy construction. Use at your own risk!</p></div></div><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>To install SciMLExpectations.jl, use the Julia package manager:</p><pre><code class="language-julia hljs">using Pkg
+</script><script data-outdated-warner src="assets/warner.js"></script><link rel="canonical" href="https://docs.sciml.ai/SciMLExpectations/stable/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="SciMLExpectations.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>SciMLExpectations.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Contributing"><span>Contributing</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/introduction/">An Introduction to Expectations via SciMLExpectations.jl</a></li><li><a class="tocitem" href="tutorials/optimization_under_uncertainty/">Optimization Under Uncertainty with SciMLExpectations.jl</a></li><li><a class="tocitem" href="tutorials/gpu_bayesian/">GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a></li><li><a class="tocitem" href="tutorials/process_noise/">Expectation of Process Noise</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="manual/problem/">ExpectationProblem</a></li><li><a class="tocitem" href="manual/solve/">Solving Expectation Problems</a></li><li><a class="tocitem" href="manual/algorithms/">Expectation Algorithms</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/SciML/SciMLExpectations.jl/blob/master/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification"><a class="docs-heading-anchor" href="#SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification">SciMLExpectations.jl: Expected Values of Simulations and Uncertainty Quantification</a><a id="SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification-1"></a><a class="docs-heading-anchor-permalink" href="#SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification" title="Permalink"></a></h1><p>SciMLExpectations.jl is a package for quantifying the uncertainties of simulations by calculating the expectations of observables with respect to input uncertainties. Its goal is to make it fast and easy to compute solution moments in a differentiable way, to enable fast optimization under uncertainty.</p><div class="admonition is-category-warn"><header class="admonition-header">Warn</header><div class="admonition-body"><p>This package is still under heavy construction. Use at your own risk!</p></div></div><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>To install SciMLExpectations.jl, use the Julia package manager:</p><pre><code class="language-julia hljs">using Pkg
 Pkg.add(&quot;SciMLExpectations&quot;)</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://github.com/SciML/ColPrac/blob/master/README.md">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/SciMLExpectations.jl/SciMLExpectations.jl/docs/Project.toml`
   [071ae1c0] DiffEqGPU v1.26.0
+  [77a26b50] DiffEqNoiseProcess v5.16.0
   [31c24e10] Distributions v0.25.86
   [e30172f5] Documenter v0.27.24
   [f6369f11] ForwardDiff v0.10.35
@@ -13,11 +14,12 @@ Pkg.add(&quot;SciMLExpectations&quot;)</code></pre><h2 id="Contributing"><a clas
   [5ab0869b] KernelDensity v0.6.5
   [c7f686f2] MCMCChains v6.0.0
   [76087f3c] NLopt v0.6.5
-  [1dea7af3] OrdinaryDiffEq v6.49.1
-  [91a5bcdd] Plots v1.38.7
+  [1dea7af3] OrdinaryDiffEq v6.49.3
+  [91a5bcdd] Plots v1.38.8
   [afe9f18d] SciMLExpectations v2.0.1 `~/work/SciMLExpectations.jl/SciMLExpectations.jl`
-  [1ed8b502] SciMLSensitivity v7.25.0
+  [1ed8b502] SciMLSensitivity v7.26.0
   [f3b207a7] StatsPlots v0.15.4
+  [789caeaf] StochasticDiffEq v6.60.0
   [fce5fe82] Turing v0.24.3</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.8.5
 Commit 17cfb8e65ea (2023-01-08 06:45 UTC)
 Platform Info:
@@ -63,7 +65,7 @@ Platform Info:
   [d360d2e6] ChainRulesCore v1.15.7
   [9e997f8a] ChangesOfVariables v0.1.6
   [fb6a15b2] CloseOpenIntervals v0.1.12
-  [aaaa29a8] Clustering v0.14.3
+  [aaaa29a8] Clustering v0.14.4
   [523fee87] CodecBzip2 v0.7.2
   [944b1d66] CodecZlib v0.7.1
   [35d6a980] ColorSchemes v3.20.0
@@ -112,7 +114,7 @@ Platform Info:
   [7034ab61] FastBroadcast v0.2.5
   [9aa1b823] FastClosures v0.3.2
   [29a986be] FastLapackInterface v1.2.9
-  [1a297f60] FillArrays v0.13.7
+  [1a297f60] FillArrays v0.13.9
   [6a86dc24] FiniteDiff v2.18.0
   [53c48c17] FixedPointNumbers v0.8.4
   [59287772] Formatting v0.4.2
@@ -120,10 +122,10 @@ Platform Info:
   [069b7b12] FunctionWrappers v1.1.3
   [77dc65aa] FunctionWrappersWrappers v0.1.3
 ⌅ [d9f16b24] Functors v0.3.0
-  [0c68f7d7] GPUArrays v8.6.3
+  [0c68f7d7] GPUArrays v8.6.5
   [46192b85] GPUArraysCore v0.1.4
-  [61eb1bfa] GPUCompiler v0.17.3
-  [28b8d3ca] GR v0.71.7
+⌅ [61eb1bfa] GPUCompiler v0.17.3
+  [28b8d3ca] GR v0.71.8
   [c145ed77] GenericSchur v0.5.3
   [86223c79] Graphs v1.8.0
   [42e2da0e] Grisu v1.0.2
@@ -143,7 +145,7 @@ Platform Info:
   [a98d9a8b] Interpolations v0.14.7
   [8197267c] IntervalSets v0.7.4
   [3587e190] InverseFunctions v0.1.8
-  [41ab1584] InvertedIndices v1.2.0
+  [41ab1584] InvertedIndices v1.3.0
   [92d709cd] IrrationalConstants v0.2.2
   [c8e1da08] IterTools v1.4.0
   [42fd0dbc] IterativeSolvers v0.9.2
@@ -151,13 +153,13 @@ Platform Info:
   [1019f520] JLFzf v0.1.5
   [692b3bcd] JLLWrappers v1.4.1
   [682c06a0] JSON v0.21.3
-  [ccbc3e58] JumpProcesses v9.5.1
+  [ccbc3e58] JumpProcesses v9.6.0
   [ef3ab10e] KLU v0.4.0
 ⌅ [63c18a36] KernelAbstractions v0.8.6
   [5ab0869b] KernelDensity v0.6.5
   [ba0b0d4f] Krylov v0.9.0
   [0b1a1467] KrylovKit v0.6.0
-  [929cbde3] LLVM v4.16.0
+  [929cbde3] LLVM v4.17.0
   [8ac3fa9e] LRUCache v1.4.0
   [b964fa9f] LaTeXStrings v1.3.0
   [23fbe1c1] Latexify v0.15.18
@@ -183,7 +185,7 @@ Platform Info:
   [fdba3010] MathProgBase v0.7.8
   [739be429] MbedTLS v1.1.7
   [442fdcdd] Measures v0.3.2
-  [128add7d] MicroCollections v0.1.3
+  [128add7d] MicroCollections v0.1.4
   [e1d29d7a] Missings v1.1.0
 ⌅ [4886b29c] MonteCarloIntegration v0.0.3
   [46d2c3a1] MuladdMacro v0.2.4
@@ -205,21 +207,21 @@ Platform Info:
   [429524aa] Optim v1.7.4
   [3bd65402] Optimisers v0.2.15
   [bac558e1] OrderedCollections v1.4.1
-  [1dea7af3] OrdinaryDiffEq v6.49.1
+  [1dea7af3] OrdinaryDiffEq v6.49.3
   [90014a1f] PDMats v0.11.17
   [d96e819e] Parameters v0.12.3
   [69de0a69] Parsers v2.5.8
   [b98c9c47] Pipe v1.3.0
   [ccf2f8ad] PlotThemes v3.1.0
   [995b91a9] PlotUtils v1.3.4
-  [91a5bcdd] Plots v1.38.7
-  [e409e4f3] PoissonRandom v0.4.3
+  [91a5bcdd] Plots v1.38.8
+  [e409e4f3] PoissonRandom v0.4.4
   [f517fe37] Polyester v0.7.3
   [1d0040c9] PolyesterWeave v0.2.1
   [85a6dd25] PositiveFactorizations v0.2.4
   [d236fae5] PreallocationTools v0.4.12
   [21216c6a] Preferences v1.3.0
-  [08abe8d2] PrettyTables v2.2.2
+  [08abe8d2] PrettyTables v2.2.3
   [33c8b6b6] ProgressLogging v0.1.4
   [92933f4c] ProgressMeter v1.7.2
   [1fd47b50] QuadGK v2.8.2
@@ -242,18 +244,18 @@ Platform Info:
   [7e49a35a] RuntimeGeneratedFunctions v0.5.5
   [94e857df] SIMDTypes v0.1.0
   [476501e8] SLEEFPirates v0.6.38
-  [0bca4576] SciMLBase v1.91.0
+  [0bca4576] SciMLBase v1.91.1
   [afe9f18d] SciMLExpectations v2.0.1 `~/work/SciMLExpectations.jl/SciMLExpectations.jl`
   [e9a6253c] SciMLNLSolve v0.1.3
   [c0aeaf25] SciMLOperators v0.2.0
-  [1ed8b502] SciMLSensitivity v7.25.0
+  [1ed8b502] SciMLSensitivity v7.26.0
   [30f210dd] ScientificTypesBase v3.0.0
   [6c6a2e73] Scratch v1.2.0
   [91c51154] SentinelArrays v1.3.18
   [efcf1570] Setfield v1.1.1
   [992d4aef] Showoff v1.0.3
   [777ac1f9] SimpleBufferStream v1.1.0
-  [05bca326] SimpleDiffEq v1.8.0
+  [05bca326] SimpleDiffEq v1.9.0
   [727e6d20] SimpleNonlinearSolve v0.1.14
   [699a6c99] SimpleTraits v0.9.4
   [ce78b400] SimpleUnPack v1.1.0
@@ -263,16 +265,16 @@ Platform Info:
   [e56a9233] Sparspak v0.3.9
   [276daf66] SpecialFunctions v2.2.0
   [171d559e] SplittablesBase v0.1.15
-  [aedffcd0] Static v0.8.5
+  [aedffcd0] Static v0.8.6
   [0d7ed370] StaticArrayInterface v1.3.0
-  [90137ffa] StaticArrays v1.5.17
+  [90137ffa] StaticArrays v1.5.18
   [1e83bf80] StaticArraysCore v1.4.0
   [64bff920] StatisticalTraits v3.2.0
   [82ae8749] StatsAPI v1.5.0
   [2913bbd2] StatsBase v0.33.21
   [4c63d2b9] StatsFuns v1.3.0
   [f3b207a7] StatsPlots v0.15.4
-  [789caeaf] StochasticDiffEq v6.58.0
+  [789caeaf] StochasticDiffEq v6.60.0
   [7792a7ef] StrideArraysCore v0.4.9
   [892a3eda] StringManipulation v0.3.0
   [09ab397b] StructArrays v0.6.15
@@ -291,7 +293,7 @@ Platform Info:
   [a2a6695c] TreeViews v0.3.0
   [d5829a12] TriangularSolve v0.1.19
   [410a4b4d] Tricks v0.1.6
-  [781d530d] TruncatedStacktraces v1.1.0
+  [781d530d] TruncatedStacktraces v1.2.0
   [fce5fe82] Turing v0.24.3
   [5c2747f8] URIs v1.4.2
   [3a884ed6] UnPack v1.0.2
@@ -303,8 +305,8 @@ Platform Info:
   [19fa3120] VertexSafeGraphs v0.2.0
   [cc8bc4a8] Widgets v0.6.6
   [efce3f68] WoodburyMatrices v0.5.5
-  [e88e6eb3] Zygote v0.6.56
-  [700de1a5] ZygoteRules v0.2.2
+  [e88e6eb3] Zygote v0.6.59
+  [700de1a5] ZygoteRules v0.2.3
 ⌅ [68821587] Arpack_jll v3.5.1+1
   [6e34b625] Bzip2_jll v1.0.8+0
   [83423d85] Cairo_jll v1.16.1+1
@@ -317,7 +319,7 @@ Platform Info:
   [d7e528f0] FreeType2_jll v2.10.4+0
   [559328eb] FriBidi_jll v1.0.10+0
   [0656b61e] GLFW_jll v3.3.8+0
-  [d2c73de3] GR_jll v0.71.7+0
+  [d2c73de3] GR_jll v0.71.8+0
   [78b55507] Gettext_jll v0.21.0+0
   [7746bdde] Glib_jll v2.74.0+2
   [3b182d85] Graphite2_jll v1.3.14+0
@@ -326,7 +328,7 @@ Platform Info:
   [aacddb02] JpegTurbo_jll v2.1.91+0
   [c1c5ebd0] LAME_jll v3.100.1+0
   [88015f11] LERC_jll v3.0.0+1
-  [dad2f222] LLVMExtra_jll v0.0.16+2
+  [dad2f222] LLVMExtra_jll v0.0.19+0
   [dd4b983a] LZO_jll v2.10.1+0
 ⌅ [e9f186c6] Libffi_jll v3.2.2+1
   [d4300ac3] Libgcrypt_jll v1.8.7+0
@@ -431,4 +433,4 @@ Platform Info:
   [3f19e933] p7zip_jll v17.4.0+0
 Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details>You can also download the 
 <a href="https://github.com/SciML/SciMLExpectations.jl/tree/gh-pages/v2.0.1/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/SciMLExpectations.jl/tree/gh-pages/v2.0.1/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/introduction/">An Introduction to Expectations via SciMLExpectations.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 14 March 2023 15:15">Tuesday 14 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/SciMLExpectations.jl/tree/gh-pages/v2.0.1/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/introduction/">An Introduction to Expectations via SciMLExpectations.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Tuesday 21 March 2023 11:07">Tuesday 21 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
