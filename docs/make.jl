@@ -8,7 +8,7 @@ include("pages.jl")
 makedocs(sitename = "SciMLExpectations.jl",
          authors = "Chris Rackauckas",
          modules = [SciMLExpectations],
-         linkcheck=true,
+         linkcheck = true,
          strict = [
              :doctest,
              :linkcheck,

@@ -5,6 +5,7 @@ version = "2.0.1"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
+DiffEqNoiseProcess = "77a26b50-5914-5dd7-bc55-306e6241c503"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Integrals = "de52edbc-65ea-441a-8357-d3a637375a31"
 KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
@@ -47,8 +48,9 @@ RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 ReferenceTests = "324d217c-45ce-50fc-942e-d289b448e8cf"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 SymPy = "24249f21-da20-56a4-8eb1-6a02cf4ae2e6"
+StochasticDiffEq = "789caeaf-c7a9-5a7d-9973-96adeb23e2a0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 
 [targets]
-test = ["Test", "SafeTestsets", "TestExtras", "Pkg", "PkgBenchmark", "BenchmarkTools", "ReferenceTests", "SymPy", "Random", "OrdinaryDiffEq", "ComponentArrays", "ForwardDiff", "Integrals", "IntegralsCubature", "IntegralsCuba", "FiniteDiff", "RecursiveArrayTools"]
+test = ["Test", "SafeTestsets", "TestExtras", "Pkg", "PkgBenchmark", "BenchmarkTools", "ReferenceTests", "SymPy", "Random", "OrdinaryDiffEq", "ComponentArrays", "ForwardDiff", "Integrals", "IntegralsCubature", "IntegralsCuba", "FiniteDiff", "RecursiveArrayTools", "StochasticDiffEq"]
