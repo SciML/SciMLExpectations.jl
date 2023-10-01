@@ -1,13 +1,13 @@
-# Optimization Under Uncertainty with SciMLExpectations.jl
+# [Optimization Under Uncertainty](@id optimization_under_uncertainty)
 
-This tutorial gives an overview of how to leverage the efficient Koopman expectation method from SciMLExpectations to perform optimization under uncertainty. We demonstrate this by using a bouncing ball model with an uncertain model parameter. We also demonstrate its application to problems with probabilistic constraints, in particular a special class of constraints called chance constraints.
+This tutorial showcases how to leverage the efficient Koopman expectation method from SciMLExpectations to perform optimization under uncertainty. We demonstrate this by using a bouncing ball model with an uncertain model parameter. We also demonstrate its application to problems with probabilistic constraints, in particular a special class of constraints called chance constraints.
 
 ## System Model
 
 First let's consider a 2D bouncing ball, where the states are the horizontal position $x$, horizontal velocity $\dot{x}$, vertical position $y$, and vertical velocity $\dot{y}$. This model has two system parameters, acceleration due to gravity and coefficient of restitution (models energy loss when the ball impacts the ground). We can simulate such a system using `ContinuousCallback` as
 
 ```@example control
-using OrdinaryDiffEq, Plots
+using DifferentialEquations, Plots
 
 function ball!(du, u, p, t)
     du[1] = u[2]
@@ -27,7 +27,6 @@ p = [9.807, 0.9]
 prob = ODEProblem(ball!, u0, tspan, p)
 sol = solve(prob, Tsit5(), callback = ground_cb)
 plot(sol, vars = (1, 3), label = nothing, xlabel = "x", ylabel = "y")
-plot!(background_color = :transparent)
 ```
 
 For this particular problem, we wish to measure the impact distance from a point $y=25$ on a wall at $x=25$. So, we introduce an additional callback that terminates the simulation on wall impact.
@@ -71,7 +70,7 @@ trajectories = 100
 prob_func(prob, i, repeat) = remake(prob, p = [p[1], rand(cor_dist)])
 ensemble_prob = EnsembleProblem(prob, prob_func = prob_func)
 ensemblesol = solve(ensemble_prob, Tsit5(), EnsembleThreads(), trajectories = trajectories,
-                    callback = cbs)
+    callback = cbs)
 
 begin # plot
     plot(ensemblesol, vars = (1, 3), lw = 1)
@@ -116,40 +115,25 @@ sol.u
 
 We now wish to optimize the initial position ($x_0,y_0$) and horizontal velocity ($\dot{x}_0$) of the system to minimize the expected squared miss distance from the star, where $x_0\in\left[-100,0\right]$, $y_0\in\left[1,3\right]$, and $\dot{x}_0\in\left[10,50\right]$. We will demonstrate this using a gradient-based optimization approach from NLopt.jl using `ForwardDiff.jl` AD through the expectation calculation.
 
-First, we load the required packages and define our loss function
-
 ```@example control
-using NLopt, SciMLSensitivity, ForwardDiff
-
+using Optimization, OptimizationNLopt, OptimizationMOI
 make_u0(θ) = [θ[1], θ[2], θ[3], 0.0]
-
-function 𝔼_loss(θ)
+function 𝔼_loss(θ, pars)
     prob = ODEProblem(ball!, make_u0(θ), tspan, p)
     sm = SystemMap(prob, Tsit5(), callback = cbs)
     exprob = ExpectationProblem(sm, obs, h, gd; nout = 1)
     sol = solve(exprob, Koopman(), ireltol = 1e-5)
     sol.u
 end
-```
-
-NLopt requires that this loss function return the loss as above, but also do an inplace update of the gradient. So, we wrap this function to put it in the form required by NLopt.
-
-```@example control
-function 𝔼_loss_nlopt(θ, ∇)
-    length(∇) > 0 ? ForwardDiff.gradient!(∇, 𝔼_loss, θ) : nothing
-    𝔼_loss(θ)
-end
-```
-
-We then optimize using the [Method of Moving Asymptotes](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/#mma-method-of-moving-asymptotes-and-ccsa) algorithm (`:LD_MMA`)
-
-```@example control
-opt = Opt(:LD_MMA, 3)
-opt.lower_bounds = [-100.0, 1.0, 10.0]
-opt.upper_bounds = [0.0, 3.0, 50.0]
-opt.xtol_rel = 1e-3
-opt.min_objective = 𝔼_loss_nlopt
-(minf, minx, ret) = NLopt.optimize(opt, [-1.0, 2.0, 50.0])
+opt_f = OptimizationFunction(𝔼_loss, Optimization.AutoForwardDiff())
+opt_ini = [-1.0, 2.0, 50.0]
+opt_lb = [-100.0, 1.0, 10.0]
+opt_ub = [0.0, 3.0, 50.0]
+opt_prob = OptimizationProblem(opt_f, opt_ini; lb = opt_lb, ub = opt_ub)
+optimizer = OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
+    "algorithm" => :LD_MMA)
+opt_sol = solve(opt_prob, optimizer)
+minx = opt_sol.u
 ```
 
 Let's now visualize 100 Monte Carlo simulations
@@ -157,12 +141,12 @@ Let's now visualize 100 Monte Carlo simulations
 ```@example control
 ensembleprob = EnsembleProblem(remake(prob, u0 = make_u0(minx)), prob_func = prob_func)
 ensemblesol = solve(ensembleprob, Tsit5(), EnsembleThreads(), trajectories = 100,
-                    callback = cbs)
+    callback = cbs)
 
 begin
     plot(ensemblesol, vars = (1, 3), lw = 1, alpha = 0.1)
     plot!(solve(remake(prob, u0 = make_u0(minx)), Tsit5(), callback = cbs),
-          vars = (1, 3), label = nothing, c = :black, lw = 3, ls = :dash)
+        vars = (1, 3), label = nothing, c = :black, lw = 3, ls = :dash)
     xlabel!("x [m]")
     ylabel!("y [m]")
     plot!(rectangle(27.5, 25, 5, 50), c = :red, label = nothing)
@@ -175,7 +159,7 @@ end
 Looks pretty good! But, how long did it take? Let's benchmark.
 
 ```@example control
-@time NLopt.optimize(opt, [-1.0, 2.0, 50.0])
+@time solve(opt_prob, optimizer)
 ```
 
 Not bad for bound constrained optimization under uncertainty of a hybrid system!
@@ -191,7 +175,7 @@ begin
     xlabel!("x [m]")
     ylabel!("y [m]")
     plot!([constraint[1], constraint[1]], [0.0, constraint[2]], lw = 5, c = :black,
-          label = nothing)
+        label = nothing)
     scatter!([25], [25], marker = :star, ms = 10, label = nothing, c = :green)
     ylims!(0.0, 50.0)
     xlims!(minx[1], 27.5)
@@ -208,16 +192,16 @@ function constraint_affect!(integrator)
     integrator.u[3] < constraint[2] ? terminate!(integrator) : nothing
 end
 constraint_cb = ContinuousCallback(constraint_condition, constraint_affect!,
-                                   save_positions = (true, false));
+    save_positions = (true, false));
 constraint_cbs = CallbackSet(ground_cb, stop_cb, constraint_cb)
 
 ensemblesol = solve(ensembleprob, Tsit5(), EnsembleThreads(), trajectories = 500,
-                    callback = constraint_cbs)
+    callback = constraint_cbs)
 
 begin
     plot(ensemblesol, vars = (1, 3), lw = 1, alpha = 0.1)
     plot!(solve(remake(prob, u0 = make_u0(minx)), Tsit5(), callback = constraint_cbs),
-          vars = (1, 3), label = nothing, c = :black, lw = 3, ls = :dash)
+        vars = (1, 3), label = nothing, c = :black, lw = 3, ls = :dash)
 
     xlabel!("x [m]")
     ylabel!("y [m]")
@@ -234,13 +218,16 @@ That doesn't look good!
 We now need a second observable for the system. To compute a probability of impact, we use an indicator function for if a trajectory impacts the wall. In other words, this functions returns 1 if the trajectory hits the wall and 0 otherwise.
 
 ```@example control
-constraint_obs(sol, p) = sol[1, end] ≈ constraint[1] ? one(sol[1, end]) : zero(sol[1, end])
+function constraint_obs(sol, p)
+    sol((constraint[1] - sol[1, 1]) / sol[2, 1])[3] <= constraint[2] ? one(sol[1, end]) :
+    zero(sol[1, end])
+end
 ```
 
 Using the previously computed optimal initial conditions, let's compute the probability of hitting this wall
 
 ```@example control
-sm = SystemMap(remake(prob, u0 = make_u0(minx)), Tsit5(), callback = constraint_cbs)
+sm = SystemMap(remake(prob, u0 = make_u0(minx)), Tsit5(), callback = cbs)
 exprob = ExpectationProblem(sm, constraint_obs, h, gd; nout = 1)
 sol = solve(exprob, Koopman(), ireltol = 1e-5)
 sol.u
@@ -249,43 +236,36 @@ sol.u
 We then set up the constraint function for NLopt just as before.
 
 ```@example control
-function 𝔼_constraint(θ)
+function 𝔼_constraint(res, θ, pars)
     prob = ODEProblem(ball!, make_u0(θ), tspan, p)
-    sm = SystemMap(prob, Tsit5(), callback = constraint_cbs)
+    sm = SystemMap(prob, Tsit5(), callback = cbs)
     exprob = ExpectationProblem(sm, constraint_obs, h, gd; nout = 1)
     sol = solve(exprob, Koopman(), ireltol = 1e-5)
-    sol.u
+    res .= sol.u
 end
-function 𝔼_constraint_nlopt(x, ∇)
-    length(∇) > 0 ? ForwardDiff.gradient!(∇, 𝔼_constraint, x) : nothing
-    𝔼_constraint(x) - 0.01
-end
-```
-
-Note that NLopt requires the constraint function to be of the form $g(x) \leq 0$. Hence, why we return `𝔼_constraint(x) - 0.01` for the 1% chance constraint.
-
-The rest of the NLopt setup looks the same as before, except for adding the inequality constraint
-
-```@example control
-opt = Opt(:LD_MMA, 3)
-opt.lower_bounds = [-100.0, 1.0, 10.0]
-opt.upper_bounds = [0.0, 3.0, 50.0]
-opt.xtol_rel = 1e-3
-opt.min_objective = 𝔼_loss_nlopt
-inequality_constraint!(opt, 𝔼_constraint_nlopt, 1e-5)
-(minf2, minx2, ret2) = NLopt.optimize(opt, [-1.0, 2.0, 50.0])
+opt_lcons = [-Inf]
+opt_ucons = [0.01]
+optimizer = OptimizationMOI.MOI.OptimizerWithAttributes(NLopt.Optimizer,
+    "algorithm" => :LD_MMA)
+opt_f = OptimizationFunction(𝔼_loss, Optimization.AutoForwardDiff(), cons = 𝔼_constraint)
+opt_prob = OptimizationProblem(opt_f, opt_ini; lb = opt_lb, ub = opt_ub, lcons = opt_lcons,
+    ucons = opt_ucons)
+opt_sol = solve(opt_prob, optimizer)
+minx2 = opt_sol.u
 ```
 
 The probability of impacting the wall is now
 
 ```@example control
-λ = 𝔼_constraint(minx2)
+container = zeros(1)
+𝔼_constraint(container, minx2, nothing)
+λ = container[1]
 ```
 
 We can check if this is within tolerance by
 
 ```@example control
-λ - 0.01 <= 1e-5
+λ <= 0.01 + 1e-5
 ```
 
 Again, we plot some Monte Carlo simulations from this result as follows
@@ -293,12 +273,12 @@ Again, we plot some Monte Carlo simulations from this result as follows
 ```@example control
 ensembleprob = EnsembleProblem(remake(prob, u0 = make_u0(minx2)), prob_func = prob_func)
 ensemblesol = solve(ensembleprob, Tsit5(), EnsembleThreads(),
-                    trajectories = 500, callback = constraint_cbs)
+    trajectories = 500, callback = constraint_cbs)
 
 begin
     plot(ensemblesol, vars = (1, 3), lw = 1, alpha = 0.1)
     plot!(solve(remake(prob, u0 = make_u0(minx2)), Tsit5(), callback = constraint_cbs),
-          vars = (1, 3), label = nothing, c = :black, lw = 3, ls = :dash)
+        vars = (1, 3), label = nothing, c = :black, lw = 3, ls = :dash)
     plot!([constraint[1], constraint[1]], [0.0, constraint[2]], lw = 5, c = :black)
 
     xlabel!("x [m]")
