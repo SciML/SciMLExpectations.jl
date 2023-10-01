@@ -2195,7 +2195,7 @@ weakdeps = ["Zygote"]
 deps = ["DiffEqBase", "DiffEqNoiseProcess", "Distributions", "Integrals", "KernelDensity", "LinearAlgebra", "Parameters", "Random", "RecursiveArrayTools", "Reexport", "SciMLBase", "StaticArrays", "Statistics", "Zygote"]
 path = "/home/runner/work/SciMLExpectations.jl/SciMLExpectations.jl"
 uuid = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
-version = "2.0.1"
+version = "2.1.0"
 
 [[deps.SciMLNLSolve]]
 deps = ["DiffEqBase", "LineSearches", "NLsolve", "Reexport", "SciMLBase"]
