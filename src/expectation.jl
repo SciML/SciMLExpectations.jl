@@ -78,7 +78,7 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
 
     output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
 
-    function (dx, x, p) where {T}
+    function (dx, x, p)
         trajectories = size(x, 2)
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
@@ -121,7 +121,7 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
 
     output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
 
-    function (dx, x, p) where {T}
+    function (dx, x, p)
         trajectories = size(x, 2)
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
@@ -209,7 +209,7 @@ function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                           batch = 0,
                           quadalg = HCubatureJL(),
                           ireltol = 1e-2, iabstol = 1e-2,
-                          kwargs...) where {A <: AbstractExpectationADAlgorithm}
+                          kwargs...)
     integrand = build_integrand(prob, expalg, Val(batch > 0))
     lb, ub = extrema(prob.d)
 
@@ -269,7 +269,7 @@ Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub:
     function integrate_pullbacks(Δ)
         function dfdp(x, params)
             y, back = Zygote.pullback(p -> f(x, p), params)
-            [y; back(Δ)[1]]   #TODO need to match proper arrray type? promote_type???
+            [y; back(Δ)[1]]   #TODO need to match proper array type? promote_type???
         end
         ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params;
                        norm = _norm, nout = nout + nout * length(params), batch = batch,
@@ -289,7 +289,7 @@ Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::
     # Base.similar(A::ArrayPartition, ::Type{T}, dims::NTuple{N,Int}) where {T,N} = similar(Array(A), T, dims)
     # TODO add ArrayPartition similar fix upstream, see https://github.com/SciML/RecursiveArrayTools.jl/issues/135
     ∂f_∂params(x, params) = only(Zygote.jacobian(p -> f(x, p), params))
-    f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper arrray type? promote_type???
+    f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper array type? promote_type???
     _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
 
     res = integrate(quadalg, adalg, f_augmented, lb, ub, params;
