@@ -367,7 +367,7 @@ It is also possible to solve the various simulations in parallel by using the `b
 The default quadrature algorithm to solve `ExpectationProblem` does not support batch-mode evaluation. So, we first load dependencies for additional quadrature algorithms
 
 ```@example introduction
-using IntegralsCuba
+using Cuba
 ```
 
 We then solve our expectation as before, using a `batch=10` multi-thread parallelization via `EnsembleThreads()` of Cuba's SUAVE algorithm. We also introduce additional uncertainty in the model parameter.

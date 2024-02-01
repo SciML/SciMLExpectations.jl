@@ -22,7 +22,7 @@ Let's start by importing all the necessary libraries:
 using OrdinaryDiffEq
 using Turing, MCMCChains, Distributions
 using KernelDensity
-using SciMLExpectations, IntegralsCuba
+using SciMLExpectations, Cuba
 using DiffEqGPU
 using Plots, StatsPlots
 using Random;

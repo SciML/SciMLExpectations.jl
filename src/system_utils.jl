@@ -26,12 +26,6 @@ function SystemMap(prob, alg::SciMLBase.AbstractODEAlgorithm,
     SystemMap(prob, alg, ensemblealg, kwargs)
 end
 
-function (sm::SystemMap{DT})(u0, p) where {DT}
-    prob::DT = remake(sm.prob,
-                      u0 = convert(typeof(sm.prob.u0), u0),
-                      p = convert(typeof(sm.prob.p), p))
-    solve(prob, sm.alg; sm.kwargs...)
-end
 
 """
 ```julia

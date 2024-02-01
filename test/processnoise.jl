@@ -1,7 +1,7 @@
 using Test, TestExtras
 
 using SciMLExpectations
-using IntegralsCuba
+using Cuba
 using StochasticDiffEq
 using DiffEqNoiseProcess
 using Distributions

@@ -1,6 +1,6 @@
 using Test, TestExtras,
       SciMLExpectations, OrdinaryDiffEq, Distributions,
-      Integrals, IntegralsCubature, IntegralsCuba,
+      Integrals, Cubature, Cuba,
       StaticArrays, ComponentArrays, Random
 
 quadalgs = [

@@ -226,7 +226,8 @@ function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub
                    nout = 1, batch = 0,
                    kwargs...) where {TB}
     #TODO check batch iip type stability w/ IntegralProblem{XXXX}
-    prob = IntegralProblem{batch > 0}(f, lb, ub, p; nout = nout, batch = batch)
+    batch = batch==0 ? nothing : batch
+    prob = IntegralProblem(f, lb, ub, p; nout = nout, batch = batch)
     solve(prob, quadalg; kwargs...)
 end
 
