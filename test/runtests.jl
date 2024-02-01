@@ -1,7 +1,9 @@
-using SafeTestsets
+using SafeTestsets, Test
 
-@safetestset "Quality Assurance" begin include("qa.jl") end
-@safetestset "Expectation Process Noise Tests" begin include("processnoise.jl") end
-@safetestset "Expectation Interface Tests" begin include("interface.jl") end
-@safetestset "Expectation Solve Tests" begin include("solve.jl") end
-@safetestset "Expectation Differentiation Tests" begin include("differentiation.jl") end
+@testset "Integrals" begin
+    @safetestset "Quality Assurance" include("qa.jl")
+    @safetestset "Expectation Process Noise Tests" include("processnoise.jl")
+    @safetestset "Expectation Interface Tests" include("interface.jl")
+    @safetestset "Expectation Solve Tests" include("solve.jl")
+    @safetestset "Expectation Differentiation Tests" include("differentiation.jl")
+end
