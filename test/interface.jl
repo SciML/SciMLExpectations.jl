@@ -5,13 +5,6 @@ using Test, TestExtras,
 const DEU = SciMLExpectations
 include("setup.jl")
 
-function (sm::SystemMap{DT})(u0, p) where {DT}
-    prob::DT = remake(sm.prob,
-                      u0 = convert(typeof(sm.prob.u0), u0),
-                      p = convert(typeof(sm.prob.p), p))
-    solve(prob, sm.alg; sm.kwargs...)
-end
-
 @testset "GenericDistribution" begin
     dists = (Uniform(1, 2), Uniform(3, 4), Normal(0, 1), truncated(Normal(0, 1), -3, 3))
     x = [mean(d) for d in dists]
