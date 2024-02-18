@@ -63,7 +63,7 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
 
     if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
         set_result! = @inline function (dx, sol)
-            dx[:] .= sol[:]
+            dx[:] .= sol
         end
     else
         set_result! = @inline function (dx, sol)
