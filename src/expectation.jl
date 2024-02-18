@@ -223,7 +223,7 @@ end
 
 # Integrate function to test new Adjoints, will need to roll up to Integrals.jl
 function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub::TB, p;
-                   nout = nothing, batch = nothing,
+                   nout = 1, batch = 0,
                    kwargs...) where {TB}
     #TODO check batch iip type stability w/ IntegralProblem{XXXX}
     batch = batch==0 ? nothing : batch
