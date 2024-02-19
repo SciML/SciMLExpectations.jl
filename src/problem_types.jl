@@ -2,9 +2,9 @@ abstract type AbstractUncertaintyProblem end
 
 """
 ```julia
-ExpectationProblem(S, g, h, pdist, params, nout)
-ExpectationProblem(g, pdist, params; nout = 1)
-ExpectationProblem(sm::SystemMap, g, h, d; nout = 1)
+ExpectationProblem(S, g, h, pdist, params)
+ExpectationProblem(g, pdist, params)
+ExpectationProblem(sm::SystemMap, g, h, d)
 ```
 
 Defines ∫ g(S(h(x,u0,p)))*f(x)dx
@@ -18,7 +18,6 @@ Let 𝕏 = uncertainty space, 𝕌 = Initial condition space, ℙ = model parame
   - h: 𝕏 × 𝕌 × ℙ → 𝕌 × ℙ also known as covariate function.
   - pdf(d,x): 𝕏 → ℝ the uncertainty distribution of the initial states.
   - params
-  - nout
 """
 struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
     # defines ∫ g(S(h(x,u0,p)))*f(x)dx
@@ -28,21 +27,21 @@ struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
     h::TH  # cov(input_func),         h: 𝕏 × 𝕌 × ℙ → 𝕌 × ℙ
     d::TF  # distribution,            pdf(d,x): 𝕏 → ℝ
     params::TP
-    nout::Int
 end
 
 # Constructor for general maps/functions
-function ExpectationProblem(g, pdist, params; nout = 1)
+function ExpectationProblem(g, pdist, params; nout = nothing)
+    !isnothing(nout) && @warn "nout is deprecated and unused"
     h(x, u, p) = x, p
     S(x, p) = x
-    ExpectationProblem(S, g, h, pdist, params, nout)
+    ExpectationProblem(S, g, h, pdist, params)
 end
 
 # Constructor for DEProblems
-function ExpectationProblem(sm::SystemMap, g, h, d; nout = 1)
+function ExpectationProblem(sm::SystemMap, g, h, d; nout = nothing)
+    !isnothing(nout) && @warn "nout is deprecated and unused"
     ExpectationProblem(sm, g, h, d,
-                       ArrayPartition(deepcopy(sm.prob.u0), deepcopy(sm.prob.p)),
-                       nout)
+                       ArrayPartition(deepcopy(sm.prob.u0), deepcopy(sm.prob.p)))
 end
 
 distribution(prob::ExpectationProblem) = prob.d
@@ -58,7 +57,8 @@ parameters(prob::ExpectationProblem) = prob.params
 #     exp_prob::ExpectationProblem
 # end
 
-function ExpectationProblem(sm::ProcessNoiseSystemMap, g, h; nout = 1)
+function ExpectationProblem(sm::ProcessNoiseSystemMap, g, h; nout = nothing)
+    !isnothing(nout) && @warn "nout is deprecated and unused"
     d = GenericDistribution((Truncated(Normal(), -4.0, 4.0) for i in 1:(sm.n))...)
-    ExpectationProblem(sm, g, h, d, deepcopy(sm.prob.p), nout)
+    ExpectationProblem(sm, g, h, d, deepcopy(sm.prob.p))
 end
