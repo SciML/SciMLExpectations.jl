@@ -50,7 +50,7 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
     end
     @testset "Vector-Valued Observable (nout > 1)" begin
         g(sol, p) = sol[:, end]
-        exprob = ExpectationProblem(sm, g, cov, gd; nout = length(u0))
+        exprob = ExpectationProblem(sm, g, cov, gd)
         for alg in quadalgs
             @test solve(exprob, Koopman(); quadalg = alg, ireltol = 1e-3,
                         iabstol = 1e-3).u≈analytical rtol=1e-2
@@ -82,7 +82,7 @@ end
     @testset "Vector-Valued Observable (nout > 1)" begin
         g(u, p) = [sum(p .* sin.(u[1])) + cos(u[2]), cos(u[2])]
         analytical = [2 * sin(1 / 2)^2 * sum(p) + 1 / sqrt(exp(1)), 1 / sqrt(exp(1))]
-        exprob = ExpectationProblem(g, gd, p; nout = 2)
+        exprob = ExpectationProblem(g, gd, p)
         for alg in quadalgs
             @test solve(exprob, Koopman(); quadalg = alg).u≈analytical rtol=1e-2
         end
