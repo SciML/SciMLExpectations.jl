@@ -32,21 +32,23 @@ struct MonteCarlo <: AbstractExpectationAlgorithm
 end
 
 # Builds integrand for arbitrary functions
-function build_integrand(prob::ExpectationProblem, ::Koopman, ::Val{false})
+function build_integrand(prob::ExpectationProblem, ::Koopman, mid, p, ::Nothing)
     @unpack g, d = prob
-    function (x, p)
+    function integrand_koopman(x, p)
         g(x, p) * pdf(d, x)
     end
+    return IntegralFunction{false}(integrand_koopman, nothing)
 end
 
 # Builds integrand for DEProblems
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{false}) where {F <: SystemMap}
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman, mid, p,
+                         ::Nothing) where {F <: SystemMap}
     @unpack S, g, h, d = prob
-    function (x, p)
+    function integrand_koopman_systemmap(x, p)
         ū, p̄ = h(x, p.x[1], p.x[2])
         g(S(ū, p̄), p̄) * pdf(d, x)
     end
+    return IntegralFunction{false}(integrand_koopman_systemmap, nothing)
 end
 
 function _make_view(x::Union{Vector{T}, Adjoint{T, Vector{T}}}, i) where {T}
@@ -57,19 +59,9 @@ function _make_view(x, i)
     @view x[:, i]
 end
 
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{true}) where {F <: SystemMap}
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman, mid, p,
+                         batch::Integer) where {F <: SystemMap}
     @unpack S, g, h, d = prob
-
-    if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
-        set_result! = @inline function (dx, sol)
-            dx[:] .= sol
-        end
-    else
-        set_result! = @inline function (dx, sol)
-            dx .= reshape(sol[:, :], size(dx))
-        end
-    end
 
     prob_func = function (prob, i, repeat, x)  # TODO is it better to make prob/output funcs outside of integrand, then call w/ closure?
         u0, p = h((_make_view(x, i)), prob.u0, prob.p)
@@ -78,36 +70,31 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
 
     output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
 
-    function (dx, x, p)
-        trajectories = size(x, 2)
+    function integrand_koopman_systemmap_batch(x, p)
+        trajectories = size(x)[end]
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
                                   prob_func = (prob, i, repeat) -> prob_func(prob, i,
                                                                              repeat, x))
-        sol = solve(ensprob, S.alg, S.ensemblealg; trajectories = trajectories, S.kwargs...)
-        set_result!(dx, sol)
+        solve(ensprob, S.alg, S.ensemblealg; trajectories = trajectories, S.kwargs...)
+    end
+    function integrand_koopman_systemmap_batch!(dx, x, p)
+        dx .= integrand_koopman_systemmap_batch(x, p)
         nothing
     end
+    proto_sol = integrand_koopman_systemmap_batch(reshape(collect(mid), size(mid)..., 1), p)
+    prototype = Array(proto_sol)
+    return BatchIntegralFunction{true}(integrand_koopman_systemmap_batch!, prototype; max_batch=batch)
 end
 
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{false}) where {F <: ProcessNoiseSystemMap}
-    error("Out of position problems currently not supported")
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman, mid,
+                         ::Nothing) where {F <: ProcessNoiseSystemMap}
+    error("Batching is required for Koopman ProcessNoiseSystemMap")
 end
 
-function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
-                         ::Val{true}) where {F <: ProcessNoiseSystemMap}
+function build_integrand(prob::ExpectationProblem{F}, ::Koopman, mid, p,
+                         batch::Integer) where {F <: ProcessNoiseSystemMap}
     @unpack S, g, h, d = prob
-
-    if prob.nout == 1 # TODO fix upstream in quadrature, expected sizes depend on quadrature method is requires different copying based on nout > 1
-        set_result! = @inline function (dx, sol)
-            dx[:] .= sol[:]
-        end
-    else
-        set_result! = @inline function (dx, sol)
-            dx .= reshape(sol[:, :], size(dx))
-        end
-    end
 
     prob_func = function (prob, i, repeat, x)
         Z, p = h((_make_view(x, i)), prob.u0, prob.p)
@@ -121,16 +108,21 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman,
 
     output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
 
-    function (dx, x, p)
-        trajectories = size(x, 2)
+    function integrand_koopman_processnoisesystemmap_batch(x, p)
+        trajectories = size(x)[end]
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
                                   prob_func = (prob, i, repeat) -> prob_func(prob, i,
                                                                              repeat, x))
-        sol = solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
-        set_result!(dx, sol)
+        solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
+    end
+    function integrand_koopman_processnoisesystemmap_batch!(dx, x, p)
+        dx .= integrand_koopman_processnoisesystemmap_batch(x, p)
         nothing
     end
+    proto_sol = integrand_koopman_processnoisesystemmap_batch(reshape(collect(mid), size(mid)..., 1), p)
+    prototype = Array(proto_sol)
+    return BatchIntegralFunction{true}(integrand_koopman_processnoisesystemmap_batch!, prototype; max_batch=batch)
 end
 
 """
@@ -198,7 +190,7 @@ end
 """
 ```julia
 solve(exprob::ExpectationProblem, expalg::Koopman;
-      maxiters = 1000000, batch = 0, quadalg = HCubatureJL(),
+      maxiters = 1000000, batch = nothing, quadalg = HCubatureJL(),
       ireltol = 1e-2, iabstol = 1e-2, kwargs...)
 ```
 
@@ -206,38 +198,34 @@ Solve an `ExpectationProblem` using Koopman integration.
 """
 function DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...;
                           maxiters = 1000000,
-                          batch = 0,
+                          batch = nothing,
                           quadalg = HCubatureJL(),
                           ireltol = 1e-2, iabstol = 1e-2,
                           kwargs...)
-    integrand = build_integrand(prob, expalg, Val(batch > 0))
-    lb, ub = extrema(prob.d)
+    domain = extrema(prob.d)
+    integrand = build_integrand(prob, expalg, sum(domain)/2, prob.params, batch)
 
-    sol = integrate(quadalg, expalg.sensealg, integrand, lb, ub, prob.params;
+    sol = integrate(quadalg, expalg.sensealg, integrand, domain, prob.params;
                     reltol = ireltol, abstol = iabstol, maxiters = maxiters,
-                    nout = prob.nout, batch = batch,
                     kwargs...)
 
     return ExpectationSolution(sol.u, sol.resid, sol)
 end
 
 # Integrate function to test new Adjoints, will need to roll up to Integrals.jl
-function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, lb::TB, ub::TB, p;
-                   nout = 1, batch = 0,
-                   kwargs...) where {TB}
-    #TODO check batch iip type stability w/ IntegralProblem{XXXX}
-    batch = batch==0 ? nothing : batch
-    prob = IntegralProblem(f, (lb, ub), p; nout = nout, batch = batch)
+function integrate(quadalg, adalg::AbstractExpectationADAlgorithm, f, domain, p;
+                   kwargs...)
+    prob = IntegralProblem(f, domain, p)
     solve(prob, quadalg; kwargs...)
 end
 
 # defines adjoint via ∫∂/∂p f(x,p) dx
-Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::T,
+Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, domain,
                                    params::P;
-                                   nout = 1, batch = 0, norm = norm,
-                                   kwargs...) where {F, T, P}
-    primal = integrate(quadalg, adalg, f, lb, ub, params;
-                       norm = norm, nout = nout, batch = batch,
+                                #    norm = norm,
+                                   kwargs...) where {F, P}
+    primal = integrate(quadalg, adalg, f, domain, params;
+                    #    norm = norm,
                        kwargs...)
 
     function integrate_pullbacks(Δ)
@@ -245,8 +233,8 @@ Zygote.@adjoint function integrate(quadalg, adalg::NonfusedAD, f::F, lb::T, ub::
             _, back = Zygote.pullback(p -> f(x, p), params)
             back(Δ)[1]
         end
-        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params;
-                       norm = norm, nout = nout * length(params), batch = batch,
+        ∂p = integrate(quadalg, adalg, dfdp, domain, params;
+                    #    norm = norm,
                        kwargs...)
         # ∂lb = -f(lb,params)  #needs correct for dim > 1
         # ∂ub = f(ub,params)
@@ -257,23 +245,25 @@ end
 
 # defines adjoint via ∫[f(x,p; ∂/∂p f(x,p)] dx, ie it fuses the primal, post the primal calculation
 # has flag to only compute quad norm with respect to only the primal in the pull-back. Gives same quadrature points as doing forwarddiff
-Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub::T,
+Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, domain,
                                    params::P;
-                                   nout = 1, batch = 0, norm = norm,
-                                   kwargs...) where {F, T, P}
-    primal = integrate(quadalg, adalg, f, lb, ub, params;
-                       norm = norm, nout = nout, batch = batch,
+                                #    norm = norm,
+                                   kwargs...) where {F, P}
+    @assert f isa IntegralFunction{false} "adjoint doesn't support in-place or batching"
+    primal = integrate(quadalg, adalg, f, domain, params;
+                       norm = norm,
                        kwargs...)
 
-    _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
+    nout = length(primal)
+    # _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
 
     function integrate_pullbacks(Δ)
         function dfdp(x, params)
             y, back = Zygote.pullback(p -> f(x, p), params)
             [y; back(Δ)[1]]   #TODO need to match proper array type? promote_type???
         end
-        ∂p = integrate(quadalg, adalg, dfdp, lb, ub, params;
-                       norm = _norm, nout = nout + nout * length(params), batch = batch,
+        ∂p = integrate(quadalg, adalg, dfdp, domain, params;
+                    #    norm = _norm,
                        kwargs...)
         return nothing, nothing, nothing, nothing, nothing, @view ∂p[(nout + 1):end]
     end
@@ -281,20 +271,22 @@ Zygote.@adjoint function integrate(quadalg, adalg::PostfusedAD, f::F, lb::T, ub:
 end
 
 # Fuses primal and partials prior to pullback, I doubt this will stick around based on required system evals.
-Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, lb::T, ub::T,
+Zygote.@adjoint function integrate(quadalg, adalg::PrefusedAD, f::F, domain,
                                    params::P;
-                                   nout = 1, batch = 0, norm = norm,
-                                   kwargs...) where {F, T, P}
+                                #    norm = norm,
+                                   kwargs...) where {F, P}
+    @assert f isa IntegralFunction{false} "adjoint doesn't support in-place or batching"
     # from Seth Axen via Slack
     # Does not work w/ ArrayPartition unless with following hack
     # Base.similar(A::ArrayPartition, ::Type{T}, dims::NTuple{N,Int}) where {T,N} = similar(Array(A), T, dims)
     # TODO add ArrayPartition similar fix upstream, see https://github.com/SciML/RecursiveArrayTools.jl/issues/135
     ∂f_∂params(x, params) = only(Zygote.jacobian(p -> f(x, p), params))
     f_augmented(x, params) = [f(x, params); ∂f_∂params(x, params)...] #TODO need to match proper array type? promote_type???
-    _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
+    nout = length(f(sum(domain)/2, params))
+    # _norm = adalg.norm_partials ? norm : primalnorm(nout, norm)
 
-    res = integrate(quadalg, adalg, f_augmented, lb, ub, params;
-                    norm = _norm, nout = nout + nout * length(params), batch = batch,
+    res = integrate(quadalg, adalg, f_augmented, domain, params;
+                    # norm = _norm,
                     kwargs...)
     primal = first(res)
     function integrate_pullback(Δy)
