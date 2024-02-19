@@ -106,7 +106,7 @@ using SciMLExpectations
 gd = GenericDistribution(cor_dist)
 h(x, u, p) = u, [p[1]; x[1]]
 sm = SystemMap(prob, Tsit5(), callback = cbs)
-exprob = ExpectationProblem(sm, obs, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, obs, h, gd)
 sol = solve(exprob, Koopman(), ireltol = 1e-5)
 sol.u
 ```
@@ -121,7 +121,7 @@ make_u0(θ) = [θ[1], θ[2], θ[3], 0.0]
 function 𝔼_loss(θ, pars)
     prob = ODEProblem(ball!, make_u0(θ), tspan, p)
     sm = SystemMap(prob, Tsit5(), callback = cbs)
-    exprob = ExpectationProblem(sm, obs, h, gd; nout = 1)
+    exprob = ExpectationProblem(sm, obs, h, gd)
     sol = solve(exprob, Koopman(), ireltol = 1e-5)
     sol.u
 end
@@ -228,7 +228,7 @@ Using the previously computed optimal initial conditions, let's compute the prob
 
 ```@example control
 sm = SystemMap(remake(prob, u0 = make_u0(minx)), Tsit5(), callback = cbs)
-exprob = ExpectationProblem(sm, constraint_obs, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, constraint_obs, h, gd)
 sol = solve(exprob, Koopman(), ireltol = 1e-5)
 sol.u
 ```
@@ -239,7 +239,7 @@ We then set up the constraint function for NLopt just as before.
 function 𝔼_constraint(res, θ, pars)
     prob = ODEProblem(ball!, make_u0(θ), tspan, p)
     sm = SystemMap(prob, Tsit5(), callback = cbs)
-    exprob = ExpectationProblem(sm, constraint_obs, h, gd; nout = 1)
+    exprob = ExpectationProblem(sm, constraint_obs, h, gd)
     sol = solve(exprob, Koopman(), ireltol = 1e-5)
     res .= sol.u
 end
