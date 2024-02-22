@@ -62,7 +62,7 @@ using SciMLExpectations
 gd = GenericDistribution(u0_dist...)
 h(x, u, p) = x, p
 sm = SystemMap(prob, Tsit5())
-exprob = ExpectationProblem(sm, g, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, MonteCarlo(100000))
 sol.u
 ```
@@ -115,7 +115,7 @@ Changing the distribution, we arrive at
 ```@example introduction
 u0_dist = [Uniform(0.0, 10.0)]
 gd = GenericDistribution(u0_dist...)
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(u0))
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, MonteCarlo(100000))
 sol.u
 ```
@@ -125,7 +125,7 @@ and
 ```@example introduction
 u0_dist = [Uniform(0.0, 10.0)]
 gd = GenericDistribution(u0_dist...)
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(u0))
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -141,7 +141,7 @@ Note that the `Koopman()` algorithm doesn't currently support infinite or semi-i
 ```@example introduction
 u0_dist = [Normal(3.0, 2.0)]
 gd = GenericDistribution(u0_dist...)
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(u0))
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -157,7 +157,7 @@ Using a truncated distribution will alleviate this problem. However, there is an
 ```@example introduction
 u0_dist = [truncated(Normal(3.0, 2.0), -1000, 1000)]
 gd = GenericDistribution(u0_dist...)
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(u0))
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -167,7 +167,7 @@ whereas truncating at $\pm 4\sigma$ produces the correct result
 ```@example introduction
 u0_dist = [truncated(Normal(3.0, 2.0), -5, 11)]
 gd = GenericDistribution(u0_dist...)
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(u0))
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -177,20 +177,20 @@ If a large truncation is required, it is best practice to center the distributio
 ```@example introduction
 u0_dist = [truncated(Normal(3.0, 2.0), 3 - 1000, 3 + 1000)]
 gd = GenericDistribution(u0_dist...)
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(u0))
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
 
 ## Vector-Valued Functions
 
-`ExpectationProblem` can also handle vector-valued functions. Simply pass the vector-valued function and set the `nout` kwarg to the length of the vector the function returns.
+`ExpectationProblem` can also handle vector-valued functions.
 
 Here, we demonstrate this by computing the expectation of `u` at `t=4.0s` and `t=6.0s`
 
 ```@example introduction
 g(sol, p) = [sol(4.0)[1], sol(6.0)[1]]
-exprob = ExpectationProblem(sm, g, h, gd; nout = 2)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -208,7 +208,7 @@ saveat = tspan[1]:0.5:tspan[2]
 g(sol, p) = sol[1, :]
 prob = ODEProblem(f, u0, tspan, p, saveat = saveat)
 sm = SystemMap(prob, Tsit5())
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(saveat))
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -234,21 +234,21 @@ end
 counter = [0, 0, 0]
 g(sol, p, power) = g(sol, p, power, counter)
 g(sol, p) = g(sol, p, 1)
-exprob = ExpectationProblem(sm, g, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
 
 ```@example introduction
 g(sol, p) = g(sol, p, 2)
-exprob = ExpectationProblem(sm, g, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
 
 ```@example introduction
 g(sol, p) = g(sol, p, 3)
-exprob = ExpectationProblem(sm, g, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -269,7 +269,7 @@ function g(sol, p, counter)
 end
 counter = [0]
 g(sol, p) = g(sol, p, counter)
-exprob = ExpectationProblem(sm, g, h, gd; nout = 3)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 ```
@@ -305,7 +305,7 @@ function g(sol, p)
     x = sol(4.0)[1]
     [x, x^2]
 end
-exprob = ExpectationProblem(sm, g, h, gd; nout = 2)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 mean_g = sol.u[1]
@@ -327,7 +327,7 @@ saveat = tspan[1]:0.5:tspan[2]
 g(sol, p) = [sol[1, :]; sol[1, :] .^ 2]
 prob = ODEProblem(f, u0, tspan, p, saveat = saveat)
 sm = SystemMap(prob, Tsit5())
-exprob = ExpectationProblem(sm, g, h, gd; nout = length(saveat) * 2)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 
@@ -350,7 +350,7 @@ function g(sol, p)
     x = sol(4.0)[1]
     [x, x^2, x^3]
 end
-exprob = ExpectationProblem(sm, g, h, gd; nout = 3)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman())
 sol.u
 mean_g = sol.u[1]
@@ -379,7 +379,7 @@ gd = GenericDistribution(u0_dist, p_dist)
 g(sol, p) = sol(6.0)[1]
 h(x, u, p) = [x[1]], [x[2]]
 sm = SystemMap(prob, Tsit5(), EnsembleThreads())
-exprob = ExpectationProblem(sm, g, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, g, h, gd)
 # batchmode = EnsembleThreads() #where to pass this?
 sol = solve(exprob, Koopman(), batch = 10, quadalg = CubaSUAVE())
 sol.u
@@ -392,8 +392,8 @@ Now, let's compare the performance of the batch and non-batch modes
 ```
 
 ```@example introduction
-solve(exprob, Koopman(), batch = 0, quadalg = CubaSUAVE())
-@time solve(exprob, Koopman(), batch = 0, quadalg = CubaSUAVE())
+solve(exprob, Koopman(), quadalg = CubaSUAVE())
+@time solve(exprob, Koopman(), quadalg = CubaSUAVE())
 ```
 
 It is also possible to parallelize across the GPU. However, one must be careful of the limitations of ensemble solutions with the GPU. Please refer to [DiffEqGPU.jl](https://github.com/SciML/DiffEqGPU.jl) for details.
@@ -428,7 +428,7 @@ g(sol, p) = sol(6.0f0)[1]
 h(x, u, p) = [x[1]], [x[2]]
 prob = ODEProblem(f, u0, tspan, p)
 sm = SystemMap(prob, Tsit5(), EnsembleCPUArray())
-exprob = ExpectationProblem(sm, g, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman(), batch = 10, quadalg = CubaSUAVE())
 sol.u
 ```

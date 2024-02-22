@@ -19,7 +19,7 @@ prob = SDEProblem(f, g, u0, (0.0, 1.0), noise = W)
 sm = ProcessNoiseSystemMap(prob, 8, LambaEM(), abstol = 1e-3, reltol = 1e-3)
 cov(x, u, p) = x, p
 observed(sol, p) = sol[:, end]
-exprob = ExpectationProblem(sm, observed, cov; nout = length(u0))
+exprob = ExpectationProblem(sm, observed, cov)
 sol1 = solve(exprob, Koopman(), ireltol = 1e-3, iabstol = 1e-3, batch = 64,
              quadalg = CubaDivonne())
 sol1.u

@@ -26,7 +26,7 @@ the documentation, which contains the unreleased features.
 ### Example
 
 ```julia
-using SciMLExpectations, OrdinaryDiffEq, Distributions, IntegralsCubature
+using SciMLExpectations, OrdinaryDiffEq, Distributions, Cubature
 
 function eom!(du, u, p, t, A)
     du .= A * u
@@ -56,7 +56,7 @@ julia> analytical
 
 ```julia
 g(sol, p) = sol[:, end]
-exprob = ExpectationProblem(sm, g, cov, gd; nout = length(u0))
+exprob = ExpectationProblem(sm, g, cov, gd)
 sol = solve(exprob, Koopman(); quadalg = CubatureJLh(),
             ireltol = 1e-3, iabstol = 1e-3)
 sol.u # Expectation of the states 1 and 2 at the final time point
