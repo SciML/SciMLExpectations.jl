@@ -392,8 +392,8 @@ Now, let's compare the performance of the batch and non-batch modes
 ```
 
 ```@example introduction
-solve(exprob, Koopman(), batch = 0, quadalg = CubaSUAVE())
-@time solve(exprob, Koopman(), batch = 0, quadalg = CubaSUAVE())
+solve(exprob, Koopman(), quadalg = CubaSUAVE())
+@time solve(exprob, Koopman(), quadalg = CubaSUAVE())
 ```
 
 It is also possible to parallelize across the GPU. However, one must be careful of the limitations of ensemble solutions with the GPU. Please refer to [DiffEqGPU.jl](https://github.com/SciML/DiffEqGPU.jl) for details.
