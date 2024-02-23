@@ -63,14 +63,14 @@ function build_integrand(prob::ExpectationProblem{F}, ::Koopman, mid, p,
                          batch::Integer) where {F <: SystemMap}
     @unpack S, g, h, d = prob
 
-    prob_func = function (prob, i, repeat, x)  # TODO is it better to make prob/output funcs outside of integrand, then call w/ closure?
-        u0, p = h((_make_view(x, i)), prob.u0, prob.p)
-        remake(prob, u0 = u0, p = p)
+    function prob_func(prob, i, repeat, x)  # TODO is it better to make prob/output funcs outside of integrand, then call w/ closure?
+        u0, _p = h((_make_view(x, i)), prob.u0, prob.p)
+        remake(prob, u0 = u0, p = _p)
     end
 
     output_func(sol, i, x) = (g(sol, sol.prob.p) * pdf(d, (_make_view(x, i))), false)
 
-    function integrand_koopman_systemmap_batch(x, p)
+    function integrand_koopman_systemmap_batch(x, _)
         trajectories = size(x)[end]
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(S.prob; output_func = (sol, i) -> output_func(sol, i, x),
