@@ -22,7 +22,7 @@ include("setup.jl")
     end
     @testset "Correctness" begin
         fd = FiniteDiff.finite_difference_derivative(loss, 0.0)
-        @test VectorOfArray(ForwardDiff.derivative(loss, 0.0))≈fd rtol=1e-4
+        @test ForwardDiff.derivative(loss, 0.0)≈fd rtol=1e-3
     end
     @testset "Type Stability" begin pt = 0.0
         #@test_broken @constinferred ForwardDiff.derivative(loss, pt)

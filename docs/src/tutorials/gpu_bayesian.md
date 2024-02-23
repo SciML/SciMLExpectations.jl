@@ -22,7 +22,7 @@ Let's start by importing all the necessary libraries:
 using OrdinaryDiffEq
 using Turing, MCMCChains, Distributions
 using KernelDensity
-using SciMLExpectations, IntegralsCuba
+using SciMLExpectations, Cuba
 using DiffEqGPU
 using Plots, StatsPlots
 using Random;
@@ -166,7 +166,7 @@ ub = [p_kde_i.x[end] for p_kde_i in p_kde] #upper bound for integration
 gd = GenericDistribution(pdf_func, rand_func, lb, ub)
 h(x, u, p) = u, x
 sm = SystemMap(prob1, Tsit5())
-exprob = ExpectationProblem(sm, g, h, gd; nout = 1)
+exprob = ExpectationProblem(sm, g, h, gd)
 sol = solve(exprob, Koopman(); reltol = 1e-2, abstol = 1e-2)
 sol.u
 ```
