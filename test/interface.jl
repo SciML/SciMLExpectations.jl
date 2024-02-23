@@ -54,8 +54,8 @@ end end
                    DEU.parameters)
         dists = (Uniform(1, 2), Uniform(3, 4), truncated(Normal(0, 1), -5, 5))
         gd = GenericDistribution(dists...)
+        x = [mean(d) for d in dists]
         @testset "DiffEq" begin
-            x = [mean(d) for d in dists]
             h(x, u, p) = x, p
             prob = ODEProblem(eoms[1], u0s[1], tspan, ps[1])
             sm = SystemMap(prob, Tsit5(); saveat = 1.0)
@@ -66,21 +66,21 @@ end end
             for foo in getters
                 @constinferred foo(ep)
             end
-            f = @constinferred build_integrand(ep, Koopman(), Val(false))
+            f = @constinferred build_integrand(ep, Koopman(), x, DEU.parameters(ep), nothing)
             @constinferred f(x, DEU.parameters(ep))
 
-            fbatch = @constinferred build_integrand(ep, Koopman(), Val(true))
+            fbatch = #= @constinferred =# build_integrand(ep, Koopman(), x, DEU.parameters(ep), 10)
             y = reshape(repeat(x, outer = 5), :, 5)
             dy = similar(y[1, :])
             @constinferred fbatch(dy, y, DEU.parameters(ep))
 
             # nout > 1
             g2(soln, p) = [soln[1, end], soln[2, end]]
-            ep = @constinferred ExpectationProblem(sm, g2, h, gd; nout = 2)
-            f = @constinferred build_integrand(ep, Koopman(), Val(false))
+            ep = @constinferred ExpectationProblem(sm, g2, h, gd)
+            f = @constinferred build_integrand(ep, Koopman(), x, DEU.parameters(ep), nothing)
             @constinferred f(x, DEU.parameters(ep))
 
-            fbatch = @constinferred build_integrand(ep, Koopman(), Val(true))
+            fbatch = #= @constinferred =# build_integrand(ep, Koopman(), x, DEU.parameters(ep), 10)
             y = reshape(repeat(x, outer = 5), :, 5)
             dy = similar(y[1:2, :])
             @constinferred fbatch(dy, y, DEU.parameters(ep))
@@ -91,7 +91,7 @@ end end
             for foo in getters
                 @constinferred foo(ep)
             end
-            f = @constinferred build_integrand(ep, Koopman(), Val(false))
+            f = @constinferred build_integrand(ep, Koopman(), x, DEU.parameters(ep), nothing)
             @constinferred f([0.0, 1.0, 2.0], DEU.parameters(ep))
         end
     end
