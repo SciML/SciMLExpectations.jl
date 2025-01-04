@@ -49,7 +49,7 @@ StochasticDiffEq = "6"
 SymPy = "2"
 Test = "1"
 TestExtras = "0.2"
-Zygote = "0.6"
+Zygote = "0.6, 0.7"
 julia = "1.6"
 
 [extras]
