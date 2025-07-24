@@ -77,8 +77,6 @@ Following that tutorial, we choose a set of priors and perform `NUTS` sampling
 to arrive at the MCMC chain:
 
 ```@example Bayesian
-Turing.setadbackend(:forwarddiff)
-
 @model function fitlv(data, prob1)
     σ ~ InverseGamma(2, 3) # ~ is the tilde character
     α ~ truncated(Normal(1.5, 0.5), 1.0, 2.0)
@@ -98,6 +96,7 @@ end
 model = fitlv(odedata, prob1)
 
 # This next command runs 3 independent chains without using multithreading.
+# NUTS uses ForwardDiff by default for automatic differentiation
 chain = mapreduce(c -> sample(model, NUTS(0.45), 1000), chainscat, 1:3)
 ```
 
