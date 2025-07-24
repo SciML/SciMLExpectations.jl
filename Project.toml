@@ -1,7 +1,7 @@
 name = "SciMLExpectations"
 uuid = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "2.2.0"
+version = "2.3.0"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
@@ -50,7 +50,7 @@ SymPy = "2"
 Test = "1"
 TestExtras = "0.2"
 Zygote = "0.6, 0.7"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
