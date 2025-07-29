@@ -335,10 +335,10 @@ sol.u
 σ = sqrt.(sol.u[(length(saveat) + 1):end] - μ .^ 2)
 
 plot(t -> exp(p[1] * t) * mean(u0_dist[1]), tspan...,
-     ribbon = t -> -sqrt(exp(2 * p[1] * t) * var(u0_dist[1])),
-     label = "Analytical Mean, 1 std bounds")
+    ribbon = t -> -sqrt(exp(2 * p[1] * t) * var(u0_dist[1])),
+    label = "Analytical Mean, 1 std bounds")
 scatter!(collect(saveat), μ, marker = :x, yerror = σ, c = :black,
-         label = "Koopman Mean, 1 std bounds")
+    label = "Koopman Mean, 1 std bounds")
 ```
 
 ### Skewness
@@ -410,7 +410,9 @@ Currently, these docs are built on a machine without a GPU.
 using DiffEqGPU
 
 function f(du, u, p, t)
-    @inbounds begin du[1] = p[1] * u[1] end
+    @inbounds begin
+        du[1] = p[1] * u[1]
+    end
     nothing
 end
 

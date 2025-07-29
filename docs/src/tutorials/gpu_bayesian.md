@@ -210,7 +210,7 @@ prob = ODEProblem(lotka_volterra, u0, (0.0, 10.0), p)
 prob_func = (prob, i, repeat) -> remake(prob, p = rand(Float64, 4) .* p)
 monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy = false)
 @time sol = solve(monteprob, Tsit5(), EnsembleGPUArray(), trajectories = 10_000,
-                  saveat = 1.0f0)
+    saveat = 1.0f0)
 ```
 
 Let's now use this in the ensembling method. We need to specify a `batch` for the

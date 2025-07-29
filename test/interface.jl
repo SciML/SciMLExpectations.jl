@@ -39,19 +39,21 @@ include("setup.jl")
     end
 end
 
-@testset "SystemMap" begin for (f, u, p) in zip(eoms, u0s, ps)
-    prob = ODEProblem(f, u, tspan, p)
-    sm = @constinferred SystemMap(prob, Tsit5(); saveat = 1.0)
-    sm_soln = @constinferred sm(u, p)
-    soln = solve(prob, Tsit5(); saveat = 1.0)
-    @test sm_soln.t == soln.t
-    @test sm_soln.u == soln.u
-end end
+@testset "SystemMap" begin
+    for (f, u, p) in zip(eoms, u0s, ps)
+        prob = ODEProblem(f, u, tspan, p)
+        sm = @constinferred SystemMap(prob, Tsit5(); saveat = 1.0)
+        sm_soln = @constinferred sm(u, p)
+        soln = solve(prob, Tsit5(); saveat = 1.0)
+        @test sm_soln.t == soln.t
+        @test sm_soln.u == soln.u
+    end
+end
 
 @testset "ExpectationProblem" begin
     @testset "Interface" begin
         getters = (DEU.distribution, DEU.mapping, DEU.observable, DEU.input_cov,
-                   DEU.parameters)
+            DEU.parameters)
         dists = (Uniform(1, 2), Uniform(3, 4), truncated(Normal(0, 1), -5, 5))
         gd = GenericDistribution(dists...)
         x = [mean(d) for d in dists]
@@ -66,10 +68,11 @@ end end
             for foo in getters
                 @constinferred foo(ep)
             end
-            f = @constinferred build_integrand(ep, Koopman(), x, DEU.parameters(ep), nothing)
+            f = @constinferred build_integrand(
+                ep, Koopman(), x, DEU.parameters(ep), nothing)
             @constinferred f(x, DEU.parameters(ep))
 
-            fbatch = #= @constinferred =# build_integrand(ep, Koopman(), x, DEU.parameters(ep), 10)
+            fbatch = build_integrand(ep, Koopman(), x, DEU.parameters(ep), 10) #= @constinferred =#
             y = reshape(repeat(x, outer = 5), :, 5)
             dy = similar(y[1, :])
             @constinferred fbatch(dy, y, DEU.parameters(ep))
@@ -77,10 +80,11 @@ end end
             # nout > 1
             g2(soln, p) = [soln[1, end], soln[2, end]]
             ep = @constinferred ExpectationProblem(sm, g2, h, gd)
-            f = @constinferred build_integrand(ep, Koopman(), x, DEU.parameters(ep), nothing)
+            f = @constinferred build_integrand(
+                ep, Koopman(), x, DEU.parameters(ep), nothing)
             @constinferred f(x, DEU.parameters(ep))
 
-            fbatch = #= @constinferred =# build_integrand(ep, Koopman(), x, DEU.parameters(ep), 10)
+            fbatch = build_integrand(ep, Koopman(), x, DEU.parameters(ep), 10) #= @constinferred =#
             y = reshape(repeat(x, outer = 5), :, 5)
             dy = similar(y[1:2, :])
             @constinferred fbatch(dy, y, DEU.parameters(ep))
@@ -91,7 +95,8 @@ end end
             for foo in getters
                 @constinferred foo(ep)
             end
-            f = @constinferred build_integrand(ep, Koopman(), x, DEU.parameters(ep), nothing)
+            f = @constinferred build_integrand(
+                ep, Koopman(), x, DEU.parameters(ep), nothing)
             @constinferred f([0.0, 1.0, 2.0], DEU.parameters(ep))
         end
     end

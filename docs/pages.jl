@@ -6,11 +6,11 @@ pages = [
         "tutorials/introduction.md",
         "tutorials/optimization_under_uncertainty.md",
         "tutorials/gpu_bayesian.md",
-        "tutorials/process_noise.md",
+        "tutorials/process_noise.md"
     ],
     "Manual" => [
         "manual/problem.md",
         "manual/solve.md",
-        "manual/algorithms.md",
-    ],
+        "manual/algorithms.md"
+    ]
 ]
