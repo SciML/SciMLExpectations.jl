@@ -24,7 +24,8 @@ include("setup.jl")
         fd = FiniteDiff.finite_difference_derivative(loss, 0.0)
         @test ForwardDiff.derivative(loss, 0.0)≈fd rtol=1e-3
     end
-    @testset "Type Stability" begin pt = 0.0
+    @testset "Type Stability" begin
+        pt = 0.0
         #@test_broken @constinferred ForwardDiff.derivative(loss, pt)
         #cfg = ForwardDiff.GradientConfig(loss∘first, [pt, 0.0])  # required, as config heuristic is type unstable, see: https://juliadiff.org/ForwardDiff.jl/latest/user/advanced.html#Configuring-Chunk-Size-1
         #@test_broken @constinferred ForwardDiff.gradient(loss∘first,[pt, 0.0], cfg)

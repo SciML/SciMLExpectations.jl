@@ -41,7 +41,7 @@ end
 function ExpectationProblem(sm::SystemMap, g, h, d; nout = nothing)
     !isnothing(nout) && @warn "nout is deprecated and unused"
     ExpectationProblem(sm, g, h, d,
-                       ArrayPartition(deepcopy(sm.prob.u0), deepcopy(sm.prob.p)))
+        ArrayPartition(deepcopy(sm.prob.u0), deepcopy(sm.prob.p)))
 end
 
 distribution(prob::ExpectationProblem) = prob.d

@@ -14,10 +14,10 @@ tspan = (0.0, 10.0)
 
 eoms = (pend!, pendsa, pend!, pendca!)
 u0s = ([π / 2, 0.0],
-       SVector(π / 2, 0.0),
-       ComponentArray(state = (θ = π / 2, θ̇ = 0.0)),
-       ComponentArray(state = (θ = π / 2, θ̇ = 0.0)))
+    SVector(π / 2, 0.0),
+    ComponentArray(state = (θ = π / 2, θ̇ = 0.0)),
+    ComponentArray(state = (θ = π / 2, θ̇ = 0.0)))
 ps = ([9.807, 1.0],
-      SVector(9.807, 1.0),
-      ComponentArray(g = 9.807, ℓ = 1.0),
-      ComponentArray(g = 9.807, ℓ = 1.0))
+    SVector(9.807, 1.0),
+    ComponentArray(g = 9.807, ℓ = 1.0),
+    ComponentArray(g = 9.807, ℓ = 1.0))
