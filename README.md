@@ -58,7 +58,7 @@ julia> analytical
 g(sol, p) = sol[:, end]
 exprob = ExpectationProblem(sm, g, cov, gd)
 sol = solve(exprob, Koopman(); quadalg = CubatureJLh(),
-            ireltol = 1e-3, iabstol = 1e-3)
+    ireltol = 1e-3, iabstol = 1e-3)
 sol.u # Expectation of the states 1 and 2 at the final time point
 ```
 

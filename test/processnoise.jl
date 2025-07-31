@@ -17,7 +17,7 @@ cov(x, u, p) = x, p
 observed(sol, p) = sol[:, end]
 exprob = ExpectationProblem(sm, observed, cov)
 sol1 = solve(exprob, Koopman(), ireltol = 1e-3, iabstol = 1e-3, batch = 64,
-             quadalg = CubaDivonne())
+    quadalg = CubaDivonne())
 sol2 = solve(exprob, MonteCarlo(1_000_000))
 @testset "Process noise" begin
     @test isapprox(sol1.u, sol2.u, rtol = 1e-2)
