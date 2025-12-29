@@ -23,6 +23,6 @@ Base.extrema(K::UnivariateKDE) = minimum(K), maximum(K)
 
 export Koopman, MonteCarlo, PrefusedAD, PostfusedAD, NonfusedAD
 export GenericDistribution, SystemMap, ProcessNoiseSystemMap, ExpectationProblem,
-       build_integrand
+       build_integrand, centralmoment
 
 end

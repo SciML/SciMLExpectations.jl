@@ -92,3 +92,70 @@ end
         @test solve(exprob, MonteCarlo(10000)).u≈analytical rtol=1e-1
     end
 end
+
+@testset "centralmoment Tests" begin
+    @testset "General Map" begin
+        # Test case: Standard Normal distribution
+        # Central moments of N(0,1):
+        # μ₁ = 0 (1st central moment is always 0)
+        # μ₂ = 1 (variance)
+        # μ₃ = 0 (skewness for symmetric distribution)
+        # μ₄ = 3 (kurtosis)
+
+        gd = GenericDistribution(Normal(0, 1))
+        g(u, p) = u[1]  # Identity function
+        exprob = ExpectationProblem(g, gd, nothing)
+
+        # Test with Koopman
+        moments_k = centralmoment(4, exprob, Koopman())
+        @test abs(moments_k[1]) < 0.01  # μ₁ ≈ 0
+        @test abs(moments_k[2] - 1) < 0.01  # μ₂ ≈ 1
+        @test abs(moments_k[3]) < 0.01  # μ₃ ≈ 0
+        @test abs(moments_k[4] - 3) < 0.1  # μ₄ ≈ 3
+
+        # Test with MonteCarlo
+        moments_m = centralmoment(4, exprob, MonteCarlo(100000))
+        @test abs(moments_m[1]) < 0.01  # μ₁ ≈ 0
+        @test abs(moments_m[2] - 1) < 0.1  # μ₂ ≈ 1 (looser tolerance for MC)
+        @test abs(moments_m[3]) < 0.2  # μ₃ ≈ 0
+        @test abs(moments_m[4] - 3) < 0.5  # μ₄ ≈ 3
+    end
+
+    @testset "SystemMap" begin
+        # Test case: Simple linear ODE with uncertain initial condition
+        # du/dt = -0.5 * u, u(0) ~ truncated Normal
+        # Solution: u(t) = u0 * exp(-0.5 * t)
+
+        function f(du, u, p, t)
+            du[1] = -0.5 * u[1]
+            nothing
+        end
+
+        u0 = [1.0]
+        tspan = (0.0, 2.0)
+        p = nothing
+        prob = ODEProblem(f, u0, tspan, p)
+
+        u0_dist = truncated(Normal(1.0, 0.1), 0.5, 1.5)
+        gd = GenericDistribution(u0_dist)
+
+        cov(x, u, p) = [x[1]], p
+        g(sol, p) = sol[1, end]  # Observable: final value
+
+        sm = SystemMap(prob, Tsit5(), save_everystep = false)
+        exprob = ExpectationProblem(sm, g, cov, gd)
+
+        # Expected variance: Var(u0) * exp(-2)
+        expected_var = var(u0_dist) * exp(-2 * 1)
+
+        # Test with Koopman
+        moments_k = centralmoment(2, exprob, Koopman())
+        @test abs(moments_k[1]) < 1e-10  # μ₁ should be exactly 0
+        @test abs(moments_k[2] - expected_var) < 0.001
+
+        # Test with MonteCarlo
+        moments_m = centralmoment(2, exprob, MonteCarlo(10000))
+        @test abs(moments_m[1]) < 1e-10  # μ₁ should be exactly 0
+        @test abs(moments_m[2] - expected_var) < 0.01
+    end
+end
