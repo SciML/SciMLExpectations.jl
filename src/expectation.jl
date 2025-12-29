@@ -301,3 +301,125 @@ end
 function primalnorm(nout, fnorm)
     x -> fnorm(@view x[1:nout])
 end
+
+"""
+    centralmoment(n, exprob::ExpectationProblem, expalg::AbstractExpectationAlgorithm; kwargs...)
+
+Compute the first `n` central moments of the observable defined in `exprob`.
+
+Returns a vector `[μ₁, μ₂, ..., μₙ]` where `μₖ` is the k-th central moment.
+Note that the first central moment is always 0 (by definition).
+
+The central moments are computed using the binomial expansion:
+`μₙ = E[(X - μ)ⁿ] = Σₖ₌₀ⁿ C(n,k) (-μ)^(n-k) E[X^k]`
+
+where `μ = E[X]` is the mean.
+
+## Arguments
+- `n`: The highest order central moment to compute (n ≥ 1)
+- `exprob`: An `ExpectationProblem` with a scalar-valued observable
+- `expalg`: The algorithm to use (`Koopman()` or `MonteCarlo(trajectories)`)
+- `kwargs...`: Additional keyword arguments passed to `solve`
+
+## Example
+```julia
+using SciMLExpectations, Distributions
+
+gd = GenericDistribution(Normal(0, 1))
+g(u, p) = u[1]  # Identity function
+exprob = ExpectationProblem(g, gd, nothing)
+
+# Compute first 4 central moments
+moments = centralmoment(4, exprob, Koopman())
+# moments[1] ≈ 0 (1st central moment is always 0)
+# moments[2] ≈ 1 (variance of N(0,1))
+# moments[3] ≈ 0 (skewness of N(0,1))
+# moments[4] ≈ 3 (kurtosis of N(0,1))
+```
+"""
+function centralmoment(n::Int, exprob::ExpectationProblem, expalg::AbstractExpectationAlgorithm,
+        args...; kwargs...)
+    n >= 1 || throw(ArgumentError("n must be at least 1"))
+
+    # Get the original observable
+    g_orig = observable(exprob)
+
+    # Create a new observable that returns [g(x)^1, g(x)^2, ..., g(x)^n]
+    function g_powers(x, p)
+        val = g_orig(x, p)
+        [val^i for i in 1:n]
+    end
+
+    # Create a new ExpectationProblem with the modified observable
+    new_exprob = ExpectationProblem(exprob.S, g_powers, exprob.h, exprob.d, exprob.params)
+
+    # Solve the expectation problem
+    sol = solve(new_exprob, expalg, args...; kwargs...)
+
+    # Extract raw moments E[X], E[X^2], ..., E[X^n]
+    raw_moments = sol.u
+    μ = raw_moments[1]  # E[X] = mean
+
+    # Compute central moments using binomial expansion
+    # μₙ = E[(X - μ)ⁿ] = Σₖ₌₀ⁿ C(n,k) (-μ)^(n-k) E[X^k]
+    # where E[X^0] = 1
+    central_moments = similar(raw_moments)
+
+    for m in 1:n
+        cm = zero(eltype(raw_moments))
+        for k in 0:m
+            # E[X^k] is raw_moments[k] for k >= 1, and 1 for k = 0
+            E_Xk = k == 0 ? one(eltype(raw_moments)) : raw_moments[k]
+            cm += binomial(m, k) * (-μ)^(m - k) * E_Xk
+        end
+        central_moments[m] = cm
+    end
+
+    return central_moments
+end
+
+"""
+    centralmoment(n, exprob::ExpectationProblem{F}, expalg::AbstractExpectationAlgorithm; kwargs...) where {F <: Union{SystemMap, ProcessNoiseSystemMap}}
+
+Compute the first `n` central moments for differential equation systems.
+
+See `centralmoment(n, exprob, expalg)` for details.
+"""
+function centralmoment(n::Int, exprob::ExpectationProblem{F},
+        expalg::AbstractExpectationAlgorithm, args...;
+        kwargs...) where {F <: Union{SystemMap, ProcessNoiseSystemMap}}
+    n >= 1 || throw(ArgumentError("n must be at least 1"))
+
+    # Get the original observable
+    g_orig = observable(exprob)
+
+    # Create a new observable that returns [g(sol,p)^1, g(sol,p)^2, ..., g(sol,p)^n]
+    function g_powers(sol, p)
+        val = g_orig(sol, p)
+        [val^i for i in 1:n]
+    end
+
+    # Create a new ExpectationProblem with the modified observable
+    new_exprob = ExpectationProblem(exprob.S, g_powers, exprob.h, exprob.d, exprob.params)
+
+    # Solve the expectation problem
+    sol = solve(new_exprob, expalg, args...; kwargs...)
+
+    # Extract raw moments E[X], E[X^2], ..., E[X^n]
+    raw_moments = sol.u
+    μ = raw_moments[1]  # E[X] = mean
+
+    # Compute central moments using binomial expansion
+    central_moments = similar(raw_moments)
+
+    for m in 1:n
+        cm = zero(eltype(raw_moments))
+        for k in 0:m
+            E_Xk = k == 0 ? one(eltype(raw_moments)) : raw_moments[k]
+            cm += binomial(m, k) * (-μ)^(m - k) * E_Xk
+        end
+        central_moments[m] = cm
+    end
+
+    return central_moments
+end
