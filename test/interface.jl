@@ -1,6 +1,6 @@
 using Test, TestExtras,
-      SciMLExpectations, OrdinaryDiffEq, Distributions,
-      StaticArrays, ComponentArrays, Random, ForwardDiff
+    SciMLExpectations, OrdinaryDiffEq, Distributions,
+    StaticArrays, ComponentArrays, Random, ForwardDiff
 
 const DEU = SciMLExpectations
 include("setup.jl")
@@ -52,8 +52,10 @@ end
 
 @testset "ExpectationProblem" begin
     @testset "Interface" begin
-        getters = (DEU.distribution, DEU.mapping, DEU.observable, DEU.input_cov,
-            DEU.parameters)
+        getters = (
+            DEU.distribution, DEU.mapping, DEU.observable, DEU.input_cov,
+            DEU.parameters,
+        )
         dists = (Uniform(1, 2), Uniform(3, 4), truncated(Normal(0, 1), -5, 5))
         gd = GenericDistribution(dists...)
         x = [mean(d) for d in dists]
@@ -69,11 +71,13 @@ end
                 @constinferred foo(ep)
             end
             f = @constinferred build_integrand(
-                ep, Koopman(), x, DEU.parameters(ep), nothing)
+                ep, Koopman(), x, DEU.parameters(ep), nothing
+            )
             @constinferred f(x, DEU.parameters(ep))
 
-            fbatch = #= @constinferred =#build_integrand(
-                ep, Koopman(), x, DEU.parameters(ep), 10)
+            fbatch = #= @constinferred =# build_integrand(
+                ep, Koopman(), x, DEU.parameters(ep), 10
+            )
             y = reshape(repeat(x, outer = 5), :, 5)
             dy = similar(y[1, :])
             @constinferred fbatch(dy, y, DEU.parameters(ep))
@@ -82,11 +86,13 @@ end
             g2(soln, p) = [soln[1, end], soln[2, end]]
             ep = @constinferred ExpectationProblem(sm, g2, h, gd)
             f = @constinferred build_integrand(
-                ep, Koopman(), x, DEU.parameters(ep), nothing)
+                ep, Koopman(), x, DEU.parameters(ep), nothing
+            )
             @constinferred f(x, DEU.parameters(ep))
 
-            fbatch = #= @constinferred =#build_integrand(
-                ep, Koopman(), x, DEU.parameters(ep), 10)
+            fbatch = #= @constinferred =# build_integrand(
+                ep, Koopman(), x, DEU.parameters(ep), 10
+            )
             y = reshape(repeat(x, outer = 5), :, 5)
             dy = similar(y[1:2, :])
             @constinferred fbatch(dy, y, DEU.parameters(ep))
@@ -98,7 +104,8 @@ end
                 @constinferred foo(ep)
             end
             f = @constinferred build_integrand(
-                ep, Koopman(), x, DEU.parameters(ep), nothing)
+                ep, Koopman(), x, DEU.parameters(ep), nothing
+            )
             @constinferred f([0.0, 1.0, 2.0], DEU.parameters(ep))
         end
     end
