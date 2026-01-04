@@ -1,7 +1,7 @@
 using Test, TestExtras,
-      SciMLExpectations, OrdinaryDiffEq, Distributions,
-      StaticArrays, ComponentArrays, Random, FiniteDiff,
-      ForwardDiff, RecursiveArrayTools
+    SciMLExpectations, OrdinaryDiffEq, Distributions,
+    StaticArrays, ComponentArrays, Random, FiniteDiff,
+    ForwardDiff, RecursiveArrayTools
 
 include("setup.jl")
 
@@ -12,7 +12,7 @@ include("setup.jl")
         tspan = (0.0, 10.0)
         prob = ODEProblem{true}(pend!, u0, tspan, ps)
 
-        sm = SystemMap(prob, Tsit5(); saveat = 1.0, abstol = 1e-10, reltol = 1e-10)
+        sm = SystemMap(prob, Tsit5(); saveat = 1.0, abstol = 1.0e-10, reltol = 1.0e-10)
 
         h(x, u, p) = u, p
         g(soln, p) = soln
@@ -22,7 +22,7 @@ include("setup.jl")
     end
     @testset "Correctness" begin
         fd = FiniteDiff.finite_difference_derivative(loss, 0.0)
-        @test ForwardDiff.derivative(loss, 0.0)≈fd rtol=1e-3
+        @test ForwardDiff.derivative(loss, 0.0) ≈ fd rtol = 1.0e-3
     end
     @testset "Type Stability" begin
         pt = 0.0

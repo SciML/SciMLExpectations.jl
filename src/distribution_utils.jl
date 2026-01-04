@@ -19,7 +19,7 @@ function GenericDistribution(d::Distributions.Sampleable, ds...)
     lb = SVector(map(minimum, dists)...)
     ub = SVector(map(maximum, dists)...)
 
-    GenericDistribution(pdf_func, rand_func, lb, ub)
+    return GenericDistribution(pdf_func, rand_func, lb, ub)
 end
 
 Distributions.pdf(d::GenericDistribution, x) = d.pdf_func(x)

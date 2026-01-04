@@ -34,14 +34,16 @@ function ExpectationProblem(g, pdist, params; nout = nothing)
     !isnothing(nout) && @warn "nout is deprecated and unused"
     h(x, u, p) = x, p
     S(x, p) = x
-    ExpectationProblem(S, g, h, pdist, params)
+    return ExpectationProblem(S, g, h, pdist, params)
 end
 
 # Constructor for DEProblems
 function ExpectationProblem(sm::SystemMap, g, h, d; nout = nothing)
     !isnothing(nout) && @warn "nout is deprecated and unused"
-    ExpectationProblem(sm, g, h, d,
-        ArrayPartition(deepcopy(sm.prob.u0), deepcopy(sm.prob.p)))
+    return ExpectationProblem(
+        sm, g, h, d,
+        ArrayPartition(deepcopy(sm.prob.u0), deepcopy(sm.prob.p))
+    )
 end
 
 distribution(prob::ExpectationProblem) = prob.d
@@ -60,5 +62,5 @@ parameters(prob::ExpectationProblem) = prob.params
 function ExpectationProblem(sm::ProcessNoiseSystemMap, g, h; nout = nothing)
     !isnothing(nout) && @warn "nout is deprecated and unused"
     d = GenericDistribution((Truncated(Normal(), -4.0, 4.0) for i in 1:(sm.n))...)
-    ExpectationProblem(sm, g, h, d, deepcopy(sm.prob.p))
+    return ExpectationProblem(sm, g, h, d, deepcopy(sm.prob.p))
 end
