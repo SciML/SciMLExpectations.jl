@@ -59,8 +59,8 @@ function ProcessNoiseSystemMap(prob, n, args...; kwargs...)
 end
 
 function (sm::ProcessNoiseSystemMap{DT})(Z, p) where {DT}
-    t0 = prob.tspan[1]
-    tend = prob.tspan[2]
+    t0 = sm.prob.tspan[1]
+    tend = sm.prob.tspan[2]
     function W(t)
         return sqrt(2) * (tend - t0) *
             sum(
@@ -70,7 +70,7 @@ function (sm::ProcessNoiseSystemMap{DT})(Z, p) where {DT}
     end
     prob::DT = remake(
         sm.prob, p = convert(typeof(sm.prob.p), p),
-        noise = NoiseFunction{false}(prob.tspan[1], W)
+        noise = DiffEqNoiseProcess.NoiseFunction{false}(sm.prob.tspan[1], W)
     )
     return solve(prob, sm.args...; sm.kwargs...)
 end

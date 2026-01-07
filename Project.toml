@@ -31,6 +31,7 @@ Distributions = "0.23, 0.24, 0.25"
 FiniteDiff = "2"
 ForwardDiff = "0.10, 1"
 Integrals = "4.6"
+JET = "0.11"
 KernelDensity = "0.6"
 LinearAlgebra = "1"
 OrdinaryDiffEq = "6"
@@ -55,6 +56,7 @@ julia = "1.10"
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
 Cuba = "8a292aeb-7a57-582c-b821-06e4c11590b1"
 Cubature = "667455a9-e2ce-5579-9412-b964f529a492"
@@ -74,4 +76,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 
 [targets]
-test = ["Test", "Aqua", "SafeTestsets", "TestExtras", "Pkg", "PkgBenchmark", "BenchmarkTools", "ReferenceTests", "SymPy", "Random", "OrdinaryDiffEq", "ComponentArrays", "ForwardDiff", "Integrals", "Cubature", "Cuba", "FiniteDiff", "RecursiveArrayTools", "StochasticDiffEq"]
+test = ["Test", "Aqua", "JET", "SafeTestsets", "TestExtras", "Pkg", "PkgBenchmark", "BenchmarkTools", "ReferenceTests", "SymPy", "Random", "OrdinaryDiffEq", "ComponentArrays", "ForwardDiff", "Integrals", "Cubature", "Cuba", "FiniteDiff", "RecursiveArrayTools", "StochasticDiffEq"]
