@@ -1,7 +1,7 @@
 name = "SciMLExpectations"
 uuid = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "2.4.0"
+version = "2.4.1"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
@@ -42,7 +42,7 @@ RecursiveArrayTools = "3, 4"
 Reexport = "0.2, 1.0"
 ReferenceTests = "0.10"
 SafeTestsets = "0.1"
-SciMLBase = "2.104"
+SciMLBase = "2.104, 3.1"
 StaticArrays = "1"
 Statistics = "1"
 StochasticDiffEq = "6"
