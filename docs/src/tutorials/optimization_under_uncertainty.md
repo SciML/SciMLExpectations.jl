@@ -67,7 +67,7 @@ using Distributions
 cor_dist = truncated(Normal(0.9, 0.02), 0.9 - 3 * 0.02, 1.0)
 trajectories = 100
 
-prob_func(prob, i, repeat) = remake(prob, p = [p[1], rand(cor_dist)])
+prob_func(prob, ctx) = remake(prob, p = [p[1], rand(cor_dist)])
 ensemble_prob = EnsembleProblem(prob, prob_func = prob_func)
 ensemblesol = solve(ensemble_prob, Tsit5(), EnsembleThreads(), trajectories = trajectories,
     callback = cbs)

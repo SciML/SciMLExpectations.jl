@@ -32,7 +32,7 @@ u0_dist = [Uniform(-10.0, 10.0)]
 We can then run a Monte Carlo simulation of 100,000 trajectories by solving an `EnsembleProblem`.
 
 ```@example introduction
-prob_func(prob, i, repeat) = remake(prob, u0 = rand.(u0_dist))
+prob_func(prob, ctx) = remake(prob, u0 = rand.(u0_dist))
 ensemble_prob = EnsembleProblem(prob, prob_func = prob_func)
 
 ensemblesol = solve(ensemble_prob, Tsit5(), EnsembleThreads(), trajectories = 100000)
