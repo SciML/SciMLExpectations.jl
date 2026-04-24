@@ -4,11 +4,11 @@ abstract type AbstractSystemMap end
 SystemMap(prob, args...; kwargs...)
 ```
 
-Representation of a system solution map for a given `prob::DEProblem`. `args` and `kwargs`
+Representation of a system solution map for a given `prob::AbstractSciMLProblem`. `args` and `kwargs`
 are forwarded to the equation solver.
 """
 struct SystemMap{
-        DT <: DiffEqBase.DEProblem,
+        DT <: SciMLBase.AbstractSciMLProblem,
         A <: Union{SciMLBase.AbstractODEAlgorithm, Nothing},
         EA <: SciMLBase.EnsembleAlgorithm, K,
     }
@@ -48,7 +48,7 @@ Representation of a system solution map for a given `prob::SDEProblem`. `args` a
 are forwarded to the equation solver. `n` is the number of terms in the
 Kosambi–Karhunen–Loève representation of the process noise.
 """
-struct ProcessNoiseSystemMap{DT <: DiffEqBase.DEProblem, A, K} <: AbstractSystemMap
+struct ProcessNoiseSystemMap{DT <: SciMLBase.AbstractSciMLProblem, A, K} <: AbstractSystemMap
     prob::DT
     n::Int
     args::A

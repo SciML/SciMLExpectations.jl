@@ -9,7 +9,7 @@ struct PostfusedAD <: AbstractExpectationADAlgorithm
 end
 PostfusedAD() = PostfusedAD(true)
 
-abstract type AbstractExpectationAlgorithm <: DiffEqBase.DEAlgorithm end
+abstract type AbstractExpectationAlgorithm <: SciMLBase.AbstractDEAlgorithm end
 
 """
 ```julia
@@ -67,7 +67,7 @@ function build_integrand(
     ) where {F <: SystemMap}
     @unpack S, g, h, d = prob
 
-    function prob_func(prob, i, repeat, x)  # TODO is it better to make prob/output funcs outside of integrand, then call w/ closure?
+    function prob_func(prob, i, x)  # TODO is it better to make prob/output funcs outside of integrand, then call w/ closure?
         u0, _p = h((_make_view(x, i)), prob.u0, prob.p)
         return remake(prob, u0 = u0, p = _p)
     end
@@ -78,10 +78,9 @@ function build_integrand(
         trajectories = size(x)[end]
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(
-            S.prob; output_func = (sol, i) -> output_func(sol, i, x),
-            prob_func = (prob, i, repeat) -> prob_func(
-                prob, i,
-                repeat, x
+            S.prob; output_func = (sol, ctx) -> output_func(sol, ctx.i, x),
+            prob_func = (prob, ctx) -> prob_func(
+                prob, ctx.i, x
             )
         )
         return solve(ensprob, S.alg, S.ensemblealg; trajectories = trajectories, S.kwargs...)
@@ -108,7 +107,7 @@ function build_integrand(
     ) where {F <: ProcessNoiseSystemMap}
     @unpack S, g, h, d = prob
 
-    prob_func = function (prob, i, repeat, x)
+    prob_func = function (prob, i, x)
         Z, p = h((_make_view(x, i)), prob.u0, prob.p)
         function W(u, p, t)
             return sqrt(2) *
@@ -126,10 +125,9 @@ function build_integrand(
         trajectories = size(x)[end]
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(
-            S.prob; output_func = (sol, i) -> output_func(sol, i, x),
-            prob_func = (prob, i, repeat) -> prob_func(
-                prob, i,
-                repeat, x
+            S.prob; output_func = (sol, ctx) -> output_func(sol, ctx.i, x),
+            prob_func = (prob, ctx) -> prob_func(
+                prob, ctx.i, x
             )
         )
         return solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
@@ -171,12 +169,12 @@ function DiffEqBase.solve(
     S = mapping(exprob)
     g = observable(exprob)
 
-    prob_func = function (prob, i, repeat)
+    prob_func = function (prob, ctx)
         u0, p = cov(rand(d), prob.u0, prob.p)
         return remake(prob, u0 = u0, p = p)
     end
 
-    output_func(sol, i) = (g(sol, sol.prob.p), false)
+    output_func(sol, ctx) = (g(sol, sol.prob.p), false)
 
     monte_prob = EnsembleProblem(
         S.prob;
@@ -198,7 +196,7 @@ function DiffEqBase.solve(
     S = mapping(exprob)
     g = observable(exprob)
 
-    prob_func = function (prob, i, repeat)
+    prob_func = function (prob, ctx)
         Z, p = cov(rand(d), prob.u0, prob.p)
         function W(u, p, t)
             return sqrt(2) *
@@ -210,7 +208,7 @@ function DiffEqBase.solve(
         )
     end
 
-    output_func(sol, i) = (g(sol, sol.prob.p), false)
+    output_func(sol, ctx) = (g(sol, sol.prob.p), false)
 
     monte_prob = EnsembleProblem(
         S.prob;
