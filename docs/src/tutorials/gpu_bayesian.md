@@ -20,7 +20,7 @@ Let's start by importing all the necessary libraries:
 
 ```@example Bayesian
 using OrdinaryDiffEq
-using Turing, MCMCChains, Distributions
+using Turing, Distributions
 using KernelDensity
 using SciMLExpectations, Cuba
 using DiffEqGPU
@@ -96,8 +96,9 @@ end
 model = fitlv(odedata, prob1)
 
 # This next command runs 3 independent chains without using multithreading.
-# NUTS uses ForwardDiff by default for automatic differentiation
-chain = mapreduce(c -> sample(model, NUTS(0.45), 1000), chainscat, 1:3)
+# NUTS uses ForwardDiff by default for automatic differentiation.
+# As of Turing v0.45, `sample` returns a `FlexiChains.VNChain` by default.
+chain = sample(model, NUTS(0.45), MCMCSerial(), 1000, 3)
 ```
 
 This chain gives a discrete approximation to the probability distribution of our
@@ -148,8 +149,8 @@ distributions through [kernel density estimation](https://github.com/JuliaStats/
 (the plots of the distribution above are just KDE plots!).
 
 ```@example Bayesian
-p_kde = [kde(vec(Array(chain[:α]))), kde(vec(Array(chain[:β]))),
-    kde(vec(Array(chain[:γ]))), kde(vec(Array(chain[:δ])))]
+p_kde = [kde(vec(chain[@varname(α)])), kde(vec(chain[@varname(β)])),
+    kde(vec(chain[@varname(γ)])), kde(vec(chain[@varname(δ)]))]
 ```
 
 Now that we have our observable and our uncertainty distributions, let's calculate
