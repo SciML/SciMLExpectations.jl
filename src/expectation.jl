@@ -78,9 +78,9 @@ function build_integrand(
         trajectories = size(x)[end]
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(
-            S.prob; output_func = (sol, ctx) -> output_func(sol, ctx.i, x),
+            S.prob; output_func = (sol, ctx) -> output_func(sol, ctx.sim_id, x),
             prob_func = (prob, ctx) -> prob_func(
-                prob, ctx.i, x
+                prob, ctx.sim_id, x
             )
         )
         return solve(ensprob, S.alg, S.ensemblealg; trajectories = trajectories, S.kwargs...)
@@ -125,9 +125,9 @@ function build_integrand(
         trajectories = size(x)[end]
         # TODO How to inject ensemble method in solve? currently in SystemMap, but does that make sense?
         ensprob = EnsembleProblem(
-            S.prob; output_func = (sol, ctx) -> output_func(sol, ctx.i, x),
+            S.prob; output_func = (sol, ctx) -> output_func(sol, ctx.sim_id, x),
             prob_func = (prob, ctx) -> prob_func(
-                prob, ctx.i, x
+                prob, ctx.sim_id, x
             )
         )
         return solve(ensprob, S.args...; trajectories = trajectories, S.kwargs...)
