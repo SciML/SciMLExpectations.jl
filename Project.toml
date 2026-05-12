@@ -48,7 +48,7 @@ Statistics = "1"
 StochasticDiffEq = "7"
 SymPy = "2"
 Test = "1"
-TestExtras = "0.2"
+TestExtras = "0.3"
 Zygote = "0.6, 0.7"
 julia = "1.10"
 
