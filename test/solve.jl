@@ -53,7 +53,12 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
             end
         end
         @test solve(exprob, MonteCarlo(10000)).u[1] ≈ analytical[1] rtol = 1.0e-2
-        @constinferred solve(exprob, MonteCarlo(10000))
+        # `@constinferred solve(...)` cannot pass under `@testset`/`let` scope:
+        # `Base.return_types(solve, Tuple{ODEProblem, Tsit5})` returns `Any` for
+        # `let`-bound inputs (independent of SciMLBase version, see #218 bisect).
+        # Index into the result so inference is asked about the concrete-typed
+        # `mean(sol.u)[1]` path — equivalent to the pre-#190 form.
+        @constinferred getindex(getproperty(solve(exprob, MonteCarlo(10000)), :u), 1)
     end
     @testset "Vector-Valued Observable (nout > 1)" begin
         g(sol, p) = sol[:, end]
@@ -74,7 +79,7 @@ quadalgs_batch = [CubatureJLh(), CubatureJLp(), CubaSUAVE(), CubaDivonne(), Cuba
             end
         end
         @test solve(exprob, MonteCarlo(10000)).u ≈ analytical rtol = 1.0e-2
-        @constinferred solve(exprob, MonteCarlo(10000))
+        @constinferred getindex(getproperty(solve(exprob, MonteCarlo(10000)), :u), 1)
     end
 end
 
