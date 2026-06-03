@@ -1,3 +1,7 @@
+[default.extend-identifiers]
+# StochasticDiffEq.jl solver (Lamba–Rackauckas–Tretyakov Euler–Maruyama)
+LambaEM = "LambaEM"
+
 [default.extend-words]
 # Julia-specific functions
 indexin = "indexin"
