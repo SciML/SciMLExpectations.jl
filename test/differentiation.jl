@@ -3,7 +3,7 @@ using Test, TestExtras,
     StaticArrays, ComponentArrays, Random, FiniteDiff,
     ForwardDiff, RecursiveArrayTools
 
-include("setup.jl")
+include("shared/setup.jl")
 
 @testset "Koopman Expectation AD" begin
     function loss(x::T) where {T <: Real}
