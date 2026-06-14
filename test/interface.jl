@@ -3,7 +3,7 @@ using Test, TestExtras,
     StaticArrays, ComponentArrays, Random, ForwardDiff
 
 const DEU = SciMLExpectations
-include("setup.jl")
+include("shared/setup.jl")
 
 @testset "GenericDistribution" begin
     dists = (Uniform(1, 2), Uniform(3, 4), Normal(0, 1), truncated(Normal(0, 1), -3, 3))
