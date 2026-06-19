@@ -13,7 +13,7 @@ f(u, p, t) = p .* u
 We then wish to solve this model on the timespan `t=0.0` to `t=10.0`, with an initial condition `u0=10.0` and parameter `p=-0.3`. We can then set up the differential equations, solve, and plot as follows
 
 ```@example introduction
-using OrdinaryDiffEq, Plots
+using OrdinaryDiffEq, SciMLBase, Plots
 u0 = [10.0]
 p = [-0.3]
 tspan = (0.0, 10.0)
@@ -51,7 +51,7 @@ in the timespan, e.g., the state itself at `t=4.0` as
 
 ```@example introduction
 g(sol, p) = sol(4.0)
-mean([g(sol, prob.p) for sol in ensemblesol])
+mean([g(sol, prob.p) for sol in ensemblesol.u])
 ```
 
 Alternatively, SciMLExpectations.jl offers a convenient interface for this type of calculation,

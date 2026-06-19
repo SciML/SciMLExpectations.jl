@@ -96,7 +96,7 @@ obs(sol, p) = abs2(sol[3, end] - 25)
 With the observable defined, we can compute the expected squared miss distance from our Monte Carlo simulation results as
 
 ```@example control
-mean_ensemble = mean([obs(sol, p) for sol in ensemblesol])
+mean_ensemble = mean([obs(sol, p) for sol in ensemblesol.u])
 ```
 
 Alternatively, we can use the `Koopman()` algorithm in SciMLExpectations.jl to compute this expectation much more efficiently as
