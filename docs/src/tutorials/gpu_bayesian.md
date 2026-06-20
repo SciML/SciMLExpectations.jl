@@ -25,6 +25,7 @@ using KernelDensity
 using SciMLExpectations, Cuba
 using DiffEqGPU
 using Plots, StatsPlots
+using LinearAlgebra
 using Random;
 Random.seed!(1);
 ```
@@ -88,8 +89,8 @@ to arrive at the MCMC chain:
     prob = remake(prob1, p = p)
     predicted = solve(prob, Tsit5(), saveat = 0.1)
 
-    for i in 1:length(predicted)
-        data[:, i] ~ MvNormal(predicted[i], σ)
+    for i in 1:length(predicted.u)
+        data[:, i] ~ MvNormal(predicted.u[i], σ^2 * I)
     end
 end
 
