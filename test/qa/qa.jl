@@ -12,7 +12,7 @@ run_qa(
         all_qualified_accesses_are_public = (;
             ignore = (
                 Symbol("@adjoint"),    # Zygote (re-exported from ZygoteRules); still non-public
-                :EnsembleAlgorithm,    # SciMLBase; still non-public as of 3.24.0
+                :EnsembleAlgorithm,    # SciMLBase; still non-public as of 3.27.0
             ),
         ),
     ),
