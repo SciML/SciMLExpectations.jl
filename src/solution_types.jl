@@ -1,13 +1,15 @@
 """
-`ExpectationSolution`
+    ExpectationSolution
 
-The solution to an `ExpectationProblem`
+Container returned by `solve` for an `ExpectationProblem`.
 
 ## Fields
 
-  - `u`
-  - `resid`
-  - `original`
+  - `u`: Computed expectation value.
+  - `resid`: Residual reported by the underlying integration algorithm, or
+    `nothing` when unavailable.
+  - `original`: Original solver result returned by the underlying algorithm, or
+    `nothing` when unavailable.
 """
 struct ExpectationSolution{uType, R, O}
     u::uType

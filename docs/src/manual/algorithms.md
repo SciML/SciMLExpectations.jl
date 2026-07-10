@@ -3,4 +3,7 @@
 ```@docs
 MonteCarlo
 Koopman
+NonfusedAD
+PrefusedAD
+PostfusedAD
 ```

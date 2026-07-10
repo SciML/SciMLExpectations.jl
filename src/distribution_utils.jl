@@ -1,9 +1,34 @@
 """
-`GenericDistribution(d, ds...)`
+    GenericDistribution(pdf_func, rand_func, lb, ub)
+    GenericDistribution(d::Distributions.Sampleable, ds...)
 
-Defines a generic distribution that just wraps functions for pdf function, rand and bounds.
-User can use this for define any arbitrary joint pdf. Included b/c Distributions.jl Product
-method of mixed distributions are type instable.
+Represent a distribution by its density, sampler, and integration bounds.
+
+`GenericDistribution` can be used for arbitrary joint densities and for products of
+sampleable distributions. The `Distributions.Sampleable` constructor builds a joint
+density from independent one-dimensional distributions without relying on
+`Distributions.Product`.
+
+## Arguments
+
+  - `pdf_func`: Function called as `pdf_func(x)` to evaluate the density.
+  - `rand_func`: Zero-argument function that returns one sample.
+  - `lb`: Lower integration bound.
+  - `ub`: Upper integration bound.
+  - `d, ds...`: Independent sampleable distributions used to build a joint
+    distribution.
+
+## Fields
+
+  - `pdf_func`: Stored density function.
+  - `rand_func`: Stored sampler.
+  - `lb`: Stored lower bound.
+  - `ub`: Stored upper bound.
+
+## Returns
+
+A distribution-like object supporting `pdf`, `rand`, `minimum`, `maximum`, and
+`extrema`.
 """
 struct GenericDistribution{TF, TRF, TLB, TUB}
     pdf_func::TF

@@ -1,11 +1,33 @@
 abstract type AbstractSystemMap end
 """
-```julia
-SystemMap(prob, args...; kwargs...)
-```
+    SystemMap(prob; kwargs...)
+    SystemMap(prob, alg; kwargs...)
+    SystemMap(prob, alg, ensemblealg; kwargs...)
 
-Representation of a system solution map for a given `prob::AbstractSciMLProblem`. `args` and `kwargs`
-are forwarded to the equation solver.
+Represent the deterministic solution map `S(u0, p)` for a SciML problem.
+
+Calling a `SystemMap` remakes `prob` with the supplied initial condition and
+parameters, then solves the remade problem.
+
+## Arguments
+
+  - `prob`: SciML problem used as the template for repeated solves.
+  - `alg`: Solver algorithm. If omitted, `solve` is called without an explicit
+    algorithm.
+  - `ensemblealg`: Ensemble algorithm used by ensemble-based expectation solves.
+    Defaults to `EnsembleThreads()`.
+  - `kwargs...`: Keyword arguments forwarded to `solve`.
+
+## Fields
+
+  - `prob`: Stored SciML problem.
+  - `alg`: Stored solver algorithm or `nothing`.
+  - `ensemblealg`: Stored ensemble algorithm.
+  - `kwargs`: Stored solver keyword arguments.
+
+## Returns
+
+A callable `SystemMap`.
 """
 struct SystemMap{
         DT <: SciMLBase.AbstractSciMLProblem,
@@ -40,13 +62,32 @@ function (sm::SystemMap{DT})(u0, p) where {DT}
 end
 
 """
-```julia
-ProcessNoiseSystemMap(prob, n, args...; kwargs...)
-```
+    ProcessNoiseSystemMap(prob, n, args...; kwargs...)
 
-Representation of a system solution map for a given `prob::SDEProblem`. `args` and `kwargs`
-are forwarded to the equation solver. `n` is the number of terms in the
-Kosambi–Karhunen–Loève representation of the process noise.
+Represent a solution map for an SDE whose process noise is parameterized by
+uncertain expansion coefficients.
+
+Calling a `ProcessNoiseSystemMap` remakes `prob` with a
+Kosambi-Karhunen-Loeve process-noise representation determined by the sampled
+coefficients and then solves the remade problem.
+
+## Arguments
+
+  - `prob`: SciML problem used as the template for repeated solves.
+  - `n`: Number of expansion terms in the process-noise representation.
+  - `args...`: Positional arguments forwarded to `solve`.
+  - `kwargs...`: Keyword arguments forwarded to `solve`.
+
+## Fields
+
+  - `prob`: Stored SciML problem.
+  - `n`: Stored number of expansion terms.
+  - `args`: Stored solver positional arguments.
+  - `kwargs`: Stored solver keyword arguments.
+
+## Returns
+
+A callable `ProcessNoiseSystemMap`.
 """
 struct ProcessNoiseSystemMap{DT <: SciMLBase.AbstractSciMLProblem, A, K} <: AbstractSystemMap
     prob::DT
