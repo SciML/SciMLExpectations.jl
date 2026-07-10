@@ -1,23 +1,42 @@
 abstract type AbstractUncertaintyProblem end
 
 """
-```julia
-ExpectationProblem(S, g, h, pdist, params)
-ExpectationProblem(g, pdist, params)
-ExpectationProblem(sm::SystemMap, g, h, d)
-```
+    ExpectationProblem(S, g, h, d, params)
+    ExpectationProblem(g, d, params; nout = nothing)
+    ExpectationProblem(sm::SystemMap, g, h, d; nout = nothing)
+    ExpectationProblem(sm::ProcessNoiseSystemMap, g, h; nout = nothing)
 
-Defines ∫ g(S(h(x,u0,p)))*f(x)dx
+Represent an expectation of an observable over an uncertainty distribution.
+
+An `ExpectationProblem` defines the data needed to compute an integral of the form
+`integral g(S(u, p), p) * pdf(d, x) dx`, where `h(x, u0, p)` maps uncertain
+inputs into initial conditions and parameters for the system map `S`. The
+function-only constructor uses identity maps for `S` and `h`.
 
 ## Arguments
 
-Let 𝕏 = uncertainty space, 𝕌 = Initial condition space, ℙ = model parameter space
+  - `S`: System map called as `S(u, p)`.
+  - `g`: Observable called as `g(u, p)` for function problems or `g(sol, p)` for
+    system maps.
+  - `h`: Covariate map called as `h(x, u0, p)`.
+  - `d`: Distribution of uncertain inputs. It must support the operations needed by
+    the chosen expectation algorithm, such as `pdf`, `rand`, and `extrema`.
+  - `params`: Parameters passed to the observable and integration problem.
+  - `sm`: A `SystemMap` or `ProcessNoiseSystemMap`.
+  - `nout`: Deprecated and unused.
 
-  - S: 𝕌 × ℙ → 𝕌 also known as system map.
-  - g: 𝕌 × ℙ → ℝⁿᵒᵘᵗ also known as the observables or output function.
-  - h: 𝕏 × 𝕌 × ℙ → 𝕌 × ℙ also known as covariate function.
-  - pdf(d,x): 𝕏 → ℝ the uncertainty distribution of the initial states.
-  - params
+## Fields
+
+  - `S`: Stored system map.
+  - `g`: Stored observable.
+  - `h`: Stored covariate map.
+  - `d`: Stored uncertainty distribution.
+  - `params`: Stored parameters.
+
+## Returns
+
+An `ExpectationProblem` that can be solved with `solve(prob, Koopman())` or
+`solve(prob, MonteCarlo(trajectories))`.
 """
 struct ExpectationProblem{TS, TG, TH, TF, TP} <: AbstractUncertaintyProblem
     # defines ∫ g(S(h(x,u0,p)))*f(x)dx

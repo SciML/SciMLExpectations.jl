@@ -1,9 +1,62 @@
 abstract type AbstractExpectationADAlgorithm end
+
+"""
+    NonfusedAD()
+
+Use separate quadrature solves for the primal integral and parameter pullback in
+Koopman expectation solves.
+
+## Returns
+
+A `NonfusedAD` automatic differentiation algorithm for `Koopman`.
+"""
 struct NonfusedAD <: AbstractExpectationADAlgorithm end
+
+"""
+    PrefusedAD()
+    PrefusedAD(norm_partials::Bool)
+
+Fuse the primal integrand and parameter partials before the pullback in Koopman
+expectation solves.
+
+## Arguments
+
+  - `norm_partials`: Whether fused quadrature norms should include partial terms in
+    implementations that use this option. Defaults to `true`.
+
+## Fields
+
+  - `norm_partials`: Stored partial-norm flag.
+
+## Returns
+
+A `PrefusedAD` automatic differentiation algorithm for `Koopman`.
+"""
 struct PrefusedAD <: AbstractExpectationADAlgorithm
     norm_partials::Bool
 end
 PrefusedAD() = PrefusedAD(true)
+
+"""
+    PostfusedAD()
+    PostfusedAD(norm_partials::Bool)
+
+Fuse the primal integrand and parameter partials during the pullback after the
+primal Koopman expectation solve.
+
+## Arguments
+
+  - `norm_partials`: Whether fused quadrature norms should include partial terms in
+    implementations that use this option. Defaults to `true`.
+
+## Fields
+
+  - `norm_partials`: Stored partial-norm flag.
+
+## Returns
+
+A `PostfusedAD` automatic differentiation algorithm for `Koopman`.
+"""
 struct PostfusedAD <: AbstractExpectationADAlgorithm
     norm_partials::Bool
 end
@@ -12,9 +65,26 @@ PostfusedAD() = PostfusedAD(true)
 abstract type AbstractExpectationAlgorithm <: SciMLBase.AbstractDEAlgorithm end
 
 """
-```julia
-Koopman()
-```
+    Koopman()
+    Koopman(sensealg::AbstractExpectationADAlgorithm)
+
+Solve expectations by quadrature over the uncertainty domain.
+
+`Koopman` builds an `Integrals.jl` integral problem for the observable and
+distribution in an `ExpectationProblem`. The optional `sensealg` selects the
+automatic differentiation strategy used by differentiable expectation solves.
+
+## Arguments
+
+  - `sensealg`: Automatic differentiation strategy. Defaults to `NonfusedAD()`.
+
+## Fields
+
+  - `sensealg`: Stored automatic differentiation strategy.
+
+## Returns
+
+A `Koopman` expectation algorithm for `solve`.
 """
 struct Koopman{TS} <:
     AbstractExpectationAlgorithm where {TS <: AbstractExpectationADAlgorithm}
@@ -23,15 +93,50 @@ end
 Koopman() = Koopman(NonfusedAD())
 
 """
-```julia
-MonteCarlo(trajectories::Int)
-```
+    MonteCarlo(trajectories::Int)
+
+Estimate expectations by averaging random samples from the uncertainty
+distribution.
+
+## Arguments
+
+  - `trajectories`: Number of samples or ensemble trajectories to use.
+
+## Fields
+
+  - `trajectories`: Stored sample or trajectory count.
+
+## Returns
+
+A `MonteCarlo` expectation algorithm for `solve`.
 """
 struct MonteCarlo <: AbstractExpectationAlgorithm
     trajectories::Int
 end
 
-# Builds integrand for arbitrary functions
+"""
+    build_integrand(prob::ExpectationProblem, expalg::Koopman, mid, p, batch)
+
+Construct the integral function used by a Koopman expectation solve.
+
+This helper lowers an `ExpectationProblem` to the `IntegralFunction` or
+`BatchIntegralFunction` consumed by `Integrals.jl`. It is primarily useful for
+advanced users who need to inspect or customize the integrand before integration.
+
+## Arguments
+
+  - `prob`: Expectation problem to lower.
+  - `expalg`: Koopman expectation algorithm.
+  - `mid`: Midpoint of the integration domain, used to infer output shape for
+    batched integrands.
+  - `p`: Parameters passed to the integrand.
+  - `batch`: `nothing` for scalar integration or an integer batch size.
+
+## Returns
+
+An `IntegralFunction` for unbatched integration or a `BatchIntegralFunction` for
+batched system-map integration.
+"""
 function build_integrand(prob::ExpectationProblem, ::Koopman, mid, p, ::Nothing)
     @unpack g, d = prob
     function integrand_koopman(x, p)
@@ -369,12 +474,18 @@ The central moments are computed using the binomial expansion:
 where `μ = E[X]` is the mean.
 
 ## Arguments
+
 - `n`: The highest order central moment to compute (n ≥ 1)
 - `exprob`: An `ExpectationProblem` with a scalar-valued observable
 - `expalg`: The algorithm to use (`Koopman()` or `MonteCarlo(trajectories)`)
 - `kwargs...`: Additional keyword arguments passed to `solve`
 
-## Example
+## Returns
+
+A vector of central moments from order `1` through order `n`.
+
+## Examples
+
 ```julia
 using SciMLExpectations, Distributions
 
