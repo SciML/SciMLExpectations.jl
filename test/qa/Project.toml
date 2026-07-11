@@ -8,7 +8,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [sources]
 SciMLExpectations = {path = "../.."}
-SciMLTesting = {rev = "a5cecca928f2c684c23505c3cd83921d71753e2e", url = "https://github.com/SciML/SciMLTesting.jl"}
 
 [compat]
 Aqua = "0.8"
