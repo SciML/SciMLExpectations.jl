@@ -6,6 +6,7 @@ This done by representing the Wiener process using the [Kosambi–Karhunen–Lo�
 ```@example process_noise
 using SciMLExpectations
 using Cuba
+using Integrals
 using StochasticDiffEq
 using DiffEqNoiseProcess
 using Distributions

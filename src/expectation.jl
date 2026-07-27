@@ -249,11 +249,31 @@ function build_integrand(
 end
 
 """
-```julia
-solve(exprob::ExpectationProblem, expalg::MonteCarlo)
-```
+    solve(exprob::ExpectationProblem, expalg::MonteCarlo)
 
-Solve an `ExpectationProblem` using Monte Carlo integration.
+Estimate the expectation defined by `exprob` with independent Monte Carlo samples.
+
+## Arguments
+
+  - `exprob`: Expectation problem whose distribution supplies the samples and whose
+    observable supplies the evaluated quantity.
+  - `expalg`: Monte Carlo algorithm. Its `trajectories` field determines the number
+    of samples or ensemble trajectories.
+
+## Returns
+
+An `ExpectationSolution` whose `u` field is the sample mean. For a `SystemMap` or
+`ProcessNoiseSystemMap`, the samples are evaluated through an ensemble solve.
+
+## Example
+
+```julia
+using Distributions, SciMLExpectations
+
+prob = ExpectationProblem((x, p) -> x[1]^2, GenericDistribution(Uniform(-1, 1)), nothing)
+sol = solve(prob, MonteCarlo(10_000))
+sol.u # approximately 1 / 3
+```
 """
 function DiffEqBase.solve(exprob::ExpectationProblem, expalg::MonteCarlo)
     params = parameters(exprob)
@@ -325,13 +345,43 @@ function DiffEqBase.solve(
 end
 
 """
-```julia
-solve(exprob::ExpectationProblem, expalg::Koopman;
-      maxiters = 1000000, batch = nothing, quadalg = HCubatureJL(),
-      ireltol = 1e-2, iabstol = 1e-2, kwargs...)
-```
+    solve(exprob::ExpectationProblem, expalg::Koopman;
+          maxiters = 1_000_000, batch = nothing, quadalg = HCubatureJL(),
+          ireltol = 1e-2, iabstol = 1e-2, kwargs...)
 
-Solve an `ExpectationProblem` using Koopman integration.
+Compute the expectation defined by `exprob` with deterministic quadrature.
+
+## Arguments
+
+  - `exprob`: Expectation problem to integrate. Its distribution must provide finite
+    integration bounds through `extrema` and a density through `pdf`.
+  - `expalg`: Koopman algorithm that selects the differentiation strategy used by
+    differentiable expectation solves.
+
+## Keyword Arguments
+
+  - `maxiters`: Maximum number of integrand evaluations accepted by the quadrature
+    algorithm.
+  - `batch`: Number of samples evaluated together for system-map integrands. Leave
+    as `nothing` for scalar evaluation.
+  - `quadalg`: Integrals.jl quadrature algorithm. The default is `HCubatureJL()`.
+  - `ireltol`, `iabstol`: Relative and absolute integration tolerances.
+  - `kwargs...`: Additional keyword arguments forwarded to the Integrals.jl solve.
+
+## Returns
+
+An `ExpectationSolution` containing the integral value in `u`, the integration
+residual in `resid`, and the underlying Integrals.jl solution in `original`.
+
+## Example
+
+```julia
+using Distributions, SciMLExpectations
+
+prob = ExpectationProblem((x, p) -> x[1]^2, GenericDistribution(Uniform(-1, 1)), nothing)
+sol = solve(prob, Koopman())
+sol.u # approximately 1 / 3
+```
 """
 function DiffEqBase.solve(
         prob::ExpectationProblem, expalg::Koopman, args...;
@@ -363,7 +413,7 @@ function integrate(
 end
 
 # defines adjoint via ∫∂/∂p f(x,p) dx
-Zygote.@adjoint function integrate(
+@adjoint function integrate(
         quadalg, adalg::NonfusedAD, f::F, domain,
         params::P;
         #    norm = norm,
@@ -394,7 +444,7 @@ end
 
 # defines adjoint via ∫[f(x,p; ∂/∂p f(x,p)] dx, ie it fuses the primal, post the primal calculation
 # has flag to only compute quad norm with respect to only the primal in the pull-back. Gives same quadrature points as doing forwarddiff
-Zygote.@adjoint function integrate(
+@adjoint function integrate(
         quadalg, adalg::PostfusedAD, f::F, domain,
         params::P;
         #    norm = norm,
@@ -426,7 +476,7 @@ Zygote.@adjoint function integrate(
 end
 
 # Fuses primal and partials prior to pullback, I doubt this will stick around based on required system evals.
-Zygote.@adjoint function integrate(
+@adjoint function integrate(
         quadalg, adalg::PrefusedAD, f::F, domain,
         params::P;
         #    norm = norm,
@@ -487,18 +537,18 @@ A vector of central moments from order `1` through order `n`.
 ## Examples
 
 ```julia
-using SciMLExpectations, Distributions
+using Distributions, SciMLExpectations
 
-gd = GenericDistribution(Normal(0, 1))
+gd = GenericDistribution(Uniform(-1, 1))
 g(u, p) = u[1]  # Identity function
 exprob = ExpectationProblem(g, gd, nothing)
 
 # Compute first 4 central moments
 moments = centralmoment(4, exprob, Koopman())
 # moments[1] ≈ 0 (1st central moment is always 0)
-# moments[2] ≈ 1 (variance of N(0,1))
-# moments[3] ≈ 0 (skewness of N(0,1))
-# moments[4] ≈ 3 (kurtosis of N(0,1))
+# moments[2] ≈ 1 / 3 (variance of Uniform(-1, 1))
+# moments[3] ≈ 0 (symmetry)
+# moments[4] ≈ 1 / 5
 ```
 """
 function centralmoment(

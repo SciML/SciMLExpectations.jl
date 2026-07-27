@@ -58,6 +58,7 @@ Alternatively, SciMLExpectations.jl offers a convenient interface for this type 
 using `ExpectationProblem`.
 
 ```@example introduction
+using Integrals
 using SciMLExpectations
 gd = GenericDistribution(u0_dist...)
 h(x, u, p) = x, p
