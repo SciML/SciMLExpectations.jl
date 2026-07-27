@@ -1,8 +1,8 @@
 # Solving Expectation Problems
 
 ```@docs
-solve(prob::ExpectationProblem, expalg::MonteCarlo)
-solve(prob::ExpectationProblem, expalg::Koopman)
+DiffEqBase.solve(prob::ExpectationProblem, expalg::MonteCarlo)
+DiffEqBase.solve(prob::ExpectationProblem, expalg::Koopman, args...)
 build_integrand
 centralmoment
 SciMLExpectations.ExpectationSolution

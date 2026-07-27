@@ -2,6 +2,7 @@ using Test, TestExtras
 
 using SciMLExpectations
 using Cuba
+using Integrals
 using StochasticDiffEq
 using DiffEqNoiseProcess
 using Distributions
