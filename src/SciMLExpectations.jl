@@ -16,12 +16,14 @@ import StaticArrays: SVector
 import Statistics: mean
 import Zygote
 import ZygoteRules: @adjoint
+using PrecompileTools: @compile_workload, @setup_workload
 
 include("system_utils.jl")
 include("distribution_utils.jl")
 include("problem_types.jl")
 include("solution_types.jl")
 include("expectation.jl")
+include("precompile.jl")
 
 export Koopman, MonteCarlo, PrefusedAD, PostfusedAD, NonfusedAD
 export GenericDistribution, SystemMap, ProcessNoiseSystemMap, ExpectationProblem,
