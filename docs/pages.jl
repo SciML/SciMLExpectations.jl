@@ -12,5 +12,6 @@ pages = [
         "manual/problem.md",
         "manual/solve.md",
         "manual/algorithms.md",
+        "manual/reexports.md",
     ],
 ]
