@@ -2,8 +2,10 @@
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 SciMLExpectations = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
 SciMLTesting = "09d9d899-5365-40a9-917a-5f67fddea283"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 Aqua = "0.8"
 SciMLTesting = "2.4"
+Test = "1"
 julia = "1.10"

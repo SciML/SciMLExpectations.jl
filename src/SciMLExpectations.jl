@@ -5,7 +5,10 @@ import DiffEqBase: solve
 import DiffEqNoiseProcess
 import Distributions
 import Distributions: Normal, Sampleable, Truncated, logpdf, pdf
-import Integrals: HCubatureJL
+using Integrals: ArblibJL, ChangeOfVariables, CubaCuhre, CubaDivonne, CubaSUAVE,
+    CubaVegas, CubatureJLh, CubatureJLp, FastTanhSinhQuadratureJL, GaussLegendre,
+    HAdaptiveIntegrationJL, HCubatureJL, QuadGKJL, QuadratureRule, SimpsonsRule,
+    TrapezoidalRule, VEGAS, VEGASMC
 import LinearAlgebra: Adjoint, norm
 using Parameters: @unpack
 import RecursiveArrayTools: ArrayPartition
@@ -28,5 +31,10 @@ include("precompile.jl")
 export Koopman, MonteCarlo, PrefusedAD, PostfusedAD, NonfusedAD
 export GenericDistribution, SystemMap, ProcessNoiseSystemMap, ExpectationProblem,
     build_integrand, centralmoment
+
+export ArblibJL, ChangeOfVariables, CubaCuhre, CubaDivonne, CubaSUAVE, CubaVegas,
+    CubatureJLh, CubatureJLp, FastTanhSinhQuadratureJL, GaussLegendre,
+    HAdaptiveIntegrationJL, HCubatureJL, QuadGKJL, QuadratureRule, SimpsonsRule,
+    TrapezoidalRule, VEGAS, VEGASMC
 
 end
