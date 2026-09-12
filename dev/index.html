@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · SciMLExpectations.jl</title><meta name="title" content="Home · SciMLExpectations.jl"/><meta property="og:title" content="Home · SciMLExpectations.jl"/><meta property="twitter:title" content="Home · SciMLExpectations.jl"/><meta name="description" content="Documentation for SciMLExpectations.jl."/><meta property="og:description" content="Documentation for SciMLExpectations.jl."/><meta property="twitter:description" content="Documentation for SciMLExpectations.jl."/><meta property="og:url" content="https://docs.sciml.ai/SciMLExpectations/stable/"/><meta property="twitter:url" content="https://docs.sciml.ai/SciMLExpectations/stable/"/><link rel="canonical" href="https://docs.sciml.ai/SciMLExpectations/stable/"/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href><img src="assets/logo.png" alt="SciMLExpectations.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href>SciMLExpectations.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a><ul class="internal"><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Contributing"><span>Contributing</span></a></li><li><a class="tocitem" href="#Reproducibility"><span>Reproducibility</span></a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/introduction/">An Introduction to Expectations via SciMLExpectations.jl</a></li><li><a class="tocitem" href="tutorials/optimization_under_uncertainty/">Optimization Under Uncertainty</a></li><li><a class="tocitem" href="tutorials/gpu_bayesian/">GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a></li><li><a class="tocitem" href="tutorials/process_noise/">Expectation of Process Noise</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="manual/problem/">ExpectationProblem</a></li><li><a class="tocitem" href="manual/solve/">Solving Expectation Problems</a></li><li><a class="tocitem" href="manual/algorithms/">Expectation Algorithms</a></li><li><a class="tocitem" href="manual/reexports/">Reexported integration algorithms</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/SciMLExpectations.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/SciMLExpectations.jl/blob/master/docs/src/index.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification"><a class="docs-heading-anchor" href="#SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification">SciMLExpectations.jl: Expected Values of Simulations and Uncertainty Quantification</a><a id="SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification-1"></a><a class="docs-heading-anchor-permalink" href="#SciMLExpectations.jl:-Expected-Values-of-Simulations-and-Uncertainty-Quantification" title="Permalink"></a></h1><p>SciMLExpectations.jl is a package for quantifying the uncertainties of simulations by calculating the expectations of observables with respect to input uncertainties. Its goal is to make it fast and easy to compute solution moments in a differentiable way, to enable fast optimization under uncertainty.</p><div class="admonition is-category-warn" id="Warn-b19c83696db0ac49"><header class="admonition-header">Warn<a class="admonition-anchor" href="#Warn-b19c83696db0ac49" title="Permalink"></a></header><div class="admonition-body"><p>This package is still under heavy construction. Use at your own risk!</p></div></div><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>To install SciMLExpectations.jl, use the Julia package manager:</p><pre><code class="language-julia hljs">using Pkg
 Pkg.add(&quot;SciMLExpectations&quot;)</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://docs.sciml.ai/ColPrac/stable/">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr32"><span class="sgr1">Status</span></span> `~/_work/SciMLExpectations.jl/SciMLExpectations.jl/docs/Project.toml`
   <span class="sgr90">[8a292aeb] </span>Cuba v2.3.0
-  <span class="sgr90">[2b5f629d] </span>DiffEqBase v7.21.0
+  <span class="sgr90">[2b5f629d] </span>DiffEqBase v7.21.1
   <span class="sgr90">[071ae1c0] </span>DiffEqGPU v3.21.0
   <span class="sgr90">[77a26b50] </span>DiffEqNoiseProcess v5.36.3
   <span class="sgr90">[0c46a032] </span>DifferentialEquations v8.1.1
@@ -16,9 +16,9 @@ Pkg.add(&quot;SciMLExpectations&quot;)</code></pre><h2 id="Contributing"><a clas
   <span class="sgr90">[4e6fcdb7] </span>OptimizationNLopt v0.3.18
   <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v7.8.1
   <span class="sgr90">[91a5bcdd] </span>Plots v1.41.7
-  <span class="sgr90">[0bca4576] </span>SciMLBase v3.53.2
+  <span class="sgr90">[0bca4576] </span>SciMLBase v3.53.3
   <span class="sgr90">[afe9f18d] </span>SciMLExpectations v2.11.0 `~/_work/SciMLExpectations.jl/SciMLExpectations.jl`
-  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.119.5
+  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.119.7
   <span class="sgr90">[f3b207a7] </span>StatsPlots v0.15.8
   <span class="sgr90">[789caeaf] </span>StochasticDiffEq v7.2.0
   <span class="sgr90">[fce5fe82] </span>Turing v0.48.0</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.13.0
@@ -27,9 +27,9 @@ Build Info:
   Official https://julialang.org release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 128 × AMD EPYC 9354 32-Core Processor
+  CPU: 112 × AMD EPYC 7663 56-Core Processor
   WORD_SIZE: 64
-  LLVM: libLLVM-20.1.8 (ORCJIT, znver4)
+  LLVM: libLLVM-20.1.8 (ORCJIT, znver3)
   GC: Built with stock GC
 Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)
 Environment:
@@ -95,7 +95,7 @@ Environment:
   <span class="sgr90">[e2d170a0] </span>DataValueInterfaces v1.0.0
   <span class="sgr90">[8bb1440f] </span>DelimitedFiles v1.9.1
   <span class="sgr90">[b429d917] </span>DensityInterface v0.4.0
-  <span class="sgr90">[2b5f629d] </span>DiffEqBase v7.21.0
+  <span class="sgr90">[2b5f629d] </span>DiffEqBase v7.21.1
   <span class="sgr90">[459566f4] </span>DiffEqCallbacks v4.19.3
   <span class="sgr90">[071ae1c0] </span>DiffEqGPU v3.21.0
   <span class="sgr90">[77a26b50] </span>DiffEqNoiseProcess v5.36.3
@@ -191,8 +191,8 @@ Environment:
   <span class="sgr90">[442fdcdd] </span>Measures v0.3.3
   <span class="sgr90">[e1d29d7a] </span>Missings v1.2.0
   <span class="sgr90">[dbe65cb8] </span>MistyClosures v2.1.0
-  <span class="sgr90">[7771a370] </span>ModelingToolkitBase v1.69.2
-  <span class="sgr90">[4886b29c] </span>MonteCarloIntegration v0.2.0
+  <span class="sgr90">[7771a370] </span>ModelingToolkitBase v1.70.0
+<span class="sgr33">⌅</span> <span class="sgr90">[4886b29c] </span>MonteCarloIntegration v0.2.0
 <span class="sgr33">⌅</span> <span class="sgr90">[2e0e35c7] </span>Moshi v0.3.9
   <span class="sgr90">[46d2c3a1] </span>MuladdMacro v0.2.7
   <span class="sgr90">[102ac46a] </span>MultivariatePolynomials v0.5.19
@@ -220,12 +220,12 @@ Environment:
   <span class="sgr90">[36348300] </span>OptimizationOptimJL v0.4.21
 <span class="sgr33">⌅</span> <span class="sgr90">[bac558e1] </span>OrderedCollections v1.8.2
   <span class="sgr90">[1dea7af3] </span>OrdinaryDiffEq v7.8.1
-  <span class="sgr90">[6ad6398a] </span>OrdinaryDiffEqBDF v2.4.7
-  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v4.17.0
-  <span class="sgr90">[50262376] </span>OrdinaryDiffEqDefault v2.6.0
+  <span class="sgr90">[6ad6398a] </span>OrdinaryDiffEqBDF v2.4.8
+  <span class="sgr90">[bbf590c4] </span>OrdinaryDiffEqCore v4.17.1
+  <span class="sgr90">[50262376] </span>OrdinaryDiffEqDefault v2.6.1
   <span class="sgr90">[4302a76b] </span>OrdinaryDiffEqDifferentiation v3.11.5
   <span class="sgr90">[127b3ac7] </span>OrdinaryDiffEqNonlinearSolve v2.9.6
-  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v2.7.1
+  <span class="sgr90">[43230ef6] </span>OrdinaryDiffEqRosenbrock v2.7.2
   <span class="sgr90">[b4bd8bb3] </span>OrdinaryDiffEqRosenbrockTableaus v2.4.2
   <span class="sgr90">[2d112036] </span>OrdinaryDiffEqSDIRK v2.9.2
   <span class="sgr90">[b1df2697] </span>OrdinaryDiffEqTsit5 v2.1.4
@@ -270,13 +270,13 @@ Environment:
   <span class="sgr90">[f2b01f46] </span>Roots v3.0.8
   <span class="sgr90">[7e49a35a] </span>RuntimeGeneratedFunctions v0.5.26
   <span class="sgr90">[9dfe8606] </span>SCCNonlinearSolve v1.15.3
-  <span class="sgr90">[0bca4576] </span>SciMLBase v3.53.2
+  <span class="sgr90">[0bca4576] </span>SciMLBase v3.53.3
   <span class="sgr90">[afe9f18d] </span>SciMLExpectations v2.11.0 `~/_work/SciMLExpectations.jl/SciMLExpectations.jl`
   <span class="sgr90">[19f34311] </span>SciMLJacobianOperators v0.1.19
   <span class="sgr90">[a6db7da4] </span>SciMLLogging v2.1.0
   <span class="sgr90">[c0aeaf25] </span>SciMLOperators v1.30.0
   <span class="sgr90">[431bcebd] </span>SciMLPublic v1.3.0
-  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.119.5
+  <span class="sgr90">[1ed8b502] </span>SciMLSensitivity v7.119.7
   <span class="sgr90">[53ae85a6] </span>SciMLStructures v1.10.5
   <span class="sgr90">[30f210dd] </span>ScientificTypesBase v3.1.0
   <span class="sgr90">[7e506255] </span>ScopedValues v1.6.2
@@ -305,7 +305,7 @@ Environment:
   <span class="sgr90">[4c63d2b9] </span>StatsFuns v2.2.1
   <span class="sgr90">[f3b207a7] </span>StatsPlots v0.15.8
   <span class="sgr90">[789caeaf] </span>StochasticDiffEq v7.2.0
-  <span class="sgr90">[19c5a474] </span>StochasticDiffEqCore v2.2.1
+  <span class="sgr90">[19c5a474] </span>StochasticDiffEqCore v2.2.2
   <span class="sgr90">[0520c28c] </span>StochasticDiffEqHighOrder v2.2.0
   <span class="sgr90">[ebf54054] </span>StochasticDiffEqIIF v2.1.0
   <span class="sgr90">[5080b986] </span>StochasticDiffEqImplicit v2.2.1
@@ -488,4 +488,4 @@ Environment:
   <span class="sgr90">[8e850b90] </span>libblastrampoline_jll v5.15.0+0
   <span class="sgr90">[8e850ede] </span>nghttp2_jll v1.67.1+0
   <span class="sgr90">[3f19e933] </span>p7zip_jll v17.8.2+0
-<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr33">⌅</span> have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/SciMLExpectations.jl/tree/gh-pages/v2.11.0/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/SciMLExpectations.jl/tree/gh-pages/v2.11.0/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/introduction/">An Introduction to Expectations via SciMLExpectations.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Saturday 12 September 2026 00:25">Saturday 12 September 2026</span>. Using Julia version 1.13.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr33">⌅</span> have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/SciMLExpectations.jl/tree/gh-pages/v2.11.0/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/SciMLExpectations.jl/tree/gh-pages/v2.11.0/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="tutorials/introduction/">An Introduction to Expectations via SciMLExpectations.jl »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Saturday 12 September 2026 10:23">Saturday 12 September 2026</span>. Using Julia version 1.13.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
