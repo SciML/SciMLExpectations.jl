@@ -1,7 +1,7 @@
 name = "SciMLExpectations"
 uuid = "afe9f18d-7609-4d0e-b7b7-af0cb72b8ea8"
 authors = ["Chris Rackauckas <accounts@chrisrackauckas.com>"]
-version = "2.11.0"
+version = "2.11.1"
 
 [deps]
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
@@ -31,7 +31,7 @@ DiffEqNoiseProcess = "5.30.0"
 Distributions = "0.25.88"
 FiniteDiff = "2.27.0"
 ForwardDiff = "1.0.1"
-Integrals = "5.4.0"
+Integrals = "5.5.1"
 LinearAlgebra = "1"
 OrdinaryDiffEq = "7"
 Parameters = "0.13"
