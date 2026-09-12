@@ -76,7 +76,3 @@ TestExtras = "5ed8adda-3752-4e41-b88a-e8b09835ee3a"
 
 [targets]
 test = ["QuasiMonteCarlo", "MonteCarloIntegration", "Test", "Aqua", "SafeTestsets", "SciMLTesting", "TestExtras", "PkgBenchmark", "BenchmarkTools", "ReferenceTests", "Random", "OrdinaryDiffEq", "ComponentArrays", "ForwardDiff", "Integrals", "Cubature", "Cuba", "FiniteDiff", "RecursiveArrayTools", "StochasticDiffEq"]
-
-[sources]
-Integrals = {url = "https://github.com/ChrisRackauckas-Claude/Integrals.jl.git", rev = "bump-mci-0.3"}
-MonteCarloIntegration = {url = "https://github.com/ranjanan/MonteCarloIntegration.jl.git", rev = "master"}
