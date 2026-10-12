@@ -80,6 +80,6 @@ parameters(prob::ExpectationProblem) = prob.params
 
 function ExpectationProblem(sm::ProcessNoiseSystemMap, g, h; nout = nothing)
     !isnothing(nout) && @warn "nout is deprecated and unused"
-    d = GenericDistribution((Truncated(Normal(), -4.0, 4.0) for i in 1:(sm.n))...)
+    d = GenericDistribution((truncated(Normal(), -4.0, 4.0) for i in 1:(sm.n))...)
     return ExpectationProblem(sm, g, h, d, deepcopy(sm.prob.p))
 end
