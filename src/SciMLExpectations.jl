@@ -4,7 +4,7 @@ import DiffEqBase
 import DiffEqBase: solve
 import DiffEqNoiseProcess
 import Distributions
-import Distributions: Normal, Sampleable, Truncated, logpdf, pdf
+import Distributions: Normal, Sampleable, truncated, logpdf, pdf
 using Integrals: ArblibJL, ChangeOfVariables, CubaCuhre, CubaDivonne, CubaSUAVE,
     CubaVegas, CubatureJLh, CubatureJLp, FastTanhSinhQuadratureJL, GaussLegendre,
     HAdaptiveIntegrationJL, HCubatureJL, QuadGKJL, QuadratureRule, SimpsonsRule,
