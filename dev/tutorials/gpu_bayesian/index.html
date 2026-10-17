@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators · SciMLExpectations.jl</title><meta name="title" content="GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators · SciMLExpectations.jl"/><meta property="og:title" content="GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators · SciMLExpectations.jl"/><meta property="twitter:title" content="GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators · SciMLExpectations.jl"/><meta name="description" content="Documentation for SciMLExpectations.jl."/><meta property="og:description" content="Documentation for SciMLExpectations.jl."/><meta property="twitter:description" content="Documentation for SciMLExpectations.jl."/><meta property="og:url" content="https://docs.sciml.ai/SciMLExpectations/stable/tutorials/gpu_bayesian/"/><meta property="twitter:url" content="https://docs.sciml.ai/SciMLExpectations/stable/tutorials/gpu_bayesian/"/><link rel="canonical" href="https://docs.sciml.ai/SciMLExpectations/stable/tutorials/gpu_bayesian/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.png" alt="SciMLExpectations.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">SciMLExpectations.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../introduction/">An Introduction to Expectations via SciMLExpectations.jl</a></li><li><a class="tocitem" href="../optimization_under_uncertainty/">Optimization Under Uncertainty</a></li><li class="is-active"><a class="tocitem" href>GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a><ul class="internal"><li><a class="tocitem" href="#Bayesian-Parameter-Estimation-with-Uncertainty"><span>Bayesian Parameter Estimation with Uncertainty</span></a></li><li><a class="tocitem" href="#Evaluating-Model-Hypotheses-with-the-Koopman-Expectation"><span>Evaluating Model Hypotheses with the Koopman Expectation</span></a></li></ul></li><li><a class="tocitem" href="../process_noise/">Expectation of Process Noise</a></li></ul></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../../manual/problem/">ExpectationProblem</a></li><li><a class="tocitem" href="../../manual/solve/">Solving Expectation Problems</a></li><li><a class="tocitem" href="../../manual/algorithms/">Expectation Algorithms</a></li><li><a class="tocitem" href="../../manual/reexports/">Reexported integration algorithms</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/SciML/SciMLExpectations.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/SciML/SciMLExpectations.jl/blob/master/docs/src/tutorials/gpu_bayesian.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="GPU-Accelerated-Data-Driven-Bayesian-Uncertainty-Quantification-with-Koopman-Operators"><a class="docs-heading-anchor" href="#GPU-Accelerated-Data-Driven-Bayesian-Uncertainty-Quantification-with-Koopman-Operators">GPU-Accelerated Data-Driven Bayesian Uncertainty Quantification with Koopman Operators</a><a id="GPU-Accelerated-Data-Driven-Bayesian-Uncertainty-Quantification-with-Koopman-Operators-1"></a><a class="docs-heading-anchor-permalink" href="#GPU-Accelerated-Data-Driven-Bayesian-Uncertainty-Quantification-with-Koopman-Operators" title="Permalink"></a></h1><p>What if you have data and a general model and would like to evaluate the probability that the fitted model outcomes would have had a given behavior? The purpose of this tutorial is to demonstrate a fast workflow for doing exactly this. It composes together a few different pieces of the SciML ecosystem:</p><ol><li>Parameter estimation with uncertainty with Bayesian differential equations by integrating the differentiable differential equation solvers with the <a href="https://turinglang.org/docs/">Turing.jl library</a>.</li><li>Fast calculation of probabilistic estimates of differential equation solutions with parametric uncertainty using the Koopman expectation.</li><li>GPU-acceleration of batched differential equation solves.</li></ol><p>Let&#39;s dive right in.</p><h2 id="Bayesian-Parameter-Estimation-with-Uncertainty"><a class="docs-heading-anchor" href="#Bayesian-Parameter-Estimation-with-Uncertainty">Bayesian Parameter Estimation with Uncertainty</a><a id="Bayesian-Parameter-Estimation-with-Uncertainty-1"></a><a class="docs-heading-anchor-permalink" href="#Bayesian-Parameter-Estimation-with-Uncertainty" title="Permalink"></a></h2><p>Let&#39;s start by importing all the necessary libraries:</p><pre><code class="language-julia hljs">using OrdinaryDiffEq
+using Turing, Distributions
+using KernelDensity
+using SciMLExpectations, Cuba
+using DiffEqGPU
+using Plots, StatsPlots
+using LinearAlgebra
+using Random;
+Random.seed!(1);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Random.TaskLocalRNG()</code></pre><p>For this tutorial, we will use the Lotka-Volterra equation:</p><pre><code class="language-julia hljs">function lotka_volterra(du, u, p, t)
+    @inbounds begin
+        x = u[1]
+        y = u[2]
+        α = p[1]
+        β = p[2]
+        γ = p[3]
+        δ = p[4]
+        du[1] = (α - β * y) * x
+        du[2] = (δ * x - γ) * y
+    end
+end
+p = [1.5, 1.0, 3.0, 1.0]
+u0 = [1.0, 1.0]
+prob1 = ODEProblem(lotka_volterra, u0, (0.0, 10.0), p)
+sol = solve(prob1, Tsit5())
+plot(sol)</code></pre><img src="241fb786.svg" alt="Example block output"/><p>From the Lotka-Volterra equation, we will generate a dataset with known parameters:</p><pre><code class="language-julia hljs">sol1 = solve(prob1, Tsit5(), saveat = 0.1)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">retcode: Success
+Interpolation: 1st order linear
+t: 101-element Vector{Float64}:
+  0.0
+  0.1
+  0.2
+  0.3
+  0.4
+  0.5
+  0.6
+  0.7
+  0.8
+  0.9
+  ⋮
+  9.2
+  9.3
+  9.4
+  9.5
+  9.6
+  9.7
+  9.8
+  9.9
+ 10.0
+u: 101-element Vector{Vector{Float64}}:
+ [1.0, 1.0]
+ [1.061078067335645, 0.8210842775886172]
+ [1.1440276717257596, 0.6790526689784505]
+ [1.2491712125724797, 0.5668931465840911]
+ [1.3776445705636422, 0.4788129513794749]
+ [1.5312308177480012, 0.4101564670868259]
+ [1.7122697558187612, 0.35726544879975475]
+ [1.9235782758300237, 0.3173472061617729]
+ [2.168391089699016, 0.28838884378795077]
+ [2.450250667140942, 0.2690537093963338]
+ ⋮
+ [1.8172822933736137, 4.064946558412936]
+ [1.4427612812619413, 3.539737537072804]
+ [1.2089080976008568, 2.9914549653863167]
+ [1.0685925939417136, 2.4820728869567197]
+ [0.9910229629170648, 2.0372445416280973]
+ [0.9574213502706167, 1.6632055506392018]
+ [0.9569793948457249, 1.3555870105714947]
+ [0.9835609119575054, 1.106286805618539]
+ [1.0337581330572132, 0.9063703732075951]</code></pre><p>Now let&#39;s assume our dataset should have noise. We can add this noise in and plot the noisy data against the generating set:</p><pre><code class="language-julia hljs">odedata = Array(sol1) + 0.8 * randn(size(Array(sol1)))
+plot(sol1, alpha = 0.3, legend = false);
+scatter!(sol1.t, odedata&#39;);</code></pre><img src="c4a8d83f.svg" alt="Example block output"/><p>Now let&#39;s assume that all we know is the data <code>odedata</code> and the model form. What we want to do is use the data to inform us of the parameters, but also get a probabilistic sense of the uncertainty around our parameter estimate. This is done via Bayesian estimation. For a full look at Bayesian estimation of differential equations, look at the <a href="https://turinglang.org/docs/tutorials/bayesian-differential-equations/">Bayesian differential equation</a> tutorial from Turing.jl.</p><p>Following that tutorial, we choose a set of priors and perform <code>NUTS</code> sampling to arrive at the MCMC chain:</p><pre><code class="language-julia hljs">@model function fitlv(data, prob1)
+    σ ~ InverseGamma(2, 3) # ~ is the tilde character
+    α ~ truncated(Normal(1.5, 0.5), 1.0, 2.0)
+    β ~ truncated(Normal(1.2, 0.5), 0.5, 1.5)
+    γ ~ truncated(Normal(3.0, 0.5), 2, 4)
+    δ ~ truncated(Normal(1.0, 0.5), 0.5, 1.5)
+
+    p = [α, β, γ, δ]
+    prob = remake(prob1, p = p)
+    predicted = solve(prob, Tsit5(), saveat = 0.1)
+
+    for i in 1:length(predicted.u)
+        data[:, i] ~ MvNormal(predicted.u[i], σ^2 * I)
+    end
+end
+
+model = fitlv(odedata, prob1)
+
+# This next command runs 3 independent chains without using multithreading.
+# NUTS uses ForwardDiff by default for automatic differentiation.
+# As of Turing v0.45, `sample` returns a `FlexiChains.VNChain` by default.
+chain = sample(model, NUTS(0.45), MCMCSerial(), 1000, 3)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr90">╭─</span><span class="sgr1">FlexiChain (1000 iterations, 3 chains)</span><span class="sgr90"> ──────────────────────────────────────╮</span>
+<span class="sgr90">│</span> <span class="sgr38_5" style="color:#ff875f">↓ iter  = 501:1500</span>                                                           <span class="sgr90">│</span>
+<span class="sgr90">│</span> <span class="sgr38_5" style="color:#0087d7">→ chain = 1:3</span>                                                                <span class="sgr90">│</span>
+<span class="sgr90">│</span>                                                                              <span class="sgr90">│</span>
+<span class="sgr90">│</span> <span class="sgr1">Parameters (5)</span><span class="sgr90"> ── AbstractPPL.VarName</span>                                        <span class="sgr90">│</span>
+<span class="sgr90">│</span>  <span class="sgr32">Float64</span>  σ, α, β, γ, δ                                                      <span class="sgr90">│</span>
+<span class="sgr90">│</span>                                                                              <span class="sgr90">│</span>
+<span class="sgr90">│</span> <span class="sgr1">Extras (14)</span>                                                                  <span class="sgr90">│</span>
+<span class="sgr90">│</span>  <span class="sgr32">Int64  </span>  n_steps, tree_depth                                                <span class="sgr90">│</span>
+<span class="sgr90">│</span>  <span class="sgr32">Bool   </span>  is_accept, numerical_error                                         <span class="sgr90">│</span>
+<span class="sgr90">│</span>  <span class="sgr32">Float64</span>  acceptance_rate, log_density, hamiltonian_energy                   <span class="sgr90">│</span>
+<span class="sgr90">│</span>           hamiltonian_energy_error, max_hamiltonian_energy_error, step_size  <span class="sgr90">│</span>
+<span class="sgr90">│</span>           nom_step_size, logprior, loglikelihood, logjoint                   <span class="sgr90">│</span>
+<span class="sgr90">╰──────────────────────────────────────────────────────────────────────────────╯</span></code></pre><p>This chain gives a discrete approximation to the probability distribution of our desired quantities. We can plot the chains to see these distributions in action:</p><pre><code class="language-julia hljs">plot(chain)</code></pre><img src="a99a74e9.svg" alt="Example block output"/><p>Great! From our data, we have arrived at a probability distribution for our parameter values.</p><h2 id="Evaluating-Model-Hypotheses-with-the-Koopman-Expectation"><a class="docs-heading-anchor" href="#Evaluating-Model-Hypotheses-with-the-Koopman-Expectation">Evaluating Model Hypotheses with the Koopman Expectation</a><a id="Evaluating-Model-Hypotheses-with-the-Koopman-Expectation-1"></a><a class="docs-heading-anchor-permalink" href="#Evaluating-Model-Hypotheses-with-the-Koopman-Expectation" title="Permalink"></a></h2><p>Now, let&#39;s try to ask a question: what is the expected value of <code>x</code> (the first term in the differential equation) at time <code>t=10</code> given the known uncertainties in our parameters? This is a good tutorial question because all other probabilistic statements can be phrased similarly. Asking a question like, “what is the probability that <code>x(T) &gt; 1</code> at the final time <code>T</code>?”, can similarly be phrased as an expected value (probability statements are expected values of characteristic functions which are 1 if true 0 if false). So in general, the kinds of questions we want to ask and answer are expectations about the solutions of the differential equation.</p><p>The trivial to solve this problem is to sample 100,000 sets of parameters from our parameter distribution given by the Bayesian estimation, solve the ODE 100,000 times, and then take the average. But is 100,000 ODE solves enough? Well it&#39;s hard to tell, and even then, the convergence of this approach is slow. This is the Monte Carlo approach, and it converges to the correct answer by <code>sqrt(N)</code>. Slow.</p><p>However, the <a href="https://arxiv.org/abs/2008.08737">Koopman expectation</a> can converge with much fewer points, allowing the use of higher order quadrature methods to converge exponentially faster in many cases. To use the Koopman expectation, we first need to define our observable function <code>g</code>. This function designates the thing about the solution we wish to calculate the expectation of. Thus for our question “what is the expected value of <code>x</code>at time <code>t=10</code>?” we would simply use:</p><pre><code class="language-julia hljs">function g(sol, p)
+    sol[1, end]
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">g (generic function with 1 method)</code></pre><p>Now we need to use the <code>expectation</code> call, where we need to provide our initial condition and parameters as probability distributions. For this case, we will use the same constant <code>u0</code> as before. But, let&#39;s turn our Bayesian MCMC chains into distributions through <a href="https://github.com/JuliaStats/KernelDensity.jl">kernel density estimation</a> (the plots of the distribution above are just KDE plots!).</p><pre><code class="language-julia hljs">p_kde = [kde(vec(chain[@varname(α)])), kde(vec(chain[@varname(β)])),
+    kde(vec(chain[@varname(γ)])), kde(vec(chain[@varname(δ)]))]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">4-element Vector{KernelDensity.UnivariateKDE{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}}:
+ KernelDensity.UnivariateKDE{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}(1.3076980446511084:0.00021322934651960817:1.7441785169767463, [1.1184258420726678e-5, 1.1223988629183168e-5, 1.1335033105019932e-5, 1.1517867046340058e-5, 1.1773307850848624e-5, 1.2102517068068863e-5, 1.2507003544826034e-5, 1.2988627361654181e-5, 1.3549604996221376e-5, 1.4192515344735313e-5  …  1.4850344248973357e-5, 1.4127215521408942e-5, 1.3489746567785232e-5, 1.2934879067394434e-5, 1.245993269538559e-5, 1.206259666997056e-5, 1.174092286948536e-5, 1.1493319380662115e-5, 1.13185457353282e-5, 1.1215708484169085e-5])
+ KernelDensity.UnivariateKDE{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}(0.8807117476082994:0.00020528841335145347:1.3009371297387247, [9.963747079844154e-6, 1.018168941380182e-5, 1.0458949065039747e-5, 1.0797071598567243e-5, 1.1197871311541263e-5, 1.166343844882789e-5, 1.219614740399777e-5, 1.2798665456781322e-5, 1.3473962618526514e-5, 1.422532206207805e-5  …  1.0887916166879563e-5, 1.0542338690910924e-5, 1.0254313387747516e-5, 1.002294224239364e-5, 9.847562063125537e-6, 9.727744416210271e-6, 9.66329729079618e-6, 9.654266164282888e-6, 9.700937027012912e-6, 9.803838691091471e-6])
+ KernelDensity.UnivariateKDE{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}(2.4248251679313753:0.0006594897426232394:3.774800671081146, [3.1588804112470115e-6, 3.2059926906580216e-6, 3.2761793247182425e-6, 3.3698821351180186e-6, 3.4876692709406854e-6, 3.6302376109631496e-6, 3.7984156560089133e-6, 3.993166766358414e-6, 4.215592918299649e-6, 4.466938835046008e-6  …  3.9471363302290285e-6, 3.760939090380333e-6, 3.6001007133190654e-6, 3.4638446777535137e-6, 3.351518568894818e-6, 3.262592422004218e-6, 3.1966577573872e-6, 3.153426642699131e-6, 3.1327315124229926e-6, 3.134524980907827e-6])
+ KernelDensity.UnivariateKDE{StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}}(0.7612885788972907:0.00022845726553656019:1.2289406014506294, [1.0133070571516356e-5, 1.0211538901128137e-5, 1.0361517047030588e-5, 1.0583866765667693e-5, 1.0879828037158035e-5, 1.1251023681602135e-5, 1.1699465356507233e-5, 1.2227560575173158e-5, 1.2838121156377724e-5, 1.3534372759860247e-5  …  1.3358809375141334e-5, 1.2687348685425093e-5, 1.2099397492359998e-5, 1.1592032993501533e-5, 1.1162728716485049e-5, 1.0809347166240713e-5, 1.053013435203809e-5, 1.0323714617843649e-5, 1.0189087546130793e-5, 1.0125625062862298e-5])</code></pre><p>Now that we have our observable and our uncertainty distributions, let&#39;s calculate the expected value. Using <code>GenericDistribution</code>, SciMLExpectation can calculate expectations of any distribution-like object that supports evaluating the probability density function, for the <code>Koopman</code> solver algorithm, and generating random numbers for the <code>MonteCarlo</code> solver algorithm.</p><pre><code class="language-julia hljs">pdf_func(x) = prod(pdf.(p_kde, x))
+rand_func() = nothing # not needed for Koopman
+lb = [p_kde_i.x[begin] for p_kde_i in p_kde] #lower bound for integration
+ub = [p_kde_i.x[end] for p_kde_i in p_kde] #upper bound for integration
+gd = GenericDistribution(pdf_func, rand_func, lb, ub)
+h(x, u, p) = u, x
+sm = SystemMap(prob1, Tsit5())
+exprob = ExpectationProblem(sm, g, h, gd)
+sol = solve(exprob, Koopman(); reltol = 1e-2, abstol = 1e-2)
+sol.u</code></pre><p>Note how that gives the expectation and a residual for the error bound!</p><pre><code class="language-julia hljs">sol.resid</code></pre><h3 id="GPU-Accelerated-Expectations"><a class="docs-heading-anchor" href="#GPU-Accelerated-Expectations">GPU-Accelerated Expectations</a><a id="GPU-Accelerated-Expectations-1"></a><a class="docs-heading-anchor-permalink" href="#GPU-Accelerated-Expectations" title="Permalink"></a></h3><div class="admonition is-info" id="Note-1bececf0e0b05eb5"><header class="admonition-header">Note<a class="admonition-anchor" href="#Note-1bececf0e0b05eb5" title="Permalink"></a></header><div class="admonition-body"><p>Batch functionality not yet fully implemented in version 2 of SciMLExpectations.</p></div></div><p>Are we done? No, we need to add some GPUs! As mentioned earlier, probability calculations can take quite a bit of ODE solves, so let&#39;s parallelize across the parameters. <a href="https://github.com/SciML/DiffEqGPU.jl">DiffEqGPU.jl</a> allows you to GPU-parallelize across parameters by using the <a href="https://docs.sciml.ai/DiffEqDocs/stable/features/ensemble/">Ensemble interface</a>. Note that you do not have to do any of the heavy lifting: all the conversion to GPU kernels is done automatically by simply specifying <code>EnsembleGPUArray</code> as the ensembling method. For example:</p><pre><code class="language-julia hljs">function lotka_volterra(du, u, p, t)
+    @inbounds begin
+        x = u[1]
+        y = u[2]
+        α = p[1]
+        β = p[2]
+        γ = p[3]
+        δ = p[4]
+        du[1] = (α - β * y) * x
+        du[2] = (δ * x - γ) * y
+    end
+end
+p = [1.5, 1.0, 3.0, 1.0]
+u0 = [1.0, 1.0]
+prob = ODEProblem(lotka_volterra, u0, (0.0, 10.0), p)
+prob_func = (prob, ctx) -&gt; remake(prob, p = rand(Float64, 4) .* p)
+monteprob = EnsembleProblem(prob, prob_func = prob_func, safetycopy = false)
+@time sol = solve(monteprob, Tsit5(), EnsembleGPUArray(), trajectories = 10_000,
+    saveat = 1.0f0)</code></pre><p>Let&#39;s now use this in the ensembling method. We need to specify a <code>batch</code> for the number of ODEs solved at the same time, and pass in our ensembling method. The following is a GPU-accelerated uncertainty quantified estimate of the expectation of the solution:</p><pre><code class="language-julia hljs"># batchmode = EnsembleGPUArray() #where to pass this?
+sol = solve(exprob, Koopman(), batch = 100, quadalg = CubaSUAVE())</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../optimization_under_uncertainty/">« Optimization Under Uncertainty</a><a class="docs-footer-nextpage" href="../process_noise/">Expectation of Process Noise »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Friday 16 October 2026 04:38">Friday 16 October 2026</span>. Using Julia version 1.13.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
